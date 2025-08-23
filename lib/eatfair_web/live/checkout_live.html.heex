@@ -1,0 +1,242 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <%= cond do %>
+      <% @step == :review -> %>
+        <!-- Order Review Step -->
+        <div class="mb-8">
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">Review Your Order</h1>
+          <p class="text-gray-600">Please review your order details and delivery information</p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <!-- Order Details -->
+          <div class="lg:col-span-2 space-y-6">
+            <!-- Restaurant Info -->
+            <div class="bg-white rounded-lg shadow p-6">
+              <h2 class="text-xl font-semibold text-gray-900 mb-4">Ordering from</h2>
+              <div class="flex items-start space-x-4">
+                <div class="w-16 h-16 bg-gray-200 rounded-lg overflow-hidden">
+                  <%= if @restaurant.image_url do %>
+                    <img 
+                      src={@restaurant.image_url} 
+                      alt={@restaurant.name}
+                      class="w-full h-full object-cover"
+                    />
+                  <% else %>
+                    <div class="w-full h-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center">
+                      <.icon name="hero-building-storefront" class="w-6 h-6 text-white" />
+                    </div>
+                  <% end %>
+                </div>
+                <div class="flex-1">
+                  <h3 class="font-semibold text-gray-900">{@restaurant.name}</h3>
+                  <p class="text-sm text-gray-600">{@restaurant.address}</p>
+                  <div class="flex items-center space-x-4 text-sm text-gray-500 mt-2">
+                    <div class="flex items-center">
+                      <.icon name="hero-clock" class="w-4 h-4 mr-1" />
+                      Delivery: {format_delivery_time(@restaurant.delivery_time)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Order Items -->
+            <div class="bg-white rounded-lg shadow p-6">
+              <h2 class="text-xl font-semibold text-gray-900 mb-4">Your Items</h2>
+              <div class="space-y-4">
+                <%= for item <- @cart_items do %>
+                  <div class="flex items-center justify-between py-3 border-b border-gray-100 last:border-b-0" data-order-item>
+                    <div class="flex-1">
+                      <h4 class="font-medium text-gray-900" data-meal-name>{item.meal.name}</h4>
+                      <p class="text-sm text-gray-600">{format_price(item.meal.price)} × <span data-item-quantity>{item.quantity}</span></p>
+                    </div>
+                    <div class="font-semibold text-gray-900">
+                      {format_price(Decimal.mult(item.meal.price, item.quantity))}
+                    </div>
+                  </div>
+                <% end %>
+              </div>
+            </div>
+
+            <!-- Delivery Information Form -->
+            <div class="bg-white rounded-lg shadow p-6">
+              <h2 class="text-xl font-semibold text-gray-900 mb-4">Delivery Information</h2>
+              
+              <.form 
+                for={@form} 
+                id="checkout-form"
+                phx-change="validate"
+                phx-submit="place_order"
+                class="space-y-4"
+              >
+                <div>
+                  <.input 
+                    field={@form[:delivery_address]} 
+                    type="text"
+                    label="Delivery Address"
+                    placeholder="Enter your full delivery address"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <.input 
+                    field={@form[:phone_number]} 
+                    type="tel"
+                    label="Phone Number"
+                    placeholder="Your phone number"
+                    required
+                  />
+                </div>
+                
+                <div>
+                  <.input 
+                    field={@form[:delivery_notes]} 
+                    type="textarea"
+                    label="Delivery Notes (Optional)"
+                    placeholder="Special instructions for delivery..."
+                    rows="3"
+                  />
+                </div>
+              </.form>
+            </div>
+          </div>
+
+          <!-- Order Summary Sidebar -->
+          <div class="lg:col-span-1">
+            <div class="bg-white rounded-lg shadow p-6 sticky top-6">
+              <h3 class="text-xl font-semibold text-gray-900 mb-6">Order Summary</h3>
+              
+              <!-- Items Summary -->
+              <div class="space-y-2 mb-6">
+                <%= for item <- @cart_items do %>
+                  <div class="flex justify-between text-sm">
+                    <span class="text-gray-600">{item.quantity}× {item.meal.name}</span>
+                    <span class="font-medium">{format_price(Decimal.mult(item.meal.price, item.quantity))}</span>
+                  </div>
+                <% end %>
+              </div>
+              
+              <hr class="my-4" />
+              
+              <div class="space-y-2 mb-6">
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Subtotal</span>
+                  <span class="font-medium">{format_price(@cart_total)}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-gray-600">Delivery Fee</span>
+                  <span class="font-medium">$0.00</span>
+                </div>
+                <div class="flex justify-between text-lg font-semibold text-gray-900 pt-2 border-t">
+                  <span>Total</span>
+                  <span data-order-total>{format_price(@cart_total)}</span>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="space-y-3">
+                <button 
+                  type="submit"
+                  form="checkout-form"
+                  disabled={@processing}
+                  class={[
+                    "w-full py-3 px-4 font-medium rounded-lg transition-colors",
+                    if(@processing, 
+                      do: "bg-gray-400 text-gray-600 cursor-not-allowed", 
+                      else: "bg-indigo-600 hover:bg-indigo-700 text-white"
+                    )
+                  ]}
+                >
+                  <%= if @processing do %>
+                    <div class="flex items-center justify-center">
+                      <svg class="animate-spin -ml-1 mr-2 h-4 w-4 text-gray-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Processing...
+                    </div>
+                  <% else %>
+                    Place Order & Pay {format_price(@cart_total)}
+                  <% end %>
+                </button>
+                
+                <button 
+                  type="button"
+                  phx-click="back_to_restaurant"
+                  class="w-full py-2 px-4 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  Back to Restaurant
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      <% @step == :success -> %>
+        <!-- Success Step -->
+        <div class="text-center py-12" data-success-message>
+          <div class="mx-auto flex items-center justify-center h-16 w-16 rounded-full bg-green-100 mb-6">
+            <.icon name="hero-check" class="h-8 w-8 text-green-600" />
+          </div>
+          
+          <h1 class="text-3xl font-bold text-gray-900 mb-2">Order Confirmed!</h1>
+          <p class="text-lg text-gray-600 mb-8">
+            Your order {format_order_number(@order.id)} has been placed successfully.
+          </p>
+
+          <!-- Order Details Card -->
+          <div class="max-w-md mx-auto bg-white rounded-lg shadow p-6 mb-8 text-left">
+            <div class="flex items-center justify-between mb-4">
+              <span class="text-sm font-medium text-gray-500">Order Number</span>
+              <span class="font-semibold">{format_order_number(@order.id)}</span>
+            </div>
+            
+            <div class="flex items-center justify-between mb-4">
+              <span class="text-sm font-medium text-gray-500">Restaurant</span>
+              <span class="font-semibold">{@restaurant.name}</span>
+            </div>
+            
+            <div class="flex items-center justify-between mb-4">
+              <span class="text-sm font-medium text-gray-500">Total Paid</span>
+              <span class="font-semibold text-green-600">{format_price(@payment.amount)}</span>
+            </div>
+            
+            <div class="flex items-center justify-between mb-4">
+              <span class="text-sm font-medium text-gray-500">Estimated Delivery</span>
+              <span class="font-semibold">{format_delivery_time(@restaurant.delivery_time)}</span>
+            </div>
+            
+            <div class="flex items-center justify-between">
+              <span class="text-sm font-medium text-gray-500">Status</span>
+              <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                Order Confirmed
+              </span>
+            </div>
+          </div>
+
+          <div class="space-y-4">
+            <p class="text-gray-600">
+              We'll send you updates about your order via email and SMS.
+            </p>
+            
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+              <button 
+                phx-click="continue_shopping"
+                class="px-6 py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
+              >
+                Continue Shopping
+              </button>
+              <button 
+                phx-click="back_to_restaurant"
+                class="px-6 py-3 border border-gray-300 text-gray-700 font-medium rounded-lg hover:bg-gray-50 transition-colors"
+              >
+                Order Again from {@restaurant.name}
+              </button>
+            </div>
+          </div>
+        </div>
+    <% end %>
+  </div>
+</Layouts.app>

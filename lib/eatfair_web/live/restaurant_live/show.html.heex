@@ -1,0 +1,230 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Back Button -->
+    <div class="mb-6">
+      <.link navigate={~p"/"} class="inline-flex items-center text-indigo-600 hover:text-indigo-500">
+        <.icon name="hero-arrow-left" class="w-4 h-4 mr-2" />
+        Back to restaurants
+      </.link>
+    </div>
+
+    <!-- Restaurant Header -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+      <!-- Restaurant Image -->
+      <div class="h-64 bg-gray-200">
+        <%= if @restaurant.image_url do %>
+          <img 
+            src={@restaurant.image_url} 
+            alt={@restaurant.name}
+            class="w-full h-full object-cover"
+          />
+        <% else %>
+          <div class="w-full h-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center">
+            <.icon name="hero-building-storefront" class="w-20 h-20 text-white" />
+          </div>
+        <% end %>
+      </div>
+      
+      <!-- Restaurant Info -->
+      <div class="p-8">
+        <div class="flex items-start justify-between mb-4">
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">{@restaurant.name}</h1>
+            <p class="text-lg text-gray-600 mb-4">{@restaurant.address}</p>
+            
+            <!-- Cuisines -->
+            <div class="flex flex-wrap gap-2">
+              <%= for cuisine <- @restaurant.cuisines do %>
+                <span class="inline-block px-3 py-1 text-sm font-medium bg-indigo-100 text-indigo-700 rounded-full">
+                  {cuisine.name}
+                </span>
+              <% end %>
+            </div>
+          </div>
+          
+          <%= if @restaurant.rating do %>
+            <div class="text-right">
+              <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                <.icon name="hero-star-solid" class="w-4 h-4 mr-1" />
+                {format_rating(@restaurant.rating)}
+              </div>
+            </div>
+          <% end %>
+        </div>
+        
+        <!-- Restaurant Details -->
+        <div class="flex items-center space-x-6 text-gray-500">
+          <div class="flex items-center">
+            <.icon name="hero-clock" class="w-5 h-5 mr-2" />
+            <span>Delivery: {format_delivery_time(@restaurant.delivery_time)}</span>
+          </div>
+          <%= if @restaurant.min_order_value do %>
+            <div class="flex items-center">
+              <.icon name="hero-currency-dollar" class="w-5 h-5 mr-2" />
+              <span>Min order: {format_price(@restaurant.min_order_value)}</span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Menu Section -->
+      <div class="lg:col-span-2">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Menu</h2>
+        
+        <%= for menu <- @restaurant.menus do %>
+          <div class="mb-8">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">{menu.name}</h3>
+            
+            <div class="space-y-4">
+              <%= for meal <- menu.meals do %>
+                <div class="bg-white rounded-lg shadow p-6 flex items-start justify-between" data-meal-id={meal.id}>
+                  <div class="flex-1">
+                    <h4 class="text-lg font-medium text-gray-900 mb-2" data-meal-name>{meal.name}</h4>
+                    <%= if meal.description do %>
+                      <p class="text-gray-600 text-sm mb-3">{meal.description}</p>
+                    <% end %>
+                    <p class="text-lg font-semibold text-indigo-600" data-meal-price>{format_price(meal.price)}</p>
+                  </div>
+                  
+                  <!-- Add to Cart Section -->
+                  <div class="ml-6 flex items-center">
+                    <%= if Map.get(@cart, meal.id, 0) > 0 do %>
+                      <div class="flex items-center space-x-3">
+                        <button 
+                          phx-click="remove_from_cart" 
+                          phx-value-meal_id={meal.id}
+                          class="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-gray-600"
+                        >
+                          <.icon name="hero-minus" class="w-4 h-4" />
+                        </button>
+                        
+                        <span class="text-lg font-medium text-gray-900 min-w-[2rem] text-center">
+                          {Map.get(@cart, meal.id, 0)}
+                        </span>
+                        
+                        <button 
+                          phx-click="add_to_cart" 
+                          phx-value-meal_id={meal.id}
+                          data-add-to-cart
+                          class="w-8 h-8 rounded-full bg-indigo-600 hover:bg-indigo-700 flex items-center justify-center text-white"
+                        >
+                          <.icon name="hero-plus" class="w-4 h-4" />
+                        </button>
+                      </div>
+                    <% else %>
+                      <button 
+                        phx-click="add_to_cart" 
+                        phx-value-meal_id={meal.id}
+                        data-add-to-cart
+                        class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
+                      >
+                        Add to Cart
+                      </button>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+      </div>
+
+      <!-- Cart Sidebar -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-xl shadow-xl p-6 sticky top-6 border border-gray-100">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-bold text-gray-900">Your Order</h3>
+            <%= unless Enum.empty?(@cart) do %>
+              <div class="bg-indigo-100 text-indigo-800 text-sm font-semibold px-3 py-1 rounded-full" data-cart-count>
+                {Enum.sum(Map.values(@cart))} items
+              </div>
+            <% end %>
+          </div>
+          
+          <%= if Enum.empty?(@cart) do %>
+            <div class="text-center py-12">
+              <div class="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                <.icon name="hero-shopping-cart" class="w-8 h-8 text-gray-400" />
+              </div>
+              <p class="text-gray-500 font-medium">Your cart is empty</p>
+              <p class="text-gray-400 text-sm mt-1">Add some delicious items!</p>
+            </div>
+          <% else %>
+            <div class="space-y-4 mb-6 max-h-64 overflow-y-auto">
+              <%= for {meal_id, quantity} <- @cart do %>
+                <% meal = find_meal(@restaurant, meal_id) %>
+                <div class="flex items-start justify-between p-3 bg-gray-50 rounded-lg" data-order-item data-meal-name={meal.name}>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-gray-900 truncate">{meal.name}</p>
+                    <p class="text-sm text-gray-600 mt-1">
+                      {format_price(meal.price)} each
+                    </p>
+                    <div class="flex items-center mt-2">
+                      <span class="text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full" data-item-quantity>
+                        Qty: {quantity}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="text-right ml-3">
+                    <p class="font-bold text-gray-900">
+                      {format_price(Decimal.mult(meal.price, quantity))}
+                    </p>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+            
+            <div class="border-t border-gray-200 pt-4 mb-6">
+              <div class="flex items-center justify-between text-lg font-bold text-gray-900">
+                <span>Total</span>
+                <span class="text-xl text-indigo-600" data-order-total>{format_price(@cart_total)}</span>
+              </div>
+            </div>
+            
+            <!-- Minimum Order Check -->
+            <%= cond do %>
+              <% @restaurant.min_order_value && Decimal.compare(@cart_total, @restaurant.min_order_value) == :lt -> %>
+                <div class="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <div class="flex items-start">
+                    <.icon name="hero-exclamation-triangle" class="w-5 h-5 text-amber-500 mt-0.5 mr-2 flex-shrink-0" />
+                    <div>
+                      <p class="text-sm font-medium text-amber-800">
+                        Minimum order: {format_price(@restaurant.min_order_value)}
+                      </p>
+                      <p class="text-sm text-amber-700 mt-1">
+                        Add {format_price(Decimal.sub(@restaurant.min_order_value, @cart_total))} more to continue
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <button 
+                  disabled
+                  class="w-full py-4 px-6 bg-gray-200 text-gray-500 font-semibold rounded-xl cursor-not-allowed flex items-center justify-center"
+                >
+                  <.icon name="hero-lock-closed" class="w-5 h-5 mr-2" />
+                  Minimum order not met
+                </button>
+              
+              <% true -> %>
+                <button 
+                  phx-click="checkout"
+                  data-checkout-button
+                  class="w-full py-4 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
+                >
+                  <%= if @current_scope.user do %>
+                    <.icon name="hero-credit-card" class="w-5 h-5 mr-2" />
+                    Proceed to Checkout
+                  <% else %>
+                    <.icon name="hero-user" class="w-5 h-5 mr-2" />
+                    Login to Order
+                  <% end %>
+                </button>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layouts.app>

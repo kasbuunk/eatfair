@@ -1,0 +1,114 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-gray-900">Order Food Delivery</h1>
+      <p class="mt-2 text-gray-600">Discover amazing restaurants and get food delivered to your door</p>
+    </div>
+
+    <!-- Cuisine Filter -->
+    <div class="mb-8">
+      <label for="cuisine-filter" class="block text-sm font-medium text-gray-700 mb-2">
+        Filter by Cuisine
+      </label>
+      <select 
+        id="cuisine-filter" 
+        phx-change="filter_by_cuisine"
+        name="cuisine_id"
+        class="block w-full max-w-xs px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+      >
+        <option value="">All Cuisines</option>
+        <%= for cuisine <- @cuisines do %>
+          <option 
+            value={cuisine.id} 
+            selected={@selected_cuisine == cuisine.id}
+          >
+            {cuisine.name}
+          </option>
+        <% end %>
+      </select>
+    </div>
+
+    <!-- Restaurants Grid -->
+    <div id="restaurants" phx-update="stream" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-8">
+      <div 
+        :for={{id, restaurant} <- @streams.restaurants} 
+        id={id}
+        class="bg-white rounded-xl shadow-lg overflow-hidden hover:shadow-xl transform hover:scale-105 transition-all duration-300 cursor-pointer group"
+        phx-click={JS.navigate(~p"/restaurants/#{restaurant}")}
+      >
+        <!-- Restaurant Image -->
+        <div class="relative h-56 bg-gray-200 overflow-hidden">
+          <%= if restaurant.image_url do %>
+            <img 
+              src={restaurant.image_url} 
+              alt={restaurant.name}
+              class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+              data-rating={restaurant.rating && format_rating(restaurant.rating)}
+            />
+          <% else %>
+            <div class="w-full h-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center">
+              <.icon name="hero-building-storefront" class="w-20 h-20 text-white opacity-80" />
+            </div>
+          <% end %>
+          
+          <!-- Rating Badge -->
+          <%= if restaurant.rating do %>
+            <div class="absolute top-3 right-3">
+              <span class="inline-flex items-center px-3 py-1.5 rounded-full text-sm font-semibold bg-yellow-400 text-yellow-900 shadow-lg">
+                <.icon name="hero-star-solid" class="w-4 h-4 mr-1" />
+                {format_rating(restaurant.rating)}
+              </span>
+            </div>
+          <% end %>
+        </div>
+        
+        <!-- Restaurant Info -->
+        <div class="p-6">
+          <div class="mb-4">
+            <h3 class="text-xl font-bold text-gray-900 mb-2 group-hover:text-indigo-600 transition-colors">{restaurant.name}</h3>
+            <p class="text-sm text-gray-600 leading-relaxed">{restaurant.address}</p>
+          </div>
+          
+          <!-- Cuisines -->
+          <div class="flex flex-wrap gap-2 mb-4">
+            <%= for cuisine <- restaurant.cuisines do %>
+              <span class="inline-flex items-center px-2.5 py-1 text-xs font-medium bg-indigo-50 text-indigo-700 rounded-full border border-indigo-200">
+                {cuisine.name}
+              </span>
+            <% end %>
+          </div>
+          
+          <!-- Restaurant Details -->
+          <div class="flex items-center justify-between text-sm">
+            <div class="flex items-center text-emerald-600">
+              <.icon name="hero-clock" class="w-4 h-4 mr-1.5" />
+              <span class="font-medium">{format_delivery_time(restaurant.delivery_time)}</span>
+            </div>
+            <%= if restaurant.min_order_value do %>
+              <div class="flex items-center text-gray-600">
+                <.icon name="hero-currency-dollar" class="w-4 h-4 mr-1" />
+                <span class="font-medium">{format_min_order(restaurant.min_order_value)} min</span>
+              </div>
+            <% end %>
+          </div>
+          
+          <!-- Open Status Indicator -->
+          <div class="mt-3 pt-3 border-t border-gray-100">
+            <div class="flex items-center">
+              <div class="w-2.5 h-2.5 bg-emerald-400 rounded-full mr-2 animate-pulse"></div>
+              <span class="text-sm font-medium text-emerald-600">Open now</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty State -->
+    <div class="hidden only:block text-center py-12">
+      <.icon name="hero-building-storefront" class="mx-auto w-12 h-12 text-gray-400" />
+      <h3 class="mt-2 text-sm font-medium text-gray-900">No restaurants found</h3>
+      <p class="mt-1 text-sm text-gray-500">Try selecting a different cuisine or check back later.</p>
+    </div>
+  </div>
+</Layouts.app>

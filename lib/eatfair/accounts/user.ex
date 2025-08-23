@@ -8,6 +8,10 @@ defmodule Eatfair.Accounts.User do
     field :hashed_password, :string, redact: true
     field :confirmed_at, :utc_datetime
     field :authenticated_at, :utc_datetime, virtual: true
+    field :name, :string
+    field :role, :string, default: "customer"
+    field :phone_number, :string
+    field :default_address, :string
 
     timestamps(type: :utc_datetime)
   end
@@ -54,6 +58,21 @@ defmodule Eatfair.Accounts.User do
     else
       changeset
     end
+  end
+
+  @doc """
+  A user changeset for registration with profile information.
+  """
+  def registration_changeset(user, attrs, opts \\ []) do
+    user
+    |> cast(attrs, [:email, :password, :name, :phone_number, :default_address])
+    |> validate_required([:email, :password, :name])
+    |> validate_email(opts)
+    |> validate_password(opts)
+    |> validate_length(:name, min: 2, max: 100)
+    |> validate_format(:phone_number, ~r/^[\d\s\+\-\(\)]+$/,
+      message: "must be a valid phone number"
+    )
   end
 
   @doc """

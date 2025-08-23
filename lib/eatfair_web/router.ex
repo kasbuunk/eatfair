@@ -20,7 +20,14 @@ defmodule EatfairWeb.Router do
   scope "/", EatfairWeb do
     pipe_through :browser
 
-    get "/", PageController, :home
+    live_session :current_user,
+      on_mount: [{EatfairWeb.UserAuth, :mount_current_scope}] do
+      live "/", RestaurantLive.Index, :index
+      live "/restaurants/:id", RestaurantLive.Show, :show
+      live "/users/register", UserLive.Registration, :new
+      live "/users/log-in", UserLive.Login, :new
+      live "/users/log-in/:token", UserLive.Confirmation, :new
+    end
   end
 
   # Other scopes may use custom stacks.
@@ -54,6 +61,7 @@ defmodule EatfairWeb.Router do
       on_mount: [{EatfairWeb.UserAuth, :require_authenticated}] do
       live "/users/settings", UserLive.Settings, :edit
       live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
+      live "/checkout", CheckoutLive, :index
     end
 
     post "/users/update-password", UserSessionController, :update_password
@@ -61,13 +69,6 @@ defmodule EatfairWeb.Router do
 
   scope "/", EatfairWeb do
     pipe_through [:browser]
-
-    live_session :current_user,
-      on_mount: [{EatfairWeb.UserAuth, :mount_current_scope}] do
-      live "/users/register", UserLive.Registration, :new
-      live "/users/log-in", UserLive.Login, :new
-      live "/users/log-in/:token", UserLive.Confirmation, :new
-    end
 
     post "/users/log-in", UserSessionController, :create
     delete "/users/log-out", UserSessionController, :delete
