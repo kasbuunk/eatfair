@@ -103,7 +103,7 @@ restaurants_data = [
     delivery_time: 30,
     min_order_value: Decimal.new("20.00"),
     rating: Decimal.new("4.2"),
-    image_url: "https://images.unsplash.com/photo-1552566055-dce5ad5b1a5d?w=400&h=300&fit=crop&crop=center",
+    image_url: "https://static.designmynight.com/uploads/2024/05/Gouqi-London-Chinese-Restaurant-Review.jpg",
     owner_id: Enum.at(owners, 1).id,
     cuisine_names: ["Chinese"]
   },
@@ -113,7 +113,7 @@ restaurants_data = [
     delivery_time: 25,
     min_order_value: Decimal.new("12.00"), 
     rating: Decimal.new("4.7"),
-    image_url: "https://images.unsplash.com/photo-1565299624946-b28f40a0ca4b?w=400&h=300&fit=crop&crop=center",
+    image_url: "https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?w=400&h=300&fit=crop&crop=center",
     owner_id: Enum.at(owners, 2).id,
     cuisine_names: ["Mexican"]
   },

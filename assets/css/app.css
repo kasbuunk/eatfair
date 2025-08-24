@@ -99,6 +99,81 @@
 /* Use the data attribute for dark mode  */
 @custom-variant dark (&:where([data-theme=dark], [data-theme=dark] *));
 
+/* Dark mode base styles */
+[data-theme="dark"] {
+  color-scheme: dark;
+}
+
+/* Light mode base styles */
+[data-theme="light"] {
+  color-scheme: light;
+}
+
+/* Override Tailwind with better contrast for both themes */
+[data-theme="light"] body {
+  @apply bg-gray-50 text-gray-900;
+}
+
+[data-theme="dark"] body {
+  @apply bg-gray-900 text-gray-100;
+}
+
+/* Override form elements for better contrast */
+[data-theme="light"] input, 
+[data-theme="light"] select, 
+[data-theme="light"] textarea {
+  @apply bg-white text-gray-900 border-gray-300 placeholder-gray-500;
+}
+
+[data-theme="dark"] input, 
+[data-theme="dark"] select, 
+[data-theme="dark"] textarea {
+  @apply bg-gray-800 text-gray-100 border-gray-600 placeholder-gray-400;
+}
+
+/* Override label colors */
+[data-theme="light"] label {
+  @apply text-gray-700;
+}
+
+[data-theme="dark"] label {
+  @apply text-gray-300;
+}
+
+/* Override cards and containers */
+[data-theme="light"] .bg-white {
+  @apply bg-white text-gray-900;
+}
+
+[data-theme="dark"] .bg-white {
+  @apply bg-gray-800 text-gray-100;
+}
+
+/* Navbar theming */
+[data-theme="light"] nav {
+  @apply bg-white text-gray-900;
+}
+
+[data-theme="dark"] nav {
+  @apply bg-gray-800 text-gray-100;
+}
+
+/* Link theming */
+[data-theme="dark"] .text-gray-600 {
+  @apply text-gray-400;
+}
+
+[data-theme="dark"] .text-gray-700 {
+  @apply text-gray-300;
+}  
+
+/* Focus and hover states */
+[data-theme="dark"] input:focus, 
+[data-theme="dark"] select:focus, 
+[data-theme="dark"] textarea:focus {
+  @apply ring-indigo-500 border-indigo-500;
+}
+
 /* Make LiveView wrapper divs transparent for layout */
 [data-phx-session], [data-phx-teleported-src] { display: contents }
 

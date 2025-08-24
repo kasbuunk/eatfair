@@ -46,6 +46,51 @@ liveSocket.connect()
 // >> liveSocket.disableLatencySim()
 window.liveSocket = liveSocket
 
+// Theme switching functionality
+function setTheme(theme) {
+  document.documentElement.setAttribute('data-theme', theme)
+  localStorage.setItem('theme', theme)
+}
+
+// Initialize theme from localStorage or system preference
+function initTheme() {
+  const savedTheme = localStorage.getItem('theme')
+  if (savedTheme) {
+    setTheme(savedTheme)
+  } else if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    setTheme('dark')
+  } else {
+    setTheme('light')
+  }
+}
+
+// Handle theme toggle events
+window.addEventListener('phx:set-theme', (e) => {
+  const theme = e.target.getAttribute('data-phx-theme')
+  if (theme === 'system') {
+    localStorage.removeItem('theme')
+    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+      setTheme('dark')
+    } else {
+      setTheme('light')
+    }
+  } else {
+    setTheme(theme)
+  }
+})
+
+// Initialize theme when page loads
+initTheme()
+
+// Listen for system theme changes when using system preference
+if (window.matchMedia) {
+  window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', (e) => {
+    if (!localStorage.getItem('theme')) {
+      setTheme(e.matches ? 'dark' : 'light')
+    }
+  })
+}
+
 // The lines below enable quality of life phoenix_live_reload
 // development features:
 //

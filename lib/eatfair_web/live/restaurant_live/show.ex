@@ -2,16 +2,33 @@ defmodule EatfairWeb.RestaurantLive.Show do
   use EatfairWeb, :live_view
 
   alias Eatfair.Restaurants
+  alias Eatfair.Reviews
+  alias Eatfair.Reviews.Review
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
     restaurant = Restaurants.get_restaurant!(id)
+    reviews = Reviews.list_reviews_for_restaurant(id)
+    average_rating = Reviews.get_average_rating(id)
+    review_count = Reviews.get_review_count(id)
+    
+    # Check if current user has already reviewed this restaurant
+    user_has_reviewed = case socket.assigns.current_scope do
+      %{user: user} -> Reviews.user_has_reviewed?(user.id, id)
+      _ -> false
+    end
     
     socket = 
       socket
       |> assign(:restaurant, restaurant)
       |> assign(:cart, %{})
       |> assign(:cart_total, Decimal.new(0))
+      |> assign(:reviews, reviews)
+      |> assign(:average_rating, average_rating)
+      |> assign(:review_count, review_count)
+      |> assign(:user_has_reviewed, user_has_reviewed)
+      |> assign(:review_form, to_form(Reviews.change_review(%Review{})))
+      |> assign(:show_review_form, false)
     
     {:ok, socket}
   end
@@ -85,6 +102,56 @@ defmodule EatfairWeb.RestaurantLive.Show do
         {:noreply, push_navigate(socket, to: checkout_url)}
     end
   end
+  
+  def handle_event("toggle_review_form", _params, socket) do
+    case socket.assigns.current_scope do
+      %{user: nil} ->
+        {:noreply, push_navigate(socket, to: ~p"/users/log-in")}
+      _user ->
+        {:noreply, assign(socket, :show_review_form, !socket.assigns.show_review_form)}
+    end
+  end
+  
+  def handle_event("submit_review", %{"review" => review_params}, socket) do
+    case socket.assigns.current_scope do
+      %{user: user} ->
+        attrs = Map.merge(review_params, %{
+          "user_id" => user.id,
+          "restaurant_id" => socket.assigns.restaurant.id
+        })
+        
+        case Reviews.create_review(attrs) do
+          {:ok, _review} ->
+            # Refresh review data
+            restaurant_id = socket.assigns.restaurant.id
+            reviews = Reviews.list_reviews_for_restaurant(restaurant_id)
+            average_rating = Reviews.get_average_rating(restaurant_id)
+            review_count = Reviews.get_review_count(restaurant_id)
+            
+            socket = 
+              socket
+              |> assign(:reviews, reviews)
+              |> assign(:average_rating, average_rating)
+              |> assign(:review_count, review_count)
+              |> assign(:user_has_reviewed, true)
+              |> assign(:show_review_form, false)
+              |> assign(:review_form, to_form(Reviews.change_review(%Review{})))
+              |> put_flash(:info, "Review submitted successfully!")
+              
+            {:noreply, socket}
+            
+          {:error, changeset} ->
+            {:noreply, assign(socket, :review_form, to_form(changeset))}
+        end
+      _ ->
+        {:noreply, push_navigate(socket, to: ~p"/users/log-in")}
+    end
+  end
+  
+  def handle_event("validate_review", %{"review" => review_params}, socket) do
+    changeset = Reviews.change_review(%Review{}, review_params)
+    {:noreply, assign(socket, :review_form, to_form(changeset))}
+  end
 
   defp find_meal(restaurant, meal_id) do
     restaurant.menus
@@ -125,5 +192,10 @@ defmodule EatfairWeb.RestaurantLive.Show do
   defp format_rating(rating) when is_nil(rating), do: "No rating"
   defp format_rating(rating) do
     "#{Decimal.to_float(rating)}/5"
+  end
+  
+  defp format_average_rating(rating) when is_nil(rating), do: "0.0"
+  defp format_average_rating(rating) when is_float(rating) do
+    :erlang.float_to_binary(rating, decimals: 1)
   end
 end

@@ -50,7 +50,7 @@ defmodule EatfairWeb.RestaurantLive.Index do
   end
 
   defp format_delivery_time(minutes) do
-    "#{minutes} min"
+    "#{minutes}"
   end
 
   defp format_rating(rating) when is_nil(rating), do: "No rating"
@@ -58,8 +58,8 @@ defmodule EatfairWeb.RestaurantLive.Index do
     "#{Decimal.to_float(rating)}/5"
   end
 
-  defp format_min_order(min_order) when is_nil(min_order), do: ""
-  defp format_min_order(min_order) do
-    "$#{Decimal.to_float(min_order)} min"
+  defp format_min_order_value(min_order) when is_nil(min_order), do: ""
+  defp format_min_order_value(min_order) do
+    "#{Decimal.to_float(min_order)}"
   end
 end
