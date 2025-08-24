@@ -9,7 +9,7 @@ defmodule EatfairWeb.UserLive.LoginTest do
       {:ok, _lv, html} = live(conn, ~p"/users/log-in")
 
       assert html =~ "Log in"
-      assert html =~ "Register"
+      assert html =~ "Sign up"
       assert html =~ "Log in with email"
     end
   end
@@ -99,7 +99,7 @@ defmodule EatfairWeb.UserLive.LoginTest do
       {:ok, _lv, html} = live(conn, ~p"/users/log-in")
 
       assert html =~ "You need to reauthenticate"
-      refute html =~ "Register"
+      refute html =~ "Sign up"
       assert html =~ "Log in with email"
 
       assert html =~
