@@ -1,15 +1,25 @@
 # Development Prompts Collection
 
-*This document contains proven prompts for common development tasks that align with EatFair's TDD approach and mission.*
+*Essential prompts for common development tasks that align with EatFair's TDD approach and mission.*
 
 ---
 
-## Work Prioritization
+## 🎯 Work Prioritization & Planning
 
 ### Master Work Prioritization
 **One-liner**: `Analyze EatFair's current state and recommend the most impactful work to do right now.`
 
-**Full prompt system**: See [PRIORITIZE_WORK.md](PRIORITIZE_WORK.md) for comprehensive work prioritization covering feature development, quality engineering, technical debt, user experience, and more.
+**Full system**: [PRIORITIZE_WORK.md](PRIORITIZE_WORK.md) - Comprehensive prioritization framework
+
+### Start Feature Development
+**One-liner**: `Determine and implement the next MVP-critical feature using TDD approach.`
+
+**Full system**: [START_FEATURE_DEVELOPMENT.md](START_FEATURE_DEVELOPMENT.md) - Complete feature development workflow
+
+### Sync Documentation 
+**One-liner**: `Sync PROJECT_IMPLEMENTATION.md to actual implementation status with specification compliance analysis.`
+
+**Full system**: [SYNC_DOCUMENTATION.md](SYNC_DOCUMENTATION.md) - Documentation sync and validation
 
 ---
 
