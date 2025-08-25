@@ -47,14 +47,41 @@ Independent delivery partners who want to:
 ## Core Platform Features
 
 ### Restaurant Management System
-- **Business Profile Management**: Complete restaurant information, branding, story, and values
-- **Menu Management**: Full menu creation, editing, categorization, and pricing control
-- **Operational Controls**: Hours, delivery zones, capacity management, and temporary closures
-- **Order Management**: Real-time order processing, preparation time estimates, and customer communication
+- **Business Profile Management**: 
+  - Complete restaurant information with specific address (separate from invoice address)
+  - Contact information (phone, email)
+  - Restaurant branding, story, and values
+  - Restaurant description displayed on public detail pages
+  - Image upload system for restaurant photos (secure, malware-checked, S3-compatible storage)
+  - Default images per cuisine type with option to override
+- **Menu Management**: 
+  - Full menu creation, editing, categorization, and pricing control
+  - Meal customization options (toppings, preferences, dietary modifications)
+- **Operational Controls**: 
+  - Standard and exceptional opening hours
+  - Delivery zones (postal codes, radius-based, or time-based - extensible system)
+  - Capacity management and temporary closures
+  - Order confirmation policy (auto-confirm or manual review)
+  - Order refusal capability with optional messaging
+- **Order Management**: 
+  - Real-time order processing with confirmation workflow
+  - Preparation time estimates and customer communication
+  - Order status updates and delivery coordination
+- **Review Management System**:
+  - Overview of all customer reviews with ratings
+  - Response capability with optional emoji and text replies
+  - Review analytics and sentiment tracking
+- **Courier Management**:
+  - Dashboard showing affiliated couriers (restaurant-approved)
+  - Real-time delivery status of all active orders
+  - Courier availability and current load indicators
+- **Feedback System**:
+  - Built-in feedback form for restaurant owners
+  - Feature requests and general feedback collection
+  - Direct communication channel with platform team
 - **Financial Dashboard**: Revenue tracking, payout management, and financial reporting
 - **Analytics**: Customer insights, popular items, peak hours, and business performance metrics
-
-### Consumer Ordering Experience
+- **Consumer Ordering Experience**:
 - **Intelligent Restaurant Discovery**: 
   - Location-based relevance scoring that prioritizes nearby restaurants
   - Immediate location detection (postal/zip code input, browser geolocation, IP fallback, Amsterdam Central Station default)
@@ -63,21 +90,32 @@ Independent delivery partners who want to:
   - Complete exclusion of irrelevant far-away restaurants from results
   - Geographic map interface with restaurant pins showing cuisine type and direct links to detail pages
 - **Advanced Filter System**: 
-  - Multi-select cuisine filters (Italian, Thai, Indian, etc.)
+  - Multi-select cuisine filters with modern categories (not archaic local/european vs asian/international)
+  - Aligned cuisine types between restaurant registration and consumer filtering
   - Specific food type filters transcending cuisines (pizza, sushi, burgers, healthy bowls)
   - Appetite-based discovery beyond generic cuisine categories
   - Intuitive collapsible filter interface that stays out of the way until needed
+  - Filters for price range, dietary restrictions, delivery time, and restaurant ratings
   - Filters for price range, dietary restrictions, delivery time, and restaurant ratings
 - **Personalized Recommendations**: Based on order history, preferences, and community trends
 - **Detailed Menu Browsing**: Rich item descriptions, customization options, allergen information
 - **Review-Rich Restaurant Pages**: 
   - Display customer reviews prominently on restaurant detail pages
-  - Show average ratings calculated from actual customer reviews
+  - Show average ratings calculated dynamically from actual customer reviews (no manual entry)
   - Include reviews from verified customers who have completed orders
   - Handle restaurants with no reviews gracefully with appropriate messaging
-- **Streamlined Ordering**: Cart management, special instructions, and checkout process
+  - Display restaurant description prominently on detail pages
+- **Streamlined Ordering**: 
+  - Cart management with meal customization options
+  - Special instructions and dietary preferences
+  - Streamlined checkout process
 - **Order Tracking**: Real-time updates from preparation through delivery with delivery route position and ETA
-- **Account Management**: Addresses, payment methods, dietary preferences, and order history
+- **Account Management**: 
+  - Multiple addresses (delivery and invoice)
+  - Payment methods and dietary preferences
+  - Order history and loyalty tracking
+  - Personalized dashboard based on user type (consumer vs restaurant owner)
+  - Restaurant owners see 'My Restaurant Dashboard' instead of 'Start Your Restaurant' when logged in
 
 ### Delivery Coordination System
 - **Courier Onboarding**: Application, verification, and training processes
@@ -124,6 +162,36 @@ Independent delivery partners who want to:
 - **Notification System**: Real-time updates for all user types across multiple channels
 - **Data Analytics**: Business intelligence for restaurants and platform optimization
 - **API Ecosystem**: Integration capabilities for POS systems, accounting software, and other business tools
+
+### Secure File Upload & Storage System
+**Priority**: Post-MVP (Security-Critical Implementation)
+
+#### Core Requirements
+- **File Type Validation**: Strict whitelist of allowed image formats (JPEG, PNG, WebP)
+- **Malware Detection**: Automated scanning of all uploaded files for security threats
+- **File Size Limits**: Reasonable size restrictions to prevent abuse and storage costs
+- **Image Processing**: Automatic optimization, resizing, and format conversion for web delivery
+- **Content Moderation**: Automated and manual review processes for inappropriate content
+
+#### Storage Architecture
+- **S3-Compatible Storage**: Design for easy migration to cloud storage services (AWS S3, DigitalOcean Spaces, etc.)
+- **CDN Integration**: Fast global delivery of restaurant images
+- **Backup Strategy**: Redundant storage to prevent data loss
+- **Access Control**: Secure URLs with proper permissions and expiration
+
+#### Security Measures
+- **Sandboxed Processing**: Isolated environment for image processing operations
+- **File Quarantine**: Temporary isolation of uploads during security scanning
+- **Audit Logging**: Complete tracking of all file operations for security monitoring
+- **Rate Limiting**: Upload frequency limits to prevent abuse
+
+#### Implementation Considerations
+- **Local Development**: Simple local storage for development with production-ready interfaces
+- **Progressive Enhancement**: Start with basic upload, add advanced security features iteratively
+- **Cost Management**: Efficient storage and bandwidth usage to keep platform sustainable
+- **Legal Compliance**: GDPR-compliant handling of user-uploaded content
+
+*This feature is essential for restaurant branding but requires careful security implementation. Planned for post-MVP to ensure proper security architecture.*
 
 ### Accessibility & Universal Design
 - **Visual Accessibility**: 
