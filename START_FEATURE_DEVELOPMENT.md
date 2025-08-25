@@ -13,15 +13,18 @@ Review the current project status and determine the next best feature to impleme
 
 PROCESS:
 1. Check PROJECT_IMPLEMENTATION.md for current progress
-2. Identify highest priority missing MVP feature from PROJECT_SPECIFICATION.md
-3. Consider development dependencies and logical implementation order
-4. Suggest specific feature to implement next
-5. Justify why this feature should be prioritized now
-6. Propose comprehensive TDD approach and test strategy
+2. **VERIFY DOCUMENTATION ACCURACY**: Run `mix test` to confirm implementation status matches documentation
+3. **VALIDATE SPECIFICATION COMPLIANCE**: Compare existing features against PROJECT_SPECIFICATION.md requirements
+4. Identify highest priority missing MVP feature from PROJECT_SPECIFICATION.md
+5. Consider development dependencies and logical implementation order
+6. Suggest specific feature to implement next
+7. Justify why this feature should be prioritized now
+8. Propose comprehensive TDD approach and test strategy
 
 OUTPUT FORMAT:
 ## Current Project Status
 - [Summary of completed features]
+- [Specification compliance issues identified]
 - [Current MVP completion percentage]
 - [Blocked or in-progress items]
 
@@ -56,6 +59,16 @@ OUTPUT FORMAT:
 ### 4. Documentation Updates
 - [Which documents need updates]
 - [Progress tracking changes]
+- **MANDATORY**: Update PROJECT_IMPLEMENTATION.md immediately upon feature completion
+
+### 5. POST-IMPLEMENTATION REQUIREMENTS
+**⚠️  CRITICAL**: After any development work that changes feature status:
+1. **IMMEDIATELY** run `mix test` to verify implementation status
+2. **VALIDATE AGAINST SPECIFICATION**: Ensure implementation matches PROJECT_SPECIFICATION.md requirements
+3. **IMMEDIATELY** update PROJECT_IMPLEMENTATION.md to reflect actual progress
+4. Mark features complete ONLY if they fully satisfy specification requirements
+5. Update overall MVP progress percentage realistically
+6. Document any technical debt, assumptions, or specification deviations
 
 Ready to proceed with implementation?
 ```
@@ -70,6 +83,7 @@ This prompt is designed to:
 - **Provide complete TDD approach** following project standards
 - **Justify decisions** to ensure alignment with PROJECT_SPECIFICATION.md
 - **Accelerate development** by removing decision paralysis
+- **ENFORCE DOCUMENTATION DISCIPLINE** by requiring PROJECT_IMPLEMENTATION.md updates
 
 The AI will analyze PROJECT_IMPLEMENTATION.md to understand current status, reference PROJECT_SPECIFICATION.md for requirements, and propose the most logical next step following the TDD approach defined in SOFTWARE_DEVELOPMENT_LIFECYCLE.md.
 

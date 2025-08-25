@@ -20,7 +20,7 @@ REQUIREMENTS:
 2. Implement minimum viable feature to make test pass
 3. Add edge case tests for sad paths
 4. Refactor for code quality while keeping tests green
-5. Update PROJECT_IMPLEMENTATION.md with progress
+5. **MANDATORY**: Update PROJECT_IMPLEMENTATION.md with progress immediately upon completion
 
 CONSTRAINTS:
 - Test must be delightful to read and tell clear user story
@@ -300,17 +300,86 @@ COMPLETED WORK:
 - [Technical debt resolved]
 
 UPDATE REQUIREMENTS:
-1. Mark completed user journeys with ✅
-2. Update test coverage status
-3. Add any new missing features discovered
-4. Update overall progress percentage
-5. Note any architectural changes or decisions
+1. **RUN TESTS FIRST**: Execute `mix test --trace` to verify actual status
+2. Mark completed user journeys with ✅
+3. Update test coverage status
+4. Add any new missing features discovered
+5. Update overall progress percentage
+6. Note any architectural changes or decisions
 
 ENSURE:
 - Status icons accurately reflect completion
 - Test file references are correct
 - Progress tracking is realistic
 - Next development priorities are clear
+
+⚠️  CRITICAL: Only mark features complete if tests prove they work!
+```
+
+### Documentation Audit and Sync
+```
+Update PROJECT_IMPLEMENTATION.md to reflect the actual current status of the codebase.
+
+PROCESS:
+1. **RUN TESTS**: Execute `mix test --trace` to see which tests are passing/failing
+2. **DISCOVER TESTS**: Find all test files and examine what features they cover
+3. **ANALYZE IMPLEMENTATION**: Check what contexts, LiveViews, and features actually exist
+4. **COMPARE DOCUMENTATION**: Compare actual status with PROJECT_IMPLEMENTATION.md
+5. **UPDATE DOCUMENTATION**: Sync the document with reality
+6. **IDENTIFY GAPS**: Note any features that exist without tests or vice versa
+
+OUTPUT FORMAT:
+## Documentation Audit Results
+- **Tests Passing**: [Number/percentage of passing tests]
+- **Features Actually Implemented**: [List of working features with test coverage]
+- **Documentation Discrepancies**: [What was wrong in the documentation]
+
+## Updated Implementation Status
+- **Completed Journeys**: [User journeys that are fully working]
+- **Partially Complete**: [What's working vs what's missing]
+- **Not Started**: [Features with no implementation]
+- **MVP Progress**: [Updated realistic percentage]
+
+REQUIREMENTS:
+- Update PROJECT_IMPLEMENTATION.md immediately with accurate status
+- Mark completed features as ✅ Complete with test file references
+- Update overall MVP progress percentage realistically
+- Document any assumptions or technical debt discovered
+```
+
+### Specification Compliance Validation
+```
+Ensure all implemented features comply with PROJECT_SPECIFICATION.md requirements.
+
+VALIDATION PROCESS:
+1. **RUN TESTS**: Execute `mix test --trace` to see which tests pass
+2. **IDENTIFY IMPLEMENTED FEATURES**: List all features with passing tests
+3. **COMPARE WITH SPECIFICATION**: For each implemented feature, compare against PROJECT_SPECIFICATION.md requirements
+4. **ASSESS COMPLIANCE**: Determine if implementation matches specification exactly
+5. **IDENTIFY GAPS**: Note features that work but violate specification
+6. **UPDATE DOCUMENTATION**: Mark non-compliant features appropriately
+
+OUTPUT FORMAT:
+## Specification Compliance Report
+- **Features Analyzed**: [List of implemented features reviewed]
+- **Fully Compliant**: [Features that match specification exactly]
+- **Partially Compliant**: [Features that work but have specification gaps]
+- **Non-Compliant**: [Features that violate specification requirements]
+
+## Critical Issues Found
+For each non-compliant feature:
+- **Feature Name**: [Name of feature]
+- **Specification Requirement**: [What PROJECT_SPECIFICATION.md says]
+- **Current Implementation**: [What actually exists]
+- **Compliance Gap**: [How they differ]
+- **Fix Required**: [What needs to change]
+
+## Recommendations
+- **Immediate Fixes**: [Critical specification violations to address]
+- **Technical Debt**: [Minor gaps that can be addressed later]
+- **Documentation Updates**: [Changes needed in PROJECT_IMPLEMENTATION.md]
+
+⚠️  CRITICAL: Features that violate specification should be marked as 🟡 Partially Complete or 🔴 Specification Non-Compliant
 ```
 
 ### Architecture Decision Recording
@@ -360,9 +429,11 @@ VALIDATION COMMANDS:
 - No regression in existing functionality
 
 BEFORE COMMITTING:
-- Update PROJECT_IMPLEMENTATION.md if needed
+- **MANDATORY**: Update PROJECT_IMPLEMENTATION.md if feature status changed
 - Write clear commit message following convention
 - Consider if any ADR updates are needed
+
+⚠️  CRITICAL: If any feature was completed, PROJECT_IMPLEMENTATION.md MUST be updated!
 ```
 
 ### Regression Testing
