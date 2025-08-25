@@ -25,6 +25,35 @@
             phx-submit="save_address"
             class="space-y-4"
           >
+            <!-- Quick Location Detection -->
+            <div class="bg-gray-50 rounded-lg p-4 mb-4">
+              <h4 class="text-sm font-medium text-gray-900 mb-3">Quick Address Detection</h4>
+              <div class="flex flex-col sm:flex-row gap-2">
+                <button 
+                  type="button"
+                  onclick="getCurrentLocation()"
+                  class="flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  <.icon name="hero-map-pin" class="w-4 h-4 mr-2" />
+                  Use My Location
+                </button>
+                <input 
+                  type="text"
+                  id="postal-code-lookup"
+                  placeholder="Enter postal code for quick lookup"
+                  class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                  onkeypress="if(event.key === 'Enter') { lookupPostalCode(this.value); event.preventDefault(); }"
+                />
+                <button 
+                  type="button"
+                  onclick="lookupPostalCode(document.getElementById('postal-code-lookup').value)"
+                  class="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+                >
+                  Lookup
+                </button>
+              </div>
+              <p class="text-xs text-gray-500 mt-2">We'll automatically fill in your address details to save you time</p>
+            </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <.input
                 field={@form[:name]}
@@ -151,3 +180,85 @@
     </div>
   </div>
 </Layouts.app>
+
+<script>
+  // Location detection functions
+  function getCurrentLocation() {
+    if ("geolocation" in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        function(position) {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          reverseGeocode(lat, lon);
+        },
+        function(error) {
+          console.error("Geolocation error:", error);
+          alert("Could not get your location. Please enter your address manually.");
+        },
+        {
+          enableHighAccuracy: true,
+          timeout: 10000,
+          maximumAge: 300000 // 5 minutes
+        }
+      );
+    } else {
+      alert("Geolocation is not supported by this browser.");
+    }
+  }
+
+  function reverseGeocode(lat, lon) {
+    // For now, just fill in coordinates - in production you'd use a geocoding service
+    alert(`Found your location: ${lat}, ${lon}\n\nPlease fill in your address manually for now.`);
+    
+    // In production, you would call a geocoding API here:
+    // fetch(`/api/geocode/reverse?lat=${lat}&lon=${lon}`)
+    //   .then(response => response.json())
+    //   .then(data => fillAddressForm(data))
+    //   .catch(err => console.error('Geocoding error:', err));
+  }
+
+  function lookupPostalCode(postalCode) {
+    if (!postalCode.trim()) {
+      alert("Please enter a postal code");
+      return;
+    }
+    
+    // Dutch postal code format validation (basic)
+    const dutchPostalPattern = /^\d{4}\s?[A-Z]{2}$/i;
+    if (!dutchPostalPattern.test(postalCode.trim())) {
+      alert("Please enter a valid Dutch postal code (e.g., 1012 AB)");
+      return;
+    }
+    
+    // For now, just show message - in production you'd lookup the postal code
+    alert(`Looking up postal code: ${postalCode}\n\nPlease fill in your address manually for now.`);
+    
+    // Set the postal code in the form
+    const postalField = document.querySelector('input[name="address[postal_code]"]');
+    if (postalField) {
+      postalField.value = postalCode.trim().toUpperCase();
+    }
+    
+    // In production, you would call a postal code lookup API:
+    // fetch(`/api/geocode/postal?code=${postalCode}`)
+    //   .then(response => response.json())
+    //   .then(data => fillAddressForm(data))
+    //   .catch(err => console.error('Postal lookup error:', err));
+  }
+
+  function fillAddressForm(addressData) {
+    // Helper function to fill the address form with geocoded data
+    const fields = {
+      'address[street_address]': addressData.street,
+      'address[city]': addressData.city,
+      'address[postal_code]': addressData.postal_code
+    };
+    
+    Object.entries(fields).forEach(([name, value]) => {
+      const field = document.querySelector(`input[name="${name}"]`);
+      if (field && value) {
+        field.value = value;
+      }
+    });
+  }
+</script>

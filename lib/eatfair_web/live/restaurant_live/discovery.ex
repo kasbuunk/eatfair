@@ -2,9 +2,12 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
   use EatfairWeb, :live_view
 
   alias Eatfair.Restaurants
+  alias Eatfair.Accounts
 
   @impl true
   def mount(_params, _session, socket) do
+    user_has_address = user_has_address?(socket)
+    
     {:ok,
      socket
      |> assign(:page_title, "Discover Restaurants")
@@ -12,6 +15,7 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
      |> assign(:filters, %{})
      |> assign(:search_query, "")
      |> assign(:location, nil)
+     |> assign(:user_has_address, user_has_address)
      |> load_restaurants()}
   end
 
@@ -148,5 +152,14 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
       _other, acc ->
         acc
     end)
+  end
+
+  defp user_has_address?(socket) do
+    case socket.assigns.current_scope do
+      %{user: user} -> 
+        addresses = Accounts.list_user_addresses(user.id)
+        length(addresses) > 0
+      _ -> false
+    end
   end
 end

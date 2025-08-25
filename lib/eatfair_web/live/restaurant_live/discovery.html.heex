@@ -3,6 +3,39 @@
   <:subtitle>Find restaurants near you with location-based search and smart filters</:subtitle>
 </.header>
 
+<!-- Address Management Prompt -->
+<%= if @current_scope && @current_scope.user && !@user_has_address do %>
+  <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6 mb-6">
+    <div class="flex items-center">
+      <.icon name="hero-exclamation-triangle" class="w-8 h-8 text-yellow-600 dark:text-yellow-400 mr-4 flex-shrink-0" />
+      <div class="flex-1">
+        <h3 class="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
+          📍 Add Your Address to See Nearby Restaurants
+        </h3>
+        <p class="text-yellow-700 dark:text-yellow-300 mb-4">
+          We can't show you restaurants within delivery range without knowing your location. 
+          Add your delivery address to see restaurants that can deliver to you!
+        </p>
+        <div class="flex flex-col sm:flex-row gap-3">
+          <.link 
+            navigate={~p"/users/addresses"}
+            class="inline-flex items-center px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-medium rounded-lg transition-colors"
+          >
+            <.icon name="hero-plus" class="w-4 h-4 mr-2" />
+            Add Your Address
+          </.link>
+          <button 
+            onclick="this.parentElement.parentElement.parentElement.style.display='none'"
+            class="inline-flex items-center px-4 py-2 border border-yellow-300 dark:border-yellow-600 text-yellow-700 dark:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-yellow-800 font-medium rounded-lg transition-colors"
+          >
+            Continue Without Address
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+<% end %>
+
 <div class="space-y-6">
   <!-- Search and Filter Section -->
   <div class="bg-white rounded-lg shadow p-6">
