@@ -165,6 +165,86 @@ defmodule Eatfair.Restaurants do
   end
 
   @doc """
+  Creates a menu for a restaurant.
+  """
+  def create_menu(attrs \\ %{}) do
+    %Menu{}
+    |> Menu.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a menu.
+  """
+  def update_menu(%Menu{} = menu, attrs) do
+    menu
+    |> Menu.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a menu.
+  """
+  def delete_menu(%Menu{} = menu) do
+    Repo.delete(menu)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking menu changes.
+  """
+  def change_menu(%Menu{} = menu, attrs \\ %{}) do
+    Menu.changeset(menu, attrs)
+  end
+
+  @doc """
+  Gets a single menu.
+  """
+  def get_menu!(id) do
+    Menu
+    |> preload(:meals)
+    |> Repo.get!(id)
+  end
+
+  @doc """
+  Creates a meal.
+  """
+  def create_meal(attrs \\ %{}) do
+    %Meal{}
+    |> Meal.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a meal.
+  """
+  def update_meal(%Meal{} = meal, attrs) do
+    meal
+    |> Meal.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes a meal.
+  """
+  def delete_meal(%Meal{} = meal) do
+    Repo.delete(meal)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking meal changes.
+  """
+  def change_meal(%Meal{} = meal, attrs \\ %{}) do
+    Meal.changeset(meal, attrs)
+  end
+
+  @doc """
+  Gets a single meal.
+  """
+  def get_meal!(id) do
+    Repo.get!(Meal, id)
+  end
+
+  @doc """
   Checks if a user owns any restaurant.
   Used for authorization in restaurant management pages.
   """

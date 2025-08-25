@@ -1,0 +1,125 @@
+<div class="min-h-screen bg-white" data-test="customer-menu-view">
+  <!-- Preview Header -->
+  <div class="bg-blue-50 border-b border-blue-200 px-4 py-3">
+    <div class="max-w-4xl mx-auto flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <.icon name="hero-eye" class="w-5 h-5 text-blue-600" />
+        <span class="text-blue-700 font-medium">Menu Preview</span>
+        <span class="text-blue-600 text-sm">This is how customers will see your menu</span>
+      </div>
+      
+      <button
+        phx-click="return_to_edit"
+        data-test="return-to-edit-button"
+        class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors text-sm"
+      >
+        Return to Edit
+      </button>
+    </div>
+  </div>
+
+  <!-- Restaurant Header -->
+  <div class="bg-gradient-to-r from-gray-900 to-gray-700 text-white py-12">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+      <h1 class="text-4xl font-bold mb-2"><%= @restaurant.name %></h1>
+      <%= if @restaurant.description do %>
+        <p class="text-gray-300 text-lg max-w-2xl mx-auto">
+          <%= @restaurant.description %>
+        </p>
+      <% end %>
+      <div class="flex justify-center items-center mt-4 space-x-6 text-sm text-gray-300">
+        <div class="flex items-center space-x-2">
+          <.icon name="hero-map-pin" class="w-4 h-4" />
+          <span><%= @restaurant.address %></span>
+        </div>
+        <%= if @restaurant.cuisine_types do %>
+          <div class="flex items-center space-x-2">
+            <.icon name="hero-tag" class="w-4 h-4" />
+            <span><%= Enum.join(@restaurant.cuisine_types, ", ") %></span>
+          </div>
+        <% end %>
+      </div>
+    </div>
+  </div>
+
+  <!-- Menu Content -->
+  <div class="max-w-4xl mx-auto px-4 py-8">
+    <%= if @menus == [] do %>
+      <!-- Empty Menu State -->
+      <div class="text-center py-16">
+        <div class="mx-auto w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center mb-4">
+          <.icon name="hero-document-text" class="w-8 h-8 text-gray-400" />
+        </div>
+        <h3 class="text-xl font-medium text-gray-900 mb-2">Menu Coming Soon</h3>
+        <p class="text-gray-600">We're still working on our delicious offerings!</p>
+      </div>
+    <% else %>
+      <!-- Menu Sections -->
+      <div class="space-y-12">
+        <%= for menu <- @menus do %>
+          <%= if Enum.any?(menu.meals, & &1.is_available) do %>
+            <div data-test={"menu-section-#{data_test_id(menu.name)}-customer"}>
+              <!-- Section Header -->
+              <div class="border-b border-gray-200 pb-4 mb-8">
+                <h2 class="text-2xl font-bold text-gray-900"><%= menu.name %></h2>
+              </div>
+
+              <!-- Menu Items -->
+              <div class="grid grid-cols-1 gap-6">
+                <%= for meal <- menu.meals do %>
+                  <%= if meal.is_available do %>
+                    <div class="flex items-start justify-between py-4 border-b border-gray-100 last:border-b-0">
+                      <div class="flex-1 pr-4">
+                        <h3 class="font-semibold text-gray-900 text-lg">
+                          <%= meal.name %>
+                        </h3>
+                        <%= if meal.description && meal.description != "" do %>
+                          <p class="text-gray-600 mt-1 leading-relaxed">
+                            <%= meal.description %>
+                          </p>
+                        <% end %>
+                      </div>
+                      
+                      <div class="flex items-center space-x-4">
+                        <span class="text-lg font-semibold text-green-600">
+                          <%= format_price(meal.price) %>
+                        </span>
+                        
+                        <!-- Future: Add to cart button will go here -->
+                        <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium transition-colors text-sm">
+                          Add to Cart
+                        </button>
+                      </div>
+                    </div>
+                  <% end %>
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+
+      <!-- Order Summary Section (Future feature preview) -->
+      <div class="mt-16 bg-gray-50 rounded-lg p-6">
+        <h3 class="font-semibold text-gray-900 mb-4">Ready to Order?</h3>
+        <p class="text-gray-600 mb-4">
+          Select your items above and they'll appear here for easy checkout.
+        </p>
+        <div class="bg-white border-2 border-dashed border-gray-200 rounded-lg p-8 text-center">
+          <.icon name="hero-shopping-cart" class="w-8 h-8 text-gray-400 mx-auto mb-2" />
+          <p class="text-gray-500">Your cart is empty</p>
+          <p class="text-sm text-gray-400">Add items to get started</p>
+        </div>
+      </div>
+    <% end %>
+  </div>
+
+  <!-- Footer Preview -->
+  <div class="bg-gray-100 mt-16 py-8">
+    <div class="max-w-4xl mx-auto px-4 text-center">
+      <p class="text-gray-600">
+        Ordering powered by <strong>EatFair</strong> • Supporting local restaurants, commission-free
+      </p>
+    </div>
+  </div>
+</div>

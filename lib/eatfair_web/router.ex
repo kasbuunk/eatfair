@@ -72,9 +72,10 @@ defmodule EatfairWeb.Router do
       on_mount: [{EatfairWeb.UserAuth, :require_authenticated}] do
       live "/restaurant/dashboard", RestaurantLive.Dashboard, :index
       live "/restaurant/profile/edit", RestaurantLive.ProfileEdit, :edit
-      # Future: Menu management routes will go here
-      # live "/restaurant/menu", MenuLive.Management, :index
-      # live "/restaurant/menu/new", MenuLive.Management, :new
+      
+      # Menu management routes
+      live "/restaurant/menu", MenuLive.Management, :index
+      live "/restaurant/menu/preview", MenuLive.Preview, :preview
     end
 
     post "/users/update-password", UserSessionController, :update_password
