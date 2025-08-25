@@ -11,26 +11,30 @@ defmodule EatfairWeb.RestaurantLive.Show do
     reviews = Reviews.list_reviews_for_restaurant(id)
     average_rating = Reviews.get_average_rating(id)
     review_count = Reviews.get_review_count(id)
-    
+
     # Check if current user can review this restaurant (has delivered orders and hasn't reviewed yet)
-    user_can_review = case socket.assigns.current_scope do
-      %{user: user} -> Reviews.user_can_review?(user.id, id)
-      _ -> false
-    end
-    
+    user_can_review =
+      case socket.assigns.current_scope do
+        %{user: user} -> Reviews.user_can_review?(user.id, id)
+        _ -> false
+      end
+
     # Also check if they have any orders (for messaging purposes)
-    user_has_orders = case socket.assigns.current_scope do
-      %{user: user} -> user_has_any_orders?(user.id, id)
-      _ -> false
-    end
-    
+    user_has_orders =
+      case socket.assigns.current_scope do
+        %{user: user} -> user_has_any_orders?(user.id, id)
+        _ -> false
+      end
+
     # Check if delivery is available to user's location
-    delivery_available = case socket.assigns.current_scope do
-      %{user: user} -> Restaurants.can_deliver_to_location?(String.to_integer(id), user.id)
-      _ -> false  # Not logged in users can't order
-    end
-    
-    socket = 
+    delivery_available =
+      case socket.assigns.current_scope do
+        %{user: user} -> Restaurants.can_deliver_to_location?(String.to_integer(id), user.id)
+        # Not logged in users can't order
+        _ -> false
+      end
+
+    socket =
       socket
       |> assign(:restaurant, restaurant)
       |> assign(:cart, %{})
@@ -43,7 +47,7 @@ defmodule EatfairWeb.RestaurantLive.Show do
       |> assign(:delivery_available, delivery_available)
       |> assign(:review_form, to_form(Reviews.change_review(%Review{})))
       |> assign(:show_review_form, false)
-    
+
     {:ok, socket}
   end
 
@@ -61,20 +65,20 @@ defmodule EatfairWeb.RestaurantLive.Show do
   def handle_event("add_to_cart", %{"meal_id" => meal_id}, socket) do
     meal_id = String.to_integer(meal_id)
     meal = find_meal(socket.assigns.restaurant, meal_id)
-    
+
     if meal do
       cart = socket.assigns.cart
       current_quantity = Map.get(cart, meal_id, 0)
       updated_cart = Map.put(cart, meal_id, current_quantity + 1)
-      
+
       cart_total = calculate_cart_total(updated_cart, socket.assigns.restaurant)
-      
-      socket = 
+
+      socket =
         socket
         |> assign(:cart, updated_cart)
         |> assign(:cart_total, cart_total)
         |> put_flash(:info, "Added #{meal.name} to cart")
-      
+
       {:noreply, socket}
     else
       {:noreply, put_flash(socket, :error, "Meal not found")}
@@ -84,20 +88,20 @@ defmodule EatfairWeb.RestaurantLive.Show do
   def handle_event("remove_from_cart", %{"meal_id" => meal_id}, socket) do
     meal_id = String.to_integer(meal_id)
     cart = socket.assigns.cart
-    
-    updated_cart = 
+
+    updated_cart =
       case Map.get(cart, meal_id, 0) do
         quantity when quantity > 1 -> Map.put(cart, meal_id, quantity - 1)
         _ -> Map.delete(cart, meal_id)
       end
-    
+
     cart_total = calculate_cart_total(updated_cart, socket.assigns.restaurant)
-    
-    socket = 
+
+    socket =
       socket
       |> assign(:cart, updated_cart)
       |> assign(:cart_total, cart_total)
-    
+
     {:noreply, socket}
   end
 
@@ -106,26 +110,27 @@ defmodule EatfairWeb.RestaurantLive.Show do
       %{user: nil} ->
         # Redirect to login with return URL
         {:noreply, push_navigate(socket, to: ~p"/users/log-in")}
-      
+
       %{user: _user} ->
         # Navigate to checkout with cart data
         cart_encoded = encode_cart(socket.assigns.cart)
         restaurant_id = socket.assigns.restaurant.id
-        
+
         checkout_url = ~p"/checkout/#{restaurant_id}?cart=#{cart_encoded}"
         {:noreply, push_navigate(socket, to: checkout_url)}
     end
   end
-  
+
   def handle_event("toggle_review_form", _params, socket) do
     case socket.assigns.current_scope do
       %{user: nil} ->
         {:noreply, push_navigate(socket, to: ~p"/users/log-in")}
+
       _user ->
         {:noreply, assign(socket, :show_review_form, !socket.assigns.show_review_form)}
     end
   end
-  
+
   def handle_event("submit_review", %{"review" => review_params}, socket) do
     case socket.assigns.current_scope do
       %{user: user} ->
@@ -133,14 +138,15 @@ defmodule EatfairWeb.RestaurantLive.Show do
         case Reviews.get_reviewable_order(user.id, socket.assigns.restaurant.id) do
           nil ->
             {:noreply, put_flash(socket, :error, "You must complete an order before reviewing")}
-          
+
           order ->
-            attrs = Map.merge(review_params, %{
-              "user_id" => user.id,
-              "restaurant_id" => socket.assigns.restaurant.id,
-              "order_id" => order.id
-            })
-        
+            attrs =
+              Map.merge(review_params, %{
+                "user_id" => user.id,
+                "restaurant_id" => socket.assigns.restaurant.id,
+                "order_id" => order.id
+              })
+
             case Reviews.create_review(attrs) do
               {:ok, _review} ->
                 # Refresh review data
@@ -148,28 +154,30 @@ defmodule EatfairWeb.RestaurantLive.Show do
                 reviews = Reviews.list_reviews_for_restaurant(restaurant_id)
                 average_rating = Reviews.get_average_rating(restaurant_id)
                 review_count = Reviews.get_review_count(restaurant_id)
-                
-                socket = 
+
+                socket =
                   socket
                   |> assign(:reviews, reviews)
                   |> assign(:average_rating, average_rating)
                   |> assign(:review_count, review_count)
-                  |> assign(:user_can_review, false)  # User can no longer review
+                  # User can no longer review
+                  |> assign(:user_can_review, false)
                   |> assign(:show_review_form, false)
                   |> assign(:review_form, to_form(Reviews.change_review(%Review{})))
                   |> put_flash(:info, "Review submitted successfully!")
-                  
+
                 {:noreply, socket}
-                
+
               {:error, changeset} ->
                 {:noreply, assign(socket, :review_form, to_form(changeset))}
             end
         end
+
       _ ->
         {:noreply, push_navigate(socket, to: ~p"/users/log-in")}
     end
   end
-  
+
   def handle_event("validate_review", %{"review" => review_params}, socket) do
     changeset = Reviews.change_review(%Review{}, review_params)
     {:noreply, assign(socket, :review_form, to_form(changeset))}
@@ -184,6 +192,7 @@ defmodule EatfairWeb.RestaurantLive.Show do
   defp calculate_cart_total(cart, restaurant) do
     Enum.reduce(cart, Decimal.new(0), fn {meal_id, quantity}, acc ->
       meal = find_meal(restaurant, meal_id)
+
       if meal do
         item_total = Decimal.mult(meal.price, quantity)
         Decimal.add(acc, item_total)
@@ -212,19 +221,21 @@ defmodule EatfairWeb.RestaurantLive.Show do
   end
 
   defp format_rating(rating) when is_nil(rating), do: "No rating"
+
   defp format_rating(rating) do
     "#{Decimal.to_float(rating)}/5"
   end
-  
+
   defp format_average_rating(rating) when is_nil(rating), do: "0.0"
+
   defp format_average_rating(rating) when is_float(rating) do
     :erlang.float_to_binary(rating, decimals: 1)
   end
-  
+
   defp user_has_any_orders?(user_id, restaurant_id) do
     import Ecto.Query
     alias Eatfair.Orders.Order
-    
+
     from(o in Order,
       where: o.customer_id == ^user_id and o.restaurant_id == ^restaurant_id
     )

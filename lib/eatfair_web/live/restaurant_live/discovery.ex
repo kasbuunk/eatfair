@@ -5,7 +5,7 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, 
+    {:ok,
      socket
      |> assign(:page_title, "Discover Restaurants")
      |> assign(:restaurants, [])
@@ -22,7 +22,7 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
 
   @impl true
   def handle_event("search", %{"query" => query}, socket) do
-    {:noreply, 
+    {:noreply,
      socket
      |> assign(:search_query, query)
      |> search_restaurants(query)}
@@ -52,25 +52,29 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
     case Eatfair.GeoUtils.geocode_address(address) do
       {:ok, %{latitude: lat, longitude: lon}} ->
         # Filter restaurants that can deliver to this location
-        filtered_restaurants = Restaurants.list_open_restaurants()
-        |> Enum.filter(fn restaurant ->
-          Eatfair.GeoUtils.within_delivery_range?(
-            restaurant.latitude, 
-            restaurant.longitude, 
-            Decimal.new(Float.to_string(lat)), 
-            Decimal.new(Float.to_string(lon)), 
-            restaurant.delivery_radius_km
-          )
-        end)
-        
-        {:noreply, 
+        filtered_restaurants =
+          Restaurants.list_open_restaurants()
+          |> Enum.filter(fn restaurant ->
+            Eatfair.GeoUtils.within_delivery_range?(
+              restaurant.latitude,
+              restaurant.longitude,
+              Decimal.new(Float.to_string(lat)),
+              Decimal.new(Float.to_string(lon)),
+              restaurant.delivery_radius_km
+            )
+          end)
+
+        {:noreply,
          socket
          |> assign(:location, address)
          |> assign(:restaurants, filtered_restaurants)
-         |> put_flash(:info, "Found #{length(filtered_restaurants)} restaurants delivering to #{address}")}
-      
+         |> put_flash(
+           :info,
+           "Found #{length(filtered_restaurants)} restaurants delivering to #{address}"
+         )}
+
       {:error, :not_found} ->
-        {:noreply, 
+        {:noreply,
          socket
          |> put_flash(:error, "Could not find location: #{address}")}
     end
@@ -82,10 +86,12 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
   end
 
   defp load_restaurants(socket) do
-    restaurants = case get_current_user_id(socket) do
-      nil -> Restaurants.list_restaurants_with_location_data()
-      user_id -> Restaurants.list_restaurants_for_user(user_id)
-    end
+    restaurants =
+      case get_current_user_id(socket) do
+        nil -> Restaurants.list_restaurants_with_location_data()
+        user_id -> Restaurants.list_restaurants_for_user(user_id)
+      end
+
     assign(socket, :restaurants, restaurants)
   end
 
@@ -94,18 +100,22 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
   end
 
   defp search_restaurants(socket, query) do
-    restaurants = case get_current_user_id(socket) do
-      nil -> Restaurants.search_restaurants(query)
-      user_id -> Restaurants.search_restaurants_with_location(query, user_id)
-    end
+    restaurants =
+      case get_current_user_id(socket) do
+        nil -> Restaurants.search_restaurants(query)
+        user_id -> Restaurants.search_restaurants_with_location(query, user_id)
+      end
+
     assign(socket, :restaurants, restaurants)
   end
 
   defp apply_filters(socket, filters) when is_map(filters) do
-    restaurants = case get_current_user_id(socket) do
-      nil -> Restaurants.filter_restaurants(filters)
-      user_id -> Restaurants.filter_restaurants_with_location(filters, user_id)
-    end
+    restaurants =
+      case get_current_user_id(socket) do
+        nil -> Restaurants.filter_restaurants(filters)
+        user_id -> Restaurants.filter_restaurants_with_location(filters, user_id)
+      end
+
     socket
     |> assign(:filters, filters)
     |> assign(:restaurants, restaurants)
@@ -126,10 +136,17 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
   defp build_filters_from_params(params) do
     params
     |> Enum.reduce(%{}, fn
-      {"cuisine", value}, acc when value != "" -> Map.put(acc, :cuisine, value)
-      {"max_price", value}, acc when value != "" -> Map.put(acc, :max_price, value)
-      {"max_delivery_time", value}, acc when value != "" -> Map.put(acc, :max_delivery_time, value)
-      _other, acc -> acc
+      {"cuisine", value}, acc when value != "" ->
+        Map.put(acc, :cuisine, value)
+
+      {"max_price", value}, acc when value != "" ->
+        Map.put(acc, :max_price, value)
+
+      {"max_delivery_time", value}, acc when value != "" ->
+        Map.put(acc, :max_delivery_time, value)
+
+      _other, acc ->
+        acc
     end)
   end
 end

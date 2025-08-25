@@ -5,15 +5,14 @@
       href={~p"/restaurant/dashboard"}
       class="inline-flex items-center text-blue-600 hover:text-blue-700 mb-4"
     >
-      <.icon name="hero-arrow-left" class="w-4 h-4 mr-2" />
-      Back to Dashboard
+      <.icon name="hero-arrow-left" class="w-4 h-4 mr-2" /> Back to Dashboard
     </.link>
-    
+
     <h1 class="text-3xl font-bold text-gray-900">Edit Restaurant Profile</h1>
     <p class="text-gray-600">Update your restaurant information and settings</p>
   </div>
-
-  <!-- Edit Form -->
+  
+<!-- Edit Form -->
   <div class="bg-white shadow rounded-lg p-8">
     <.form
       for={@form}
@@ -27,8 +26,8 @@
         <div class="mb-6">
           <label class="block text-sm font-medium text-gray-700 mb-2">Current Photo</label>
           <div class="flex items-center space-x-4">
-            <img 
-              src={@restaurant.image_url} 
+            <img
+              src={@restaurant.image_url}
               alt={@restaurant.name}
               class="w-20 h-20 rounded-lg object-cover"
             />
@@ -38,11 +37,11 @@
           </div>
         </div>
       <% end %>
-
-      <!-- Restaurant Information -->
+      
+<!-- Restaurant Information -->
       <div class="border-b border-gray-200 pb-6">
         <h2 class="text-xl font-semibold text-gray-900 mb-4">Basic Information</h2>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
           <div>
             <.input
@@ -52,7 +51,7 @@
               required
             />
           </div>
-          
+
           <div>
             <label class="block text-sm font-medium text-gray-700 mb-2">
               Cuisine Types *
@@ -64,16 +63,19 @@
                     type="checkbox"
                     name="restaurant[cuisine_types][]"
                     value={cuisine}
-                    checked={cuisine in (Map.get(@changeset.changes, :cuisine_types) || @restaurant.cuisine_types || [])}
+                    checked={
+                      cuisine in (Map.get(@changeset.changes, :cuisine_types) ||
+                                    @restaurant.cuisine_types || [])
+                    }
                     class="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                   />
-                  <span class="ml-2 text-gray-700"><%= cuisine %></span>
+                  <span class="ml-2 text-gray-700">{cuisine}</span>
                 </label>
               <% end %>
             </div>
           </div>
         </div>
-        
+
         <div class="mt-6">
           <.input
             field={@form[:address]}
@@ -83,7 +85,7 @@
             required
           />
         </div>
-        
+
         <div class="mt-6">
           <.input
             field={@form[:description]}
@@ -91,14 +93,16 @@
             label="Restaurant Description"
             rows="3"
           />
-          <p class="mt-1 text-sm text-gray-500">Share your story and what makes your restaurant special</p>
+          <p class="mt-1 text-sm text-gray-500">
+            Share your story and what makes your restaurant special
+          </p>
         </div>
       </div>
-
-      <!-- Operational Settings -->
+      
+<!-- Operational Settings -->
       <div class="border-b border-gray-200 pb-6">
         <h2 class="text-xl font-semibold text-gray-900 mb-4">Operational Settings</h2>
-        
+
         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div>
             <.input
@@ -107,7 +111,7 @@
               label="Average Prep Time (minutes)"
             />
           </div>
-          
+
           <div>
             <.input
               field={@form[:min_order_value]}
@@ -116,7 +120,7 @@
               label="Minimum Order Value (€)"
             />
           </div>
-          
+
           <div>
             <.input
               field={@form[:delivery_radius_km]}
@@ -125,21 +129,23 @@
             />
           </div>
         </div>
-        
+
         <div class="mt-6">
           <.input
             field={@form[:delivery_time_per_km]}
             type="number"
             label="Delivery Time per KM (minutes)"
           />
-          <p class="mt-1 text-sm text-gray-500">Estimated minutes needed per kilometer for delivery</p>
+          <p class="mt-1 text-sm text-gray-500">
+            Estimated minutes needed per kilometer for delivery
+          </p>
         </div>
       </div>
-
-      <!-- Image Upload -->
+      
+<!-- Image Upload -->
       <div class="pb-6" data-test="restaurant-image-upload">
         <h2 class="text-xl font-semibold text-gray-900 mb-4">Restaurant Photo</h2>
-        
+
         <div class="space-y-4">
           <div class="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
             <div class="space-y-2">
@@ -147,7 +153,7 @@
               <p class="text-gray-600">Upload a photo to showcase your restaurant</p>
               <small class="text-gray-500">Optional - you can add this later</small>
             </div>
-            
+
             <div class="mt-4">
               <.live_file_input upload={@uploads.restaurant_image} class="hidden" />
               <button
@@ -156,17 +162,17 @@
                 class="inline-flex items-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50"
               >
                 <.icon name="hero-photo" class="w-4 h-4 mr-2" />
-                <%= if @restaurant.image_url, do: "Change Photo", else: "Choose Photo" %>
+                {if @restaurant.image_url, do: "Change Photo", else: "Choose Photo"}
               </button>
             </div>
           </div>
           
-          <!-- Show uploaded file preview -->
+<!-- Show uploaded file preview -->
           <%= for entry <- @uploads.restaurant_image.entries do %>
             <div class="flex items-center justify-between bg-gray-50 p-3 rounded">
               <div class="flex items-center">
                 <.icon name="hero-document-text" class="w-5 h-5 text-gray-500 mr-2" />
-                <span class="text-sm text-gray-700"><%= entry.client_name %></span>
+                <span class="text-sm text-gray-700">{entry.client_name}</span>
               </div>
               <button
                 type="button"
@@ -177,15 +183,15 @@
                 <.icon name="hero-x-mark" class="w-5 h-5" />
               </button>
             </div>
-            
+
             <div class="w-full bg-gray-200 rounded-full h-2">
               <div class="bg-blue-600 h-2 rounded-full" style={"width: #{entry.progress}%"}></div>
             </div>
           <% end %>
         </div>
       </div>
-
-      <!-- Action Buttons -->
+      
+<!-- Action Buttons -->
       <div class="flex justify-between items-center pt-6 border-t border-gray-200">
         <.link
           href={~p"/restaurant/dashboard"}
@@ -193,7 +199,7 @@
         >
           Cancel
         </.link>
-        
+
         <.button
           type="submit"
           class="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg"

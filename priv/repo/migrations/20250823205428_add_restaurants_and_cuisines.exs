@@ -24,6 +24,7 @@ defmodule Eatfair.Repo.Migrations.CreateAllEatfairTables do
 
       timestamps()
     end
+
     create unique_index(:restaurants, [:owner_id])
 
     # 3. Create the 'cuisines' table
@@ -38,6 +39,7 @@ defmodule Eatfair.Repo.Migrations.CreateAllEatfairTables do
       add :cuisine_id, references(:cuisines, on_delete: :delete_all), null: false
       timestamps()
     end
+
     create unique_index(:restaurant_cuisines, [:restaurant_id, :cuisine_id])
 
     # 5. Create the 'menus' table
@@ -69,7 +71,10 @@ defmodule Eatfair.Repo.Migrations.CreateAllEatfairTables do
     create table(:customization_options) do
       add :name, :string, null: false
       add :price, :decimal, default: 0.0
-      add :meal_customization_id, references(:meal_customizations, on_delete: :delete_all), null: false
+
+      add :meal_customization_id, references(:meal_customizations, on_delete: :delete_all),
+        null: false
+
       timestamps()
     end
 
@@ -101,6 +106,7 @@ defmodule Eatfair.Repo.Migrations.CreateAllEatfairTables do
       add :order_id, references(:orders, on_delete: :delete_all), null: false
       timestamps()
     end
+
     create unique_index(:payments, [:order_id])
   end
 end

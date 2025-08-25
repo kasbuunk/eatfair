@@ -1,14 +1,14 @@
 defmodule Eatfair.Notifications do
   @moduledoc """
   The Notifications context.
-  
+
   This module handles all notification logic and provides an extensible system for:
   - Order status notifications
   - Newsletter subscriptions  
   - Promotional campaigns
   - System announcements
   - SMS, Email, Push notifications (when configured)
-  
+
   The system is designed to be decoupled from specific delivery channels,
   allowing easy integration with external services while maintaining
   comprehensive internal logging and preferences management.
@@ -20,7 +20,7 @@ defmodule Eatfair.Notifications do
 
   @doc """
   Records a notification event without sending.
-  
+
   This allows the system to track what notifications should be sent
   while keeping delivery channel integration separate.
   """
@@ -42,23 +42,26 @@ defmodule Eatfair.Notifications do
 
   @doc """
   Creates notification event for order status change.
-  
+
   This is the main integration point with the order tracking system.
   """
   def notify_order_status_change(order, old_status, new_status, context \\ %{}) do
-    with {:ok, event} <- create_event(%{
-      event_type: "order_status_changed",
-      recipient_id: order.customer_id,
-      data: %{
-        order_id: order.id,
-        restaurant_name: order.restaurant.name,
-        old_status: old_status,
-        new_status: new_status,
-        delivery_address: order.delivery_address,
-        total_price: order.total_price
-      } |> Map.merge(context),
-      priority: priority_for_status(new_status)
-    }) do
+    with {:ok, event} <-
+           create_event(%{
+             event_type: "order_status_changed",
+             recipient_id: order.customer_id,
+             data:
+               %{
+                 order_id: order.id,
+                 restaurant_name: order.restaurant.name,
+                 old_status: old_status,
+                 new_status: new_status,
+                 delivery_address: order.delivery_address,
+                 total_price: order.total_price
+               }
+               |> Map.merge(context),
+             priority: priority_for_status(new_status)
+           }) do
       # In production, this would trigger actual notifications
       # based on user preferences and configured channels
       broadcast_event(event)
@@ -75,7 +78,7 @@ defmodule Eatfair.Notifications do
       "user_notifications:#{event.recipient_id}",
       {:notification_event, event}
     )
-    
+
     Phoenix.PubSub.broadcast(
       Eatfair.PubSub,
       "notification_events",
@@ -110,17 +113,17 @@ defmodule Eatfair.Notifications do
     |> order_by([e], desc: e.inserted_at)
     |> Repo.all()
   end
-  
+
   @doc """
   Updates user notification preferences.
   """
   def update_user_preferences(user_id, attrs) do
     case Repo.get_by(UserPreference, user_id: user_id) do
-      nil -> 
+      nil ->
         %UserPreference{}
         |> UserPreference.changeset(Map.put(attrs, :user_id, user_id))
         |> Repo.insert()
-      
+
       preferences ->
         preferences
         |> UserPreference.changeset(attrs)

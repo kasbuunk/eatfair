@@ -44,28 +44,32 @@ defmodule Eatfair.AccountsFixtures do
   def confirmed_user_fixture(attrs \\ %{}) do
     default_address = Map.get(attrs, :default_address)
     attrs = Map.delete(attrs, :default_address)
-    
+
     user = unconfirmed_user_fixture(attrs)
-    
+
     # Manually confirm the user by setting confirmed_at
-    changeset = user
-    |> Ecto.Changeset.change(%{confirmed_at: DateTime.utc_now() |> DateTime.truncate(:second)})
-    
+    changeset =
+      user
+      |> Ecto.Changeset.change(%{confirmed_at: DateTime.utc_now() |> DateTime.truncate(:second)})
+
     {:ok, user} = Eatfair.Repo.update(changeset)
-    
+
     # Create default address if specified
     if default_address do
-      {:ok, _address} = Accounts.create_address(%{
-        "name" => "Home",
-        "street_address" => default_address,
-        "city" => "Amsterdam", # Default city
-        "postal_code" => "1012 AB", # Default postal code
-        "country" => "Netherlands",
-        "is_default" => true,
-        "user_id" => user.id
-      })
+      {:ok, _address} =
+        Accounts.create_address(%{
+          "name" => "Home",
+          "street_address" => default_address,
+          # Default city
+          "city" => "Amsterdam",
+          # Default postal code
+          "postal_code" => "1012 AB",
+          "country" => "Netherlands",
+          "is_default" => true,
+          "user_id" => user.id
+        })
     end
-    
+
     user
   end
 
@@ -120,7 +124,7 @@ defmodule Eatfair.AccountsFixtures do
   """
   def address_fixture(attrs \\ %{}) do
     user = attrs[:user] || user_fixture()
-    
+
     attrs =
       attrs
       |> Map.delete(:user)

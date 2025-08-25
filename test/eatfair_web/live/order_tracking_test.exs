@@ -4,7 +4,7 @@ defmodule EatfairWeb.OrderTrackingTest do
   import Phoenix.LiveViewTest
   import Eatfair.AccountsFixtures
   import Eatfair.RestaurantsFixtures
-  
+
   alias Eatfair.Orders
   alias Eatfair.Notifications
 
@@ -14,34 +14,38 @@ defmodule EatfairWeb.OrderTrackingTest do
       customer = user_fixture()
       restaurant = restaurant_fixture()
       meal = meal_fixture(%{restaurant_id: restaurant.id})
-      
+
       # Create order in pending status first, then confirm it to set proper timestamps
-      {:ok, order} = Orders.create_order_with_items(%{
-        customer_id: customer.id,
-        restaurant_id: restaurant.id,
-        total_price: meal.price,
-        delivery_address: "Amsterdamsestraatweg 15, 1234AB Hilversum",
-        delivery_notes: "Ring the bell twice, please!",
-        status: "pending"
-      }, [%{meal_id: meal.id, quantity: 1}])
-      
+      {:ok, order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Amsterdamsestraatweg 15, 1234AB Hilversum",
+            delivery_notes: "Ring the bell twice, please!",
+            status: "pending"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
+
       # Now confirm the order to set confirmed_at timestamp
       {:ok, order} = Orders.update_order_status(order, "confirmed")
-      
+
       conn = log_in_user(conn, customer)
-      
+
       # 📱 Customer visits order tracking page
       {:ok, _tracking_live, html} = live(conn, "/orders/track")
-      
+
       # ✅ Verify initial order tracking display (flexible text matching)
       assert html =~ ~r/order.*(confirmed|placed)/i
-      assert html =~ "Amsterdamsestraatweg 15, 1234AB Hilversum" 
+      assert html =~ "Amsterdamsestraatweg 15, 1234AB Hilversum"
       assert html =~ "Ring the bell twice"
       assert html =~ restaurant.name
-      
+
       # 🕐 Should show some kind of timing information (flexible matching)
       assert html =~ ~r/(estimated|arrival|delivery|time)/i
-      
+
       # Verify order exists and has correct status
       assert order.status == "confirmed"
       assert order.confirmed_at != nil
@@ -53,59 +57,65 @@ defmodule EatfairWeb.OrderTrackingTest do
       restaurant_owner = user_fixture()
       restaurant = restaurant_fixture(%{owner_id: restaurant_owner.id})
       meal = meal_fixture(%{restaurant_id: restaurant.id})
-      
-      {:ok, order} = Orders.create_order_with_items(%{
-        customer_id: customer.id,
-        restaurant_id: restaurant.id,
-        total_price: meal.price,
-        delivery_address: "Test Address",
-        status: "confirmed"
-      }, [%{meal_id: meal.id, quantity: 2}])
-      
+
+      {:ok, order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Test Address",
+            status: "confirmed"
+          },
+          [%{meal_id: meal.id, quantity: 2}]
+        )
+
       conn = log_in_user(conn, restaurant_owner)
-      
+
       # 🏪 Giuseppe visits his restaurant dashboard
       {:ok, dashboard_live, html} = live(conn, "/restaurant/orders")
-      
+
       # ✅ Should see the new order (flexible status matching)
       assert html =~ "New Orders"
       assert html =~ order.delivery_address
       assert html =~ ~r/(confirmed|new|order)/i
-      
+
       # 👨‍🍳 Giuseppe starts preparing the order (test UI interaction if element exists)
       case has_element?(dashboard_live, "#start-preparing-#{order.id}") do
         true ->
           dashboard_live
           |> element("#start-preparing-#{order.id}")
           |> render_click()
-          
+
           # ✅ Status should update to "preparing"  
           updated_order = Orders.get_order!(order.id)
           assert updated_order.status == "preparing"
           assert updated_order.preparing_at != nil
+
         false ->
           # Fallback: Test status transition via Orders context directly
           {:ok, updated_order} = Orders.update_order_status(order, "preparing")
           assert updated_order.status == "preparing"
           assert updated_order.preparing_at != nil
       end
-      
+
       # Get the current order state
       current_order = Orders.get_order!(order.id)
-      
+
       # 🍕 Test marking order as ready (flexible interaction)
       case has_element?(dashboard_live, "#mark-ready-#{current_order.id}") do
         true ->
           dashboard_live
           |> element("#mark-ready-#{current_order.id}")
           |> render_click()
+
         false ->
           # Fallback: Test status transition via context
           {:ok, _} = Orders.update_order_status(current_order, "ready")
       end
-      
+
       final_order = Orders.get_order!(order.id)
-      assert final_order.status == "ready" 
+      assert final_order.status == "ready"
       assert final_order.ready_at != nil
     end
 
@@ -115,31 +125,35 @@ defmodule EatfairWeb.OrderTrackingTest do
       restaurant_owner = user_fixture()
       restaurant = restaurant_fixture(%{owner_id: restaurant_owner.id})
       meal = meal_fixture(%{restaurant_id: restaurant.id})
-      
-      {:ok, order} = Orders.create_order_with_items(%{
-        customer_id: customer.id,
-        restaurant_id: restaurant.id,
-        total_price: meal.price,
-        delivery_address: "Real-time Test Address",
-        status: "confirmed"
-      }, [%{meal_id: meal.id, quantity: 1}])
-      
+
+      {:ok, order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Real-time Test Address",
+            status: "confirmed"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
+
       conn = log_in_user(conn, customer)
-      
+
       # 📱 Customer opens tracking page
       {:ok, tracking_live, html} = live(conn, "/orders/track/#{order.id}")
       assert html =~ "Order Confirmed"
-      
+
       # 🏪 Restaurant updates status (simulating real-time update)
       {:ok, updated_order} = Orders.update_order_status(order, "preparing")
-      
+
       # ⚡ Customer's page should update automatically via LiveView
       assert render(tracking_live) =~ "Preparing Your Order"
       assert render(tracking_live) =~ "The kitchen is working on your delicious meal"
-      
+
       # 🍕 Order is ready
       {:ok, _updated_order} = Orders.update_order_status(updated_order, "ready")
-      
+
       assert render(tracking_live) =~ "Ready for Pickup"
       assert render(tracking_live) =~ "Your order is ready"
     end
@@ -149,34 +163,38 @@ defmodule EatfairWeb.OrderTrackingTest do
       customer = user_fixture()
       restaurant = restaurant_fixture()
       meal = meal_fixture(%{restaurant_id: restaurant.id})
-      
-      {:ok, order} = Orders.create_order_with_items(%{
-        customer_id: customer.id,
-        restaurant_id: restaurant.id,
-        total_price: meal.price,
-        delivery_address: "Notification Test Address",
-        status: "pending"
-      }, [%{meal_id: meal.id, quantity: 1}])
-      
+
+      {:ok, order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Notification Test Address",
+            status: "pending"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
+
       # 🔔 Confirm order - should create notification event
       {:ok, confirmed_order} = Orders.update_order_status(order, "confirmed")
-      
+
       # ✅ Check notification event was created
       events = Notifications.list_events_for_user(customer.id)
       assert length(events) == 1
-      
+
       [event] = events
       assert event.event_type == "order_status_changed"
       assert event.data["order_id"] == confirmed_order.id
       assert event.data["new_status"] == "confirmed"
       assert event.data["restaurant_name"] == restaurant.name
-      
+
       # 👨‍🍳 Start preparing - another notification
       {:ok, _preparing_order} = Orders.update_order_status(confirmed_order, "preparing")
-      
+
       events = Notifications.list_events_for_user(customer.id)
       assert length(events) == 2
-      
+
       # ✅ Check notification priorities are set correctly
       [preparing_event, confirmed_event] = events
       assert preparing_event.priority == "normal"
@@ -189,30 +207,35 @@ defmodule EatfairWeb.OrderTrackingTest do
       restaurant = restaurant_fixture()
       courier = user_fixture()
       meal = meal_fixture(%{restaurant_id: restaurant.id})
-      
-      {:ok, order} = Orders.create_order_with_items(%{
-        customer_id: customer.id,
-        restaurant_id: restaurant.id,
-        total_price: meal.price,
-        delivery_address: "Delivery Test Address",
-        status: "ready"
-      }, [%{meal_id: meal.id, quantity: 1}])
-      
+
+      {:ok, order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Delivery Test Address",
+            status: "ready"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
+
       conn = log_in_user(conn, customer)
-      
+
       # 📍 Order goes out for delivery with courier assignment (test data model functionality)
-      {:ok, out_for_delivery_order} = Orders.update_order_status(order, "out_for_delivery", %{
-        courier_id: courier.id
-        # Note: estimated_delivery_at is calculated automatically in the status update
-      })
-      
+      {:ok, out_for_delivery_order} =
+        Orders.update_order_status(order, "out_for_delivery", %{
+          courier_id: courier.id
+          # Note: estimated_delivery_at is calculated automatically in the status update
+        })
+
       # 🚗 Customer tracking page shows delivery information
       {:ok, tracking_live, html} = live(conn, "/orders/track/#{order.id}")
-      
+
       assert html =~ "Out for Delivery"
       assert html =~ "Your order is on its way"
       assert html =~ ~r/(estimated|arrival|delivery)/i
-      
+
       # ✅ Test that the data model correctly stores delivery information
       # Note: Focus on testing business logic rather than UI coupling
       updated_order = Orders.get_order!(order.id)
@@ -224,10 +247,10 @@ defmodule EatfairWeb.OrderTrackingTest do
       assert estimated_delivery != nil
       # Note: courier_id may not be implemented in MVP - skip if not present
       # This focuses the test on essential delivery tracking features
-      
+
       # 📦 Delivery completed
       {:ok, _delivered_order} = Orders.update_order_status(out_for_delivery_order, "delivered")
-      
+
       assert render(tracking_live) =~ "Delivered"
       assert render(tracking_live) =~ "Enjoy your meal!"
     end
@@ -237,51 +260,62 @@ defmodule EatfairWeb.OrderTrackingTest do
       customer = user_fixture()
       restaurant = restaurant_fixture()
       meal = meal_fixture(%{restaurant_id: restaurant.id})
-      
-      {:ok, order} = Orders.create_order_with_items(%{
-        customer_id: customer.id,
-        restaurant_id: restaurant.id,
-        total_price: meal.price,
-        delivery_address: "Cancellation Test Address",
-        status: "confirmed"
-      }, [%{meal_id: meal.id, quantity: 1}])
-      
+
+      {:ok, order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Cancellation Test Address",
+            status: "confirmed"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
+
       conn = log_in_user(conn, customer)
-      
+
       # 🚫 Restaurant needs to cancel order (out of ingredients)
-      {:ok, _cancelled_order} = Orders.update_order_status(order, "cancelled", %{
-        delay_reason: "Sorry, we ran out of ingredients for this dish."
-      })
-      
+      {:ok, _cancelled_order} =
+        Orders.update_order_status(order, "cancelled", %{
+          delay_reason: "Sorry, we ran out of ingredients for this dish."
+        })
+
       # 📱 Customer sees cancellation immediately
       {:ok, tracking_live, _html} = live(conn, "/orders/track/#{order.id}")
-      
+
       assert render(tracking_live) =~ "Order Cancelled"
       assert render(tracking_live) =~ "ran out of ingredients"
-      
+
       # ✅ High priority notification sent for cancellation
       events = Notifications.list_events_for_user(customer.id)
-      cancellation_event = Enum.find(events, & &1.data["new_status"] == "cancelled")
+      cancellation_event = Enum.find(events, &(&1.data["new_status"] == "cancelled"))
       assert cancellation_event.priority == "high"
-      
+
       # ⏰ Test delay scenario
-      {:ok, new_order} = Orders.create_order_with_items(%{
-        customer_id: customer.id,
-        restaurant_id: restaurant.id,
-        total_price: meal.price,
-        delivery_address: "Delay Test Address",
-        status: "preparing"
-      }, [%{meal_id: meal.id, quantity: 1}])
-      
+      {:ok, new_order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Delay Test Address",
+            status: "preparing"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
+
       # 🕐 Restaurant reports delay
-      {:ok, _delayed_order} = Orders.update_order_status(new_order, "preparing", %{
-        is_delayed: true,
-        delay_reason: "High order volume - extra 15 minutes needed",
-        estimated_delivery_at: NaiveDateTime.add(NaiveDateTime.utc_now(), 2700) # 45 min instead of 30
-      })
-      
+      {:ok, _delayed_order} =
+        Orders.update_order_status(new_order, "preparing", %{
+          is_delayed: true,
+          delay_reason: "High order volume - extra 15 minutes needed",
+          # 45 min instead of 30
+          estimated_delivery_at: NaiveDateTime.add(NaiveDateTime.utc_now(), 2700)
+        })
+
       {:ok, delay_tracking_live, _html} = live(conn, "/orders/track/#{new_order.id}")
-      
+
       assert render(delay_tracking_live) =~ "Slight Delay"
       assert render(delay_tracking_live) =~ "extra 15 minutes"
     end
@@ -291,27 +325,31 @@ defmodule EatfairWeb.OrderTrackingTest do
       customer = user_fixture()
       restaurant = restaurant_fixture()
       meal = meal_fixture(%{restaurant_id: restaurant.id})
-      
-      {:ok, order} = Orders.create_order_with_items(%{
-        customer_id: customer.id,
-        restaurant_id: restaurant.id,
-        total_price: meal.price,
-        delivery_address: "Validation Test Address",
-        status: "pending"
-      }, [%{meal_id: meal.id, quantity: 1}])
-      
+
+      {:ok, order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Validation Test Address",
+            status: "pending"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
+
       # ❌ Cannot go directly from pending to ready (must go through confirmed -> preparing)
       {:error, changeset} = Orders.update_order_status(order, "ready")
       assert changeset.errors[:status] != nil
-      
+
       # ✅ Valid progression: pending -> confirmed
       {:ok, confirmed_order} = Orders.update_order_status(order, "confirmed")
       assert confirmed_order.status == "confirmed"
-      
+
       # ❌ Cannot go backwards: confirmed -> pending
       {:error, changeset} = Orders.update_order_status(confirmed_order, "pending")
       assert changeset.errors[:status] != nil
-      
+
       # ✅ Can cancel from any status
       {:ok, cancelled_order} = Orders.update_order_status(confirmed_order, "cancelled")
       assert cancelled_order.status == "cancelled"
@@ -323,55 +361,67 @@ defmodule EatfairWeb.OrderTrackingTest do
       customer = user_fixture()
       restaurant1 = restaurant_fixture(%{name: "Giuseppe's Pizza"})
       restaurant2 = restaurant_fixture(%{name: "Sakura Sushi"})
-      
+
       meal1 = meal_fixture(%{restaurant_id: restaurant1.id, name: "Margherita Pizza"})
       meal2 = meal_fixture(%{restaurant_id: restaurant2.id, name: "Salmon Roll"})
-      
-      {:ok, pizza_order} = Orders.create_order_with_items(%{
-        customer_id: customer.id,
-        restaurant_id: restaurant1.id,
-        total_price: meal1.price,
-        delivery_address: "Multi-order Test Address",
-        status: "preparing"
-      }, [%{meal_id: meal1.id, quantity: 1}])
-      
-      {:ok, sushi_order} = Orders.create_order_with_items(%{
-        customer_id: customer.id,
-        restaurant_id: restaurant2.id,
-        total_price: meal2.price,
-        delivery_address: "Multi-order Test Address",
-        status: "confirmed"
-      }, [%{meal_id: meal2.id, quantity: 2}])
-      
+
+      {:ok, pizza_order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant1.id,
+            total_price: meal1.price,
+            delivery_address: "Multi-order Test Address",
+            status: "preparing"
+          },
+          [%{meal_id: meal1.id, quantity: 1}]
+        )
+
+      {:ok, sushi_order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant2.id,
+            total_price: meal2.price,
+            delivery_address: "Multi-order Test Address",
+            status: "confirmed"
+          },
+          [%{meal_id: meal2.id, quantity: 2}]
+        )
+
       conn = log_in_user(conn, customer)
-      
+
       # 📱 Customer views all active orders
       {:ok, tracking_live, html} = live(conn, "/orders/track")
-      
+
       # ✅ Should see both orders with different statuses
       assert html =~ "Giuseppe"
       assert html =~ "Sakura"
       assert html =~ "Margherita Pizza"
       assert html =~ "Salmon Roll"
-      assert html =~ "Preparing Your Order"  # Pizza status
-      assert html =~ "Order Confirmed"       # Sushi status
-      
+      # Pizza status
+      assert html =~ "Preparing Your Order"
+      # Sushi status
+      assert html =~ "Order Confirmed"
+
       # 🍕 Pizza gets ready
       {:ok, _ready_pizza} = Orders.update_order_status(pizza_order, "ready")
-      
+
       # ⚡ Page updates to show new status
       assert render(tracking_live) =~ "Ready for Pickup"
-      
+
       # 🍣 Sushi starts preparing  
       {:ok, _preparing_sushi} = Orders.update_order_status(sushi_order, "preparing")
-      
+
       # ⚡ Both orders now show different preparing states
       rendered = render(tracking_live)
-      assert rendered =~ "Ready for Pickup"      # Pizza
-      assert rendered =~ "Preparing Your Order"  # Sushi
+      # Pizza
+      assert rendered =~ "Ready for Pickup"
+      # Sushi
+      assert rendered =~ "Preparing Your Order"
     end
   end
-  
+
   describe "🏪 Restaurant Order Management Dashboard" do
     test "restaurant owner sees all orders organized by status", %{conn: conn} do
       # 👨‍🍳 Setup: Busy restaurant with multiple orders
@@ -380,62 +430,81 @@ defmodule EatfairWeb.OrderTrackingTest do
       customer1 = user_fixture()
       customer2 = user_fixture()
       customer3 = user_fixture()
-      
+
       meal = meal_fixture(%{restaurant_id: restaurant.id})
-      
+
       # Create orders in different states
-      {:ok, _confirmed_order} = Orders.create_order_with_items(%{
-        customer_id: customer1.id,
-        restaurant_id: restaurant.id,
-        total_price: meal.price,
-        delivery_address: "Address 1",
-        status: "confirmed"
-      }, [%{meal_id: meal.id, quantity: 1}])
-      
-      {:ok, _preparing_order} = Orders.create_order_with_items(%{
-        customer_id: customer2.id,
-        restaurant_id: restaurant.id,
-        total_price: meal.price,
-        delivery_address: "Address 2",
-        status: "preparing"
-      }, [%{meal_id: meal.id, quantity: 2}])
-      
-      {:ok, _ready_order} = Orders.create_order_with_items(%{
-        customer_id: customer3.id,
-        restaurant_id: restaurant.id,
-        total_price: meal.price,
-        delivery_address: "Address 3",
-        status: "ready"
-      }, [%{meal_id: meal.id, quantity: 1}])
-      
+      {:ok, _confirmed_order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer1.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Address 1",
+            status: "confirmed"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
+
+      {:ok, _preparing_order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer2.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Address 2",
+            status: "preparing"
+          },
+          [%{meal_id: meal.id, quantity: 2}]
+        )
+
+      {:ok, _ready_order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer3.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Address 3",
+            status: "ready"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
+
       conn = log_in_user(conn, restaurant_owner)
-      
+
       # 🏪 Restaurant owner visits order management dashboard
       {:ok, _orders_live, html} = live(conn, "/restaurant/orders")
-      
+
       # ✅ Should see orders organized by status
-      assert html =~ "New Orders"       # confirmed_order section
-      assert html =~ "In Progress"     # preparing_order section  
-      assert html =~ "Ready"           # ready_order section
-      
+      # confirmed_order section
+      assert html =~ "New Orders"
+      # preparing_order section  
+      assert html =~ "In Progress"
+      # ready_order section
+      assert html =~ "Ready"
+
       assert html =~ "Address 1"
       assert html =~ "Address 2"
       assert html =~ "Address 3"
-      
+
       # 📊 Should show order counts (flexible matching for numbers)
       assert html =~ ~r/1.*new/i
       assert html =~ ~r/1.*(preparing|progress)/i
       assert html =~ ~r/1.*ready/i
-      
+
       # ⚡ Test basic functionality rather than real-time updates (which may depend on LiveView pubsub)
-      {:ok, _new_order} = Orders.create_order_with_items(%{
-        customer_id: customer1.id,
-        restaurant_id: restaurant.id,
-        total_price: meal.price,
-        delivery_address: "Address 4",
-        status: "confirmed"
-      }, [%{meal_id: meal.id, quantity: 3}])
-      
+      {:ok, _new_order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer1.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Address 4",
+            status: "confirmed"
+          },
+          [%{meal_id: meal.id, quantity: 3}]
+        )
+
       # Verify new order was created successfully - UI updates are tested elsewhere
       all_orders = Orders.list_restaurant_orders(restaurant.id)
       # list_restaurant_orders returns grouped orders, so count all values
@@ -450,27 +519,32 @@ defmodule EatfairWeb.OrderTrackingTest do
       customer = user_fixture()
       restaurant = restaurant_fixture()
       meal = meal_fixture(%{restaurant_id: restaurant.id})
-      
+
       # Customer disables order notifications
-      {:ok, _preferences} = Notifications.update_user_preferences(customer.id, %{
-        order_status_notifications: false,
-        email_enabled: true
-      })
-      
-      {:ok, order} = Orders.create_order_with_items(%{
-        customer_id: customer.id,
-        restaurant_id: restaurant.id,
-        total_price: meal.price,
-        delivery_address: "Preferences Test Address",
-        status: "pending"
-      }, [%{meal_id: meal.id, quantity: 1}])
-      
+      {:ok, _preferences} =
+        Notifications.update_user_preferences(customer.id, %{
+          order_status_notifications: false,
+          email_enabled: true
+        })
+
+      {:ok, order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Preferences Test Address",
+            status: "pending"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
+
       # ✅ Status change should still create event (for internal tracking)
       {:ok, _confirmed_order} = Orders.update_order_status(order, "confirmed")
-      
+
       events = Notifications.list_events_for_user(customer.id)
       assert length(events) == 1
-      
+
       # 📧 But notification should be marked as skipped due to preferences
       [event] = events
       assert event.event_type == "order_status_changed"
@@ -482,20 +556,25 @@ defmodule EatfairWeb.OrderTrackingTest do
       customer = user_fixture()
       restaurant = restaurant_fixture()
       meal = meal_fixture(%{restaurant_id: restaurant.id})
-      
-      {:ok, order} = Orders.create_order_with_items(%{
-        customer_id: customer.id,
-        restaurant_id: restaurant.id,
-        total_price: meal.price,
-        delivery_address: "Priority Test Address", 
-        status: "out_for_delivery"
-      }, [%{meal_id: meal.id, quantity: 1}])
-      
+
+      {:ok, order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Priority Test Address",
+            status: "out_for_delivery"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
+
       # 🚫 Cancellation should be high priority
-      {:ok, _cancelled_order} = Orders.update_order_status(order, "cancelled", %{
-        delay_reason: "Restaurant had to close due to emergency"
-      })
-      
+      {:ok, _cancelled_order} =
+        Orders.update_order_status(order, "cancelled", %{
+          delay_reason: "Restaurant had to close due to emergency"
+        })
+
       events = Notifications.list_events_for_user(customer.id)
       [event] = events
       assert event.priority == "high"

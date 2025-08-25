@@ -136,7 +136,7 @@ defmodule Eatfair.Restaurants do
   """
   def search_restaurants(query) when is_binary(query) do
     search_query = "%#{String.downcase(query)}%"
-    
+
     Restaurant
     |> where([r], r.is_open == true)
     |> where([r], like(fragment("lower(?)", r.name), ^search_query))
@@ -163,10 +163,10 @@ defmodule Eatfair.Restaurants do
   """
   def list_restaurants_for_user(user_id) when is_integer(user_id) do
     case get_user_location(user_id) do
-      nil -> 
+      nil ->
         # No address found, return all open restaurants
         list_open_restaurants()
-      
+
       {lat, lon} ->
         # Filter restaurants by delivery range
         list_open_restaurants()
@@ -177,30 +177,35 @@ defmodule Eatfair.Restaurants do
   @doc """
   Filters restaurants by location and other criteria.
   """
-  def filter_restaurants_with_location(filters, user_id) when is_map(filters) and is_integer(user_id) do
-    base_restaurants = case get_user_location(user_id) do
-      nil -> 
-        # No location filtering, use regular filter
-        filter_restaurants(filters)
-      
-      {lat, lon} ->
-        # Apply location filtering first, then other filters
-        filter_restaurants(filters)
-        |> Enum.filter(&within_delivery_range?(&1, lat, lon))
-    end
-    
+  def filter_restaurants_with_location(filters, user_id)
+      when is_map(filters) and is_integer(user_id) do
+    base_restaurants =
+      case get_user_location(user_id) do
+        nil ->
+          # No location filtering, use regular filter
+          filter_restaurants(filters)
+
+        {lat, lon} ->
+          # Apply location filtering first, then other filters
+          filter_restaurants(filters)
+          |> Enum.filter(&within_delivery_range?(&1, lat, lon))
+      end
+
     base_restaurants
   end
 
   @doc """
   Searches restaurants by name with location filtering.
   """
-  def search_restaurants_with_location(query, user_id) when is_binary(query) and is_integer(user_id) do
+  def search_restaurants_with_location(query, user_id)
+      when is_binary(query) and is_integer(user_id) do
     base_restaurants = search_restaurants(query)
-    
+
     case get_user_location(user_id) do
-      nil -> base_restaurants
-      {lat, lon} -> 
+      nil ->
+        base_restaurants
+
+      {lat, lon} ->
         base_restaurants
         |> Enum.filter(&within_delivery_range?(&1, lat, lon))
     end
@@ -209,11 +214,13 @@ defmodule Eatfair.Restaurants do
   @doc """
   Checks if a restaurant can deliver to a specific location.
   """
-  def can_deliver_to_location?(restaurant_id, user_id) when is_integer(restaurant_id) and is_integer(user_id) do
+  def can_deliver_to_location?(restaurant_id, user_id)
+      when is_integer(restaurant_id) and is_integer(user_id) do
     restaurant = get_restaurant!(restaurant_id)
-    
+
     case get_user_location(user_id) do
-      nil -> false  # No location available
+      # No location available
+      nil -> false
       {lat, lon} -> within_delivery_range?(restaurant, lat, lon)
     end
   end
@@ -221,14 +228,17 @@ defmodule Eatfair.Restaurants do
   defp get_user_location(user_id) do
     # Get user's default address coordinates
     case Eatfair.Accounts.list_user_addresses(user_id) do
-      [] -> nil
-      addresses -> 
-        default_address = Enum.find(addresses, &(&1.is_default)) || List.first(addresses)
-        
+      [] ->
+        nil
+
+      addresses ->
+        default_address = Enum.find(addresses, & &1.is_default) || List.first(addresses)
+
         case default_address do
           %{latitude: lat, longitude: lon} when not is_nil(lat) and not is_nil(lon) ->
             {lat, lon}
-          _ -> 
+
+          _ ->
             nil
         end
     end
@@ -236,16 +246,17 @@ defmodule Eatfair.Restaurants do
 
   defp within_delivery_range?(restaurant, customer_lat, customer_lon) do
     Eatfair.GeoUtils.within_delivery_range?(
-      restaurant.latitude, 
-      restaurant.longitude, 
-      customer_lat, 
-      customer_lon, 
+      restaurant.latitude,
+      restaurant.longitude,
+      customer_lat,
+      customer_lon,
       restaurant.delivery_radius_km
     )
   end
 
   defp apply_cuisine_filter(query, nil), do: query
   defp apply_cuisine_filter(query, ""), do: query
+
   defp apply_cuisine_filter(query, cuisine) do
     query
     |> join(:inner, [r], c in assoc(r, :cuisines))
@@ -254,14 +265,18 @@ defmodule Eatfair.Restaurants do
 
   defp apply_price_filter(query, nil), do: query
   defp apply_price_filter(query, ""), do: query
+
   defp apply_price_filter(query, max_price) when is_binary(max_price) do
-    {price_decimal, _} = Decimal.new(max_price) |> Decimal.to_float() |> Float.to_string() |> Float.parse()
+    {price_decimal, _} =
+      Decimal.new(max_price) |> Decimal.to_float() |> Float.to_string() |> Float.parse()
+
     price_decimal = Decimal.from_float(price_decimal)
     where(query, [r], r.min_order_value <= ^price_decimal)
   end
 
   defp apply_delivery_time_filter(query, nil), do: query
   defp apply_delivery_time_filter(query, ""), do: query
+
   defp apply_delivery_time_filter(query, max_time) when is_binary(max_time) do
     {time_int, _} = Integer.parse(max_time)
     where(query, [r], r.avg_preparation_time <= ^time_int)
@@ -303,7 +318,8 @@ defmodule Eatfair.Restaurants do
   """
   def get_available_meals(restaurant_id) do
     from(meal in Meal,
-      join: menu in Menu, on: meal.menu_id == menu.id,
+      join: menu in Menu,
+      on: meal.menu_id == menu.id,
       where: menu.restaurant_id == ^restaurant_id and meal.is_available == true,
       preload: [:menu]
     )
@@ -410,7 +426,7 @@ defmodule Eatfair.Restaurants do
     |> preload([:menus])
     |> Repo.one()
   end
-  
+
   @doc """
   Gets a restaurant by owner ID.
   Alias for get_user_restaurant with consistent naming.
@@ -426,11 +442,13 @@ defmodule Eatfair.Restaurants do
   def estimate_delivery_time(%Restaurant{} = restaurant, _delivery_address) do
     # For MVP: Use average values since we don't have real distance calculation yet
     # Future: Integrate with mapping service for actual distance
-    avg_distance_km = restaurant.delivery_radius_km / 2  # Assume average delivery is half the radius
+    # Assume average delivery is half the radius
+    avg_distance_km = restaurant.delivery_radius_km / 2
     prep_time = restaurant.avg_preparation_time || 30
     delivery_time = round(avg_distance_km * restaurant.delivery_time_per_km)
-    buffer_time = 5  # Safety buffer
-    
+    # Safety buffer
+    buffer_time = 5
+
     prep_time + delivery_time + buffer_time
   end
 end

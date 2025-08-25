@@ -5,7 +5,8 @@ defmodule Eatfair.Accounts.Address do
   alias Eatfair.Accounts.User
 
   schema "addresses" do
-    field :name, :string  # e.g. "Home", "Work", "Mom's place"
+    # e.g. "Home", "Work", "Mom's place"
+    field :name, :string
     field :street_address, :string
     field :city, :string
     field :postal_code, :string
@@ -23,8 +24,15 @@ defmodule Eatfair.Accounts.Address do
   def changeset(address, attrs) do
     address
     |> cast(attrs, [
-      :name, :street_address, :city, :postal_code, :country,
-      :latitude, :longitude, :is_default, :user_id
+      :name,
+      :street_address,
+      :city,
+      :postal_code,
+      :country,
+      :latitude,
+      :longitude,
+      :is_default,
+      :user_id
     ])
     |> validate_required([:street_address, :city, :postal_code, :user_id])
     |> validate_length(:name, max: 50)

@@ -32,10 +32,17 @@ defmodule Eatfair.Notifications.UserPreference do
     preference
     |> cast(attrs, [
       :user_id,
-      :email_enabled, :sms_enabled, :push_enabled,
-      :order_status_notifications, :delivery_notifications,
-      :marketing_notifications, :newsletter_enabled, :system_announcements,
-      :quiet_hours_start, :quiet_hours_end, :timezone
+      :email_enabled,
+      :sms_enabled,
+      :push_enabled,
+      :order_status_notifications,
+      :delivery_notifications,
+      :marketing_notifications,
+      :newsletter_enabled,
+      :system_announcements,
+      :quiet_hours_start,
+      :quiet_hours_end,
+      :timezone
     ])
     |> validate_required([:user_id])
     |> unique_constraint(:user_id)

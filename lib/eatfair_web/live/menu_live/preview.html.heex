@@ -7,7 +7,7 @@
         <span class="text-blue-700 font-medium">Menu Preview</span>
         <span class="text-blue-600 text-sm">This is how customers will see your menu</span>
       </div>
-      
+
       <button
         phx-click="return_to_edit"
         data-test="return-to-edit-button"
@@ -17,32 +17,32 @@
       </button>
     </div>
   </div>
-
-  <!-- Restaurant Header -->
+  
+<!-- Restaurant Header -->
   <div class="bg-gradient-to-r from-gray-900 to-gray-700 text-white py-12">
     <div class="max-w-4xl mx-auto px-4 text-center">
-      <h1 class="text-4xl font-bold mb-2"><%= @restaurant.name %></h1>
+      <h1 class="text-4xl font-bold mb-2">{@restaurant.name}</h1>
       <%= if @restaurant.description do %>
         <p class="text-gray-300 text-lg max-w-2xl mx-auto">
-          <%= @restaurant.description %>
+          {@restaurant.description}
         </p>
       <% end %>
       <div class="flex justify-center items-center mt-4 space-x-6 text-sm text-gray-300">
         <div class="flex items-center space-x-2">
           <.icon name="hero-map-pin" class="w-4 h-4" />
-          <span><%= @restaurant.address %></span>
+          <span>{@restaurant.address}</span>
         </div>
         <%= if @restaurant.cuisine_types do %>
           <div class="flex items-center space-x-2">
             <.icon name="hero-tag" class="w-4 h-4" />
-            <span><%= Enum.join(@restaurant.cuisine_types, ", ") %></span>
+            <span>{Enum.join(@restaurant.cuisine_types, ", ")}</span>
           </div>
         <% end %>
       </div>
     </div>
   </div>
-
-  <!-- Menu Content -->
+  
+<!-- Menu Content -->
   <div class="max-w-4xl mx-auto px-4 py-8">
     <%= if @menus == [] do %>
       <!-- Empty Menu State -->
@@ -61,31 +61,31 @@
             <div data-test={"menu-section-#{data_test_id(menu.name)}-customer"}>
               <!-- Section Header -->
               <div class="border-b border-gray-200 pb-4 mb-8">
-                <h2 class="text-2xl font-bold text-gray-900"><%= menu.name %></h2>
+                <h2 class="text-2xl font-bold text-gray-900">{menu.name}</h2>
               </div>
-
-              <!-- Menu Items -->
+              
+<!-- Menu Items -->
               <div class="grid grid-cols-1 gap-6">
                 <%= for meal <- menu.meals do %>
                   <%= if meal.is_available do %>
                     <div class="flex items-start justify-between py-4 border-b border-gray-100 last:border-b-0">
                       <div class="flex-1 pr-4">
                         <h3 class="font-semibold text-gray-900 text-lg">
-                          <%= meal.name %>
+                          {meal.name}
                         </h3>
                         <%= if meal.description && meal.description != "" do %>
                           <p class="text-gray-600 mt-1 leading-relaxed">
-                            <%= meal.description %>
+                            {meal.description}
                           </p>
                         <% end %>
                       </div>
-                      
+
                       <div class="flex items-center space-x-4">
                         <span class="text-lg font-semibold text-green-600">
-                          <%= format_price(meal.price) %>
+                          {format_price(meal.price)}
                         </span>
                         
-                        <!-- Future: Add to cart button will go here -->
+<!-- Future: Add to cart button will go here -->
                         <button class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium transition-colors text-sm">
                           Add to Cart
                         </button>
@@ -98,8 +98,8 @@
           <% end %>
         <% end %>
       </div>
-
-      <!-- Order Summary Section (Future feature preview) -->
+      
+<!-- Order Summary Section (Future feature preview) -->
       <div class="mt-16 bg-gray-50 rounded-lg p-6">
         <h3 class="font-semibold text-gray-900 mb-4">Ready to Order?</h3>
         <p class="text-gray-600 mb-4">
@@ -113,12 +113,13 @@
       </div>
     <% end %>
   </div>
-
-  <!-- Footer Preview -->
+  
+<!-- Footer Preview -->
   <div class="bg-gray-100 mt-16 py-8">
     <div class="max-w-4xl mx-auto px-4 text-center">
       <p class="text-gray-600">
-        Ordering powered by <strong>EatFair</strong> • Supporting local restaurants, commission-free
+        Ordering powered by <strong>EatFair</strong>
+        • Supporting local restaurants, commission-free
       </p>
     </div>
   </div>

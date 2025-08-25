@@ -100,7 +100,10 @@ defmodule EatfairWeb.Layouts do
         data-phx-theme="system"
         title="System theme"
       >
-        <.icon name="hero-computer-desktop" class="w-4 h-4 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100" />
+        <.icon
+          name="hero-computer-desktop"
+          class="w-4 h-4 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
+        />
       </button>
 
       <button
@@ -118,7 +121,10 @@ defmodule EatfairWeb.Layouts do
         data-phx-theme="dark"
         title="Dark theme"
       >
-        <.icon name="hero-moon" class="w-4 h-4 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100" />
+        <.icon
+          name="hero-moon"
+          class="w-4 h-4 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
+        />
       </button>
     </div>
     """

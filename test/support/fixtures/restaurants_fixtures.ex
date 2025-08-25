@@ -11,7 +11,7 @@ defmodule Eatfair.RestaurantsFixtures do
 
   def valid_restaurant_attributes(attrs \\ %{}) do
     owner = attrs[:owner] || AccountsFixtures.confirmed_user_fixture(%{role: "restaurant_owner"})
-    
+
     Enum.into(attrs, %{
       name: unique_restaurant_name(),
       address: "Test Street 123, Amsterdam",
@@ -64,20 +64,25 @@ defmodule Eatfair.RestaurantsFixtures do
   # When called with restaurant_id in attrs (for convenience in tests)
   def meal_fixture(attrs, %{}) when is_map(attrs) and is_map_key(attrs, :restaurant_id) do
     restaurant_id = attrs.restaurant_id
-    
+
     # Create a default menu for this restaurant if none exists
-    menu = case Restaurants.get_restaurant_menus(restaurant_id) do
-      [] ->
-        {:ok, menu} = Restaurants.create_menu(%{
-          name: "Default Menu",
-          restaurant_id: restaurant_id
-        })
-        menu
-      [menu | _] -> menu
-    end
-    
+    menu =
+      case Restaurants.get_restaurant_menus(restaurant_id) do
+        [] ->
+          {:ok, menu} =
+            Restaurants.create_menu(%{
+              name: "Default Menu",
+              restaurant_id: restaurant_id
+            })
+
+          menu
+
+        [menu | _] ->
+          menu
+      end
+
     meal_attrs = Map.delete(attrs, :restaurant_id) |> Map.put(:menu_id, menu.id)
-    
+
     {:ok, meal} =
       meal_attrs
       |> Enum.into(%{
@@ -112,22 +117,23 @@ defmodule Eatfair.RestaurantsFixtures do
   """
   def associate_restaurant_cuisines(restaurant, cuisines) when is_list(cuisines) do
     now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
-    
-    entries = Enum.map(cuisines, fn cuisine ->
-      %{
-        restaurant_id: restaurant.id,
-        cuisine_id: cuisine.id,
-        inserted_at: now,
-        updated_at: now
-      }
-    end)
-    
+
+    entries =
+      Enum.map(cuisines, fn cuisine ->
+        %{
+          restaurant_id: restaurant.id,
+          cuisine_id: cuisine.id,
+          inserted_at: now,
+          updated_at: now
+        }
+      end)
+
     Eatfair.Repo.insert_all("restaurant_cuisines", entries, on_conflict: :nothing)
-    
+
     # Return the restaurant reloaded with cuisines
     Eatfair.Repo.preload(restaurant, :cuisines, force: true)
   end
-  
+
   def associate_restaurant_cuisines(restaurant, cuisine) do
     associate_restaurant_cuisines(restaurant, [cuisine])
   end

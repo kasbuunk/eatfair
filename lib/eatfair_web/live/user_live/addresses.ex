@@ -8,8 +8,8 @@ defmodule EatfairWeb.UserLive.Addresses do
   def mount(_params, _session, socket) do
     user = socket.assigns.current_scope.user
     addresses = Accounts.list_user_addresses(user.id)
-    
-    {:ok, 
+
+    {:ok,
      socket
      |> assign(:page_title, "Your Addresses")
      |> assign(:addresses, addresses)
@@ -35,6 +35,7 @@ defmodule EatfairWeb.UserLive.Addresses do
     case Accounts.create_address(address_params) do
       {:ok, _address} ->
         addresses = Accounts.list_user_addresses(user.id)
+
         {:noreply,
          socket
          |> assign(:addresses, addresses)
@@ -50,10 +51,11 @@ defmodule EatfairWeb.UserLive.Addresses do
   @impl true
   def handle_event("set_default", %{"id" => id}, socket) do
     user = socket.assigns.current_scope.user
-    
+
     case Accounts.set_default_address(user.id, String.to_integer(id)) do
       {:ok, _address} ->
         addresses = Accounts.list_user_addresses(user.id)
+
         {:noreply,
          socket
          |> assign(:addresses, addresses)
@@ -67,11 +69,12 @@ defmodule EatfairWeb.UserLive.Addresses do
   @impl true
   def handle_event("delete_address", %{"id" => id}, socket) do
     address = Accounts.get_address!(String.to_integer(id))
-    
+
     case Accounts.delete_address(address) do
       {:ok, _address} ->
         user = socket.assigns.current_scope.user
         addresses = Accounts.list_user_addresses(user.id)
+
         {:noreply,
          socket
          |> assign(:addresses, addresses)

@@ -293,7 +293,11 @@ defmodule Eatfair.Accounts do
 
   """
   def list_user_addresses(user_id) do
-    Repo.all(from a in Address, where: a.user_id == ^user_id, order_by: [desc: a.is_default, asc: a.inserted_at])
+    Repo.all(
+      from a in Address,
+        where: a.user_id == ^user_id,
+        order_by: [desc: a.is_default, asc: a.inserted_at]
+    )
   end
 
   @doc """
@@ -327,20 +331,23 @@ defmodule Eatfair.Accounts do
   def create_address(attrs \\ %{}) do
     # Geocode the address if we don't have coordinates
     attrs = maybe_geocode_address(attrs)
-    
-    result = 
+
+    result =
       %Address{}
       |> Address.changeset(attrs)
       |> Repo.insert()
-    
+
     case result do
-      {:ok, address} -> 
+      {:ok, address} ->
         # If this is set as default, unset other defaults for this user
         if address.is_default do
           unset_other_default_addresses(address.user_id, address.id)
         end
+
         {:ok, address}
-      error -> error
+
+      error ->
+        error
     end
   end
 
@@ -348,21 +355,23 @@ defmodule Eatfair.Accounts do
     # Only geocode if we don't have coordinates and we have an address
     if is_nil(attrs["latitude"]) && is_nil(attrs["longitude"]) && attrs["street_address"] do
       address_string = build_address_string(attrs)
-      
+
       case Eatfair.GeoUtils.geocode_address(address_string) do
         {:ok, %{latitude: lat, longitude: lon}} ->
           attrs
           |> Map.put("latitude", Decimal.new(Float.to_string(lat)))
           |> Map.put("longitude", Decimal.new(Float.to_string(lon)))
-        
+
         {:error, :not_found} ->
           # Try with just the city if full address doesn't work
           city_string = attrs["city"] || ""
+
           case Eatfair.GeoUtils.geocode_address(city_string) do
             {:ok, %{latitude: lat, longitude: lon}} ->
               attrs
               |> Map.put("latitude", Decimal.new(Float.to_string(lat)))
               |> Map.put("longitude", Decimal.new(Float.to_string(lon)))
+
             _ ->
               attrs
           end
@@ -439,7 +448,7 @@ defmodule Eatfair.Accounts do
   """
   def set_default_address(user_id, address_id) do
     address = Repo.get!(Address, address_id)
-    
+
     # Verify the address belongs to the user
     if address.user_id != user_id do
       {:error, :not_found}
@@ -450,7 +459,7 @@ defmodule Eatfair.Accounts do
           from(a in Address, where: a.user_id == ^user_id and a.id != ^address_id),
           set: [is_default: false]
         )
-        
+
         # Then set this address as default
         case Repo.update(Address.changeset(address, %{is_default: true})) do
           {:ok, updated_address} -> {:ok, updated_address}

@@ -13,38 +13,45 @@ defmodule EatfairWeb.OrderFlowTest do
   describe "Complete order flow: User orders food for delivery" do
     setup do
       # Create test user
-      user = user_fixture(%{
-        email: "test@example.com",
-        name: "Test User",
-        phone_number: "555-0123"
-      })
-      
+      user =
+        user_fixture(%{
+          email: "test@example.com",
+          name: "Test User",
+          phone_number: "555-0123"
+        })
+
       # Create address with explicit coordinates that are close to restaurant
-      {:ok, _address} = Eatfair.Accounts.create_address(%{
-        "name" => "Home",
-        "street_address" => "Damrak 1, Amsterdam",
-        "city" => "Amsterdam",
-        "postal_code" => "1012 LG",
-        "country" => "Netherlands",
-        "latitude" => "52.3702",  # Very close to restaurant
-        "longitude" => "4.8952", 
-        "is_default" => true,
-        "user_id" => user.id
-      })
+      {:ok, _address} =
+        Eatfair.Accounts.create_address(%{
+          "name" => "Home",
+          "street_address" => "Damrak 1, Amsterdam",
+          "city" => "Amsterdam",
+          "postal_code" => "1012 LG",
+          "country" => "Netherlands",
+          # Very close to restaurant
+          "latitude" => "52.3702",
+          "longitude" => "4.8952",
+          "is_default" => true,
+          "user_id" => user.id
+        })
 
       # Create test restaurant with owner
-      owner = user_fixture(%{
-        email: "owner@restaurant.com",
-        name: "Restaurant Owner",
-        role: :owner
-      })
+      owner =
+        user_fixture(%{
+          email: "owner@restaurant.com",
+          name: "Restaurant Owner",
+          role: :owner
+        })
 
-      {:ok, restaurant} = Restaurants.create_restaurant(%{
+      {:ok, restaurant} =
+        Restaurants.create_restaurant(%{
           name: "Test Pizza Place",
-          address: "Nieuwmarkt 10, Amsterdam",  # Close to user location
+          # Close to user location
+          address: "Nieuwmarkt 10, Amsterdam",
           latitude: Decimal.new("52.3702"),
           longitude: Decimal.new("4.9002"),
-          delivery_radius_km: 5,  # 5km delivery radius
+          # 5km delivery radius
+          delivery_radius_km: 5,
           delivery_time: 40,
           min_order_value: Decimal.new("15.00"),
           is_open: true,
@@ -55,37 +62,42 @@ defmodule EatfairWeb.OrderFlowTest do
 
       # Create cuisine and associate with restaurant
       {:ok, cuisine} = Restaurants.create_cuisine(%{name: "Italian"})
-      
+
       # Associate restaurant with cuisine directly via repo
-      Repo.insert_all("restaurant_cuisines", [%{
-        restaurant_id: restaurant.id, 
-        cuisine_id: cuisine.id,
-        inserted_at: DateTime.utc_now(),
-        updated_at: DateTime.utc_now()
-      }])
+      Repo.insert_all("restaurant_cuisines", [
+        %{
+          restaurant_id: restaurant.id,
+          cuisine_id: cuisine.id,
+          inserted_at: DateTime.utc_now(),
+          updated_at: DateTime.utc_now()
+        }
+      ])
 
       # Create menu for restaurant
-      menu = Repo.insert!(%Menu{
-        name: "Main Menu",
-        restaurant_id: restaurant.id
-      })
+      menu =
+        Repo.insert!(%Menu{
+          name: "Main Menu",
+          restaurant_id: restaurant.id
+        })
 
       # Create test meals
-      meal1 = Repo.insert!(%Meal{
-        name: "Margherita Pizza",
-        description: "Classic pizza with tomato and mozzarella",
-        price: Decimal.new("18.99"),
-        is_available: true,
-        menu_id: menu.id
-      })
+      meal1 =
+        Repo.insert!(%Meal{
+          name: "Margherita Pizza",
+          description: "Classic pizza with tomato and mozzarella",
+          price: Decimal.new("18.99"),
+          is_available: true,
+          menu_id: menu.id
+        })
 
-      meal2 = Repo.insert!(%Meal{
-        name: "Caesar Salad",
-        description: "Fresh romaine with parmesan and croutons",
-        price: Decimal.new("12.99"),
-        is_available: true,
-        menu_id: menu.id
-      })
+      meal2 =
+        Repo.insert!(%Meal{
+          name: "Caesar Salad",
+          description: "Fresh romaine with parmesan and croutons",
+          price: Decimal.new("12.99"),
+          is_available: true,
+          menu_id: menu.id
+        })
 
       %{
         user: user,
@@ -106,15 +118,15 @@ defmodule EatfairWeb.OrderFlowTest do
     } do
       # Step 1: User logs in and browses restaurants
       conn = log_in_user(conn, user)
-      
+
       {:ok, restaurants_view, _html} = live(conn, ~p"/")
-      
+
       # Verify restaurant is displayed
       assert has_element?(restaurants_view, "h3", restaurant.name)
       assert has_element?(restaurants_view, "span", "4.5")
-      
+
       # Step 2: User clicks on restaurant to view details
-      {:ok, restaurant_view, _html} = 
+      {:ok, restaurant_view, _html} =
         restaurants_view
         |> element("#restaurants-#{restaurant.id}")
         |> render_click()
@@ -132,7 +144,7 @@ defmodule EatfairWeb.OrderFlowTest do
       restaurant_view
       |> element("[data-meal-id='#{meal1.id}'] [data-add-to-cart]")
       |> render_click()
-      
+
       restaurant_view
       |> element("[data-meal-id='#{meal1.id}'] [data-add-to-cart]")
       |> render_click()
@@ -144,9 +156,9 @@ defmodule EatfairWeb.OrderFlowTest do
 
       # Verify cart is updated (3 items total)
       assert has_element?(restaurant_view, "[data-cart-count]", "3")
-      
+
       # Step 4: User proceeds to checkout
-      {:ok, checkout_view, _html} = 
+      {:ok, checkout_view, _html} =
         restaurant_view
         |> element("[data-checkout-button]")
         |> render_click()
@@ -154,9 +166,11 @@ defmodule EatfairWeb.OrderFlowTest do
 
       # Verify checkout page displays order items correctly
       assert has_element?(checkout_view, "[data-order-item]", meal1.name)
-      assert has_element?(checkout_view, "[data-item-quantity]", "2")  # 2x pizza
-      assert has_element?(checkout_view, "[data-order-item]", meal2.name) 
-      assert has_element?(checkout_view, "[data-item-quantity]", "1")  # 1x salad
+      # 2x pizza
+      assert has_element?(checkout_view, "[data-item-quantity]", "2")
+      assert has_element?(checkout_view, "[data-order-item]", meal2.name)
+      # 1x salad
+      assert has_element?(checkout_view, "[data-item-quantity]", "1")
 
       # Calculate expected total: (18.99 * 2) + (12.99 * 1) = 50.97
       expected_total = Decimal.new("50.97")
@@ -188,7 +202,7 @@ defmodule EatfairWeb.OrderFlowTest do
       assert Repo.aggregate(Payment, :count) == initial_payment_count + 1
 
       # Get the created order
-      order = 
+      order =
         Order
         |> where([o], o.customer_id == ^user.id)
         |> order_by([o], desc: o.inserted_at)
@@ -205,7 +219,8 @@ defmodule EatfairWeb.OrderFlowTest do
       assert order.status == "confirmed"
 
       # Verify order items
-      assert length(order.order_items) == 2  # 2 different meals
+      # 2 different meals
+      assert length(order.order_items) == 2
 
       pizza_item = Enum.find(order.order_items, &(&1.meal_id == meal1.id))
       salad_item = Enum.find(order.order_items, &(&1.meal_id == meal2.id))
@@ -231,16 +246,16 @@ defmodule EatfairWeb.OrderFlowTest do
       meal1: meal1
     } do
       conn = log_in_user(conn, user)
-      
+
       # Navigate to restaurant and add item to cart
       {:ok, restaurant_view, _html} = live(conn, ~p"/restaurants/#{restaurant.id}")
-      
+
       restaurant_view
       |> element("[data-meal-id='#{meal1.id}'] [data-add-to-cart]")
       |> render_click()
 
       # Go to checkout
-      {:ok, checkout_view, _html} = 
+      {:ok, checkout_view, _html} =
         restaurant_view
         |> element("[data-checkout-button]")
         |> render_click()
@@ -251,8 +266,10 @@ defmodule EatfairWeb.OrderFlowTest do
 
       checkout_view
       |> form("#checkout-form", %{
-        "delivery_address" => "",  # Empty address
-        "phone_number" => "",      # Empty phone
+        # Empty address
+        "delivery_address" => "",
+        # Empty phone
+        "phone_number" => "",
         "delivery_notes" => "Optional notes"
       })
       |> render_submit()
@@ -262,11 +279,11 @@ defmodule EatfairWeb.OrderFlowTest do
 
       # Verify validation error is shown (Phoenix forms show errors in different ways)
       rendered_html = render(checkout_view)
-      
+
       # Check for validation error messages or flash messages
       assert rendered_html =~ "Please provide a complete delivery address" or
-             rendered_html =~ "can't be blank" or 
-             rendered_html =~ "Please fix the errors below"
+               rendered_html =~ "can't be blank" or
+               rendered_html =~ "Please fix the errors below"
     end
   end
 end

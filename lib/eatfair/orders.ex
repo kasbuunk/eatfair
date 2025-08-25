@@ -84,17 +84,19 @@ defmodule Eatfair.Orders do
   """
   def create_order_items(order_id, items_attrs) do
     now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
-    
-    items_with_order_id = 
-      Enum.map(items_attrs, fn attrs -> 
-        attrs
+
+    items_with_order_id =
+      Enum.map(items_attrs, fn %{meal_id: meal_id, quantity: quantity} = attrs ->
+        # Only allow specific fields to be inserted to avoid unknown field errors
+        # Price is a virtual field and should not be inserted into order_items table directly
+        Map.take(attrs, [:meal_id, :quantity])
         |> Map.put(:order_id, order_id)
         |> Map.put(:inserted_at, now)
         |> Map.put(:updated_at, now)
       end)
 
     {count, items} = Repo.insert_all(OrderItem, items_with_order_id, returning: true)
-    
+
     if count == length(items_attrs) do
       {:ok, items}
     else
@@ -135,11 +137,11 @@ defmodule Eatfair.Orders do
   """
   def process_payment(order_id, payment_attrs) do
     # This is a stub - in a real app, this would integrate with a payment provider
-    payment_attrs = 
+    payment_attrs =
       payment_attrs
       |> Map.put(:order_id, order_id)
       |> Map.put(:status, "completed")
-      |> Map.put(:provider_transaction_id, "mock_#{:rand.uniform(1000000)}")
+      |> Map.put(:provider_transaction_id, "mock_#{:rand.uniform(1_000_000)}")
 
     case create_payment(payment_attrs) do
       {:ok, payment} ->
@@ -147,14 +149,15 @@ defmodule Eatfair.Orders do
         order = get_order!(order_id)
         update_order_status(order, "confirmed")
         {:ok, payment}
-      
-      error -> error
+
+      error ->
+        error
     end
   end
 
   @doc """
   Updates order status with proper validation and notifications.
-  
+
   This is the main function for status progression with:
   - Status transition validation
   - Timestamp tracking  
@@ -164,17 +167,17 @@ defmodule Eatfair.Orders do
   def update_order_status(order, new_status, attrs \\ %{}) do
     old_status = order.status
     now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
-    
+
     # Add timestamp for the new status
     status_attrs = attrs |> add_status_timestamp(new_status, now)
-    
+
     changeset = Order.status_changeset(order, Map.put(status_attrs, :status, new_status))
-    
+
     case Repo.update(changeset) do
       {:ok, updated_order} ->
         # Load associations for notifications
         updated_order = updated_order |> Repo.preload([:restaurant, :customer])
-        
+
         # Create notification event
         Eatfair.Notifications.notify_order_status_change(
           updated_order,
@@ -182,16 +185,17 @@ defmodule Eatfair.Orders do
           new_status,
           Map.take(attrs, [:delay_reason, :estimated_delivery_at])
         )
-        
+
         # Broadcast real-time update
         broadcast_order_update(updated_order, old_status)
-        
+
         {:ok, updated_order}
-        
-      error -> error
+
+      error ->
+        error
     end
   end
-  
+
   @doc """
   Lists orders for a restaurant organized by status.
   """
@@ -200,11 +204,11 @@ defmodule Eatfair.Orders do
     |> where([o], o.restaurant_id == ^restaurant_id)
     |> where([o], o.status in ["confirmed", "preparing", "ready", "out_for_delivery"])
     |> preload([:customer, order_items: :meal])
-    |> order_by([o], [asc: :confirmed_at, asc: :inserted_at])
+    |> order_by([o], asc: :confirmed_at, asc: :inserted_at)
     |> Repo.all()
     |> group_orders_by_status()
   end
-  
+
   @doc """
   Lists active orders for a customer (not delivered or cancelled).
   """
@@ -216,7 +220,7 @@ defmodule Eatfair.Orders do
     |> order_by([o], desc: o.inserted_at)
     |> Repo.all()
   end
-  
+
   @doc """
   Lists orders currently out for delivery.
   """
@@ -227,32 +231,37 @@ defmodule Eatfair.Orders do
     |> order_by([o], asc: o.out_for_delivery_at)
     |> Repo.all()
   end
-  
+
   @doc """
   Gets estimated delivery time based on order status and restaurant prep time.
   """
   def calculate_estimated_delivery(order) do
     base_prep_minutes = order.estimated_prep_time_minutes || 30
-    delivery_minutes = 20  # Default delivery time
-    
+    # Default delivery time
+    delivery_minutes = 20
+
     case order.status do
       "confirmed" ->
         NaiveDateTime.add(NaiveDateTime.utc_now(), (base_prep_minutes + delivery_minutes) * 60)
+
       "preparing" when order.preparing_at != nil ->
         prep_elapsed = NaiveDateTime.diff(NaiveDateTime.utc_now(), order.preparing_at, :minute)
         remaining_prep = max(0, base_prep_minutes - prep_elapsed)
         NaiveDateTime.add(NaiveDateTime.utc_now(), (remaining_prep + delivery_minutes) * 60)
+
       "ready" ->
         NaiveDateTime.add(NaiveDateTime.utc_now(), delivery_minutes * 60)
+
       "out_for_delivery" ->
         order.estimated_delivery_at || NaiveDateTime.add(NaiveDateTime.utc_now(), 15 * 60)
+
       _ ->
         nil
     end
   end
-  
+
   # Private helper functions
-  
+
   defp add_status_timestamp(attrs, status, timestamp) do
     case status do
       "confirmed" -> Map.put(attrs, :confirmed_at, timestamp)
@@ -264,7 +273,7 @@ defmodule Eatfair.Orders do
       _ -> attrs
     end
   end
-  
+
   defp broadcast_order_update(order, old_status) do
     # Broadcast to customer
     Phoenix.PubSub.broadcast(
@@ -272,14 +281,14 @@ defmodule Eatfair.Orders do
       "order_tracking:#{order.customer_id}",
       {:order_status_updated, order, old_status}
     )
-    
+
     # Broadcast to restaurant
     Phoenix.PubSub.broadcast(
       Eatfair.PubSub,
       "restaurant_orders:#{order.restaurant_id}",
       {:order_status_updated, order, old_status}
     )
-    
+
     # Broadcast to courier if assigned
     if order.courier_id do
       Phoenix.PubSub.broadcast(
@@ -289,13 +298,13 @@ defmodule Eatfair.Orders do
       )
     end
   end
-  
+
   defp group_orders_by_status(orders) do
     %{
-      confirmed: Enum.filter(orders, & &1.status == "confirmed"),
-      preparing: Enum.filter(orders, & &1.status == "preparing"),
-      ready: Enum.filter(orders, & &1.status == "ready"),
-      out_for_delivery: Enum.filter(orders, & &1.status == "out_for_delivery")
+      confirmed: Enum.filter(orders, &(&1.status == "confirmed")),
+      preparing: Enum.filter(orders, &(&1.status == "preparing")),
+      ready: Enum.filter(orders, &(&1.status == "ready")),
+      out_for_delivery: Enum.filter(orders, &(&1.status == "out_for_delivery"))
     }
   end
 end

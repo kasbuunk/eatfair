@@ -9,7 +9,7 @@ defmodule Eatfair.OrdersFixtures do
     customer = attrs[:customer] || Eatfair.AccountsFixtures.user_fixture()
     restaurant = attrs[:restaurant] || Eatfair.RestaurantsFixtures.restaurant_fixture()
 
-    order_attrs = 
+    order_attrs =
       attrs
       |> Enum.into(%{
         customer_id: customer.id,
@@ -21,7 +21,7 @@ defmodule Eatfair.OrdersFixtures do
       })
 
     {:ok, order} = Orders.create_order(order_attrs)
-    
+
     # Preload associations like the main context function does
     Orders.get_order!(order.id)
   end
@@ -29,9 +29,11 @@ defmodule Eatfair.OrdersFixtures do
   def order_with_items_fixture(attrs \\ %{}) do
     customer = attrs[:customer] || Eatfair.AccountsFixtures.user_fixture()
     restaurant = attrs[:restaurant] || Eatfair.RestaurantsFixtures.restaurant_fixture()
-    meal = attrs[:meal] || Eatfair.RestaurantsFixtures.meal_fixture(%{restaurant_id: restaurant.id})
 
-    order_attrs = 
+    meal =
+      attrs[:meal] || Eatfair.RestaurantsFixtures.meal_fixture(%{restaurant_id: restaurant.id})
+
+    order_attrs =
       attrs
       |> Map.drop([:customer, :restaurant, :meal, :items])
       |> Enum.into(%{
@@ -53,15 +55,15 @@ defmodule Eatfair.OrdersFixtures do
 
   def payment_fixture(attrs \\ %{}) do
     order = attrs[:order] || order_fixture()
-    
-    payment_attrs = 
+
+    payment_attrs =
       attrs
       |> Enum.into(%{
         order_id: order.id,
         amount: order.total_price,
         status: "completed",
         provider: "test_provider",
-        provider_transaction_id: "test_txn_#{:rand.uniform(1000000)}"
+        provider_transaction_id: "test_txn_#{:rand.uniform(1_000_000)}"
       })
 
     {:ok, payment} = Orders.create_payment(payment_attrs)

@@ -18,7 +18,10 @@
         <div class="flex items-center justify-between h-16">
           <!-- Logo/Brand -->
           <div class="flex items-center">
-            <.link navigate={~p"/"} class="flex items-center space-x-2 text-xl font-bold text-indigo-600 hover:text-indigo-700">
+            <.link
+              navigate={~p"/"}
+              class="flex items-center space-x-2 text-xl font-bold text-indigo-600 hover:text-indigo-700"
+            >
               <div class="w-8 h-8 bg-indigo-600 rounded-lg flex items-center justify-center">
                 <span class="text-white font-bold text-sm">🍕</span>
               </div>
@@ -26,44 +29,72 @@
             </.link>
           </div>
           
-          <!-- Navigation Links -->
+<!-- Navigation Links -->
           <div class="flex items-center space-x-4">
             <%= if @current_scope do %>
               <!-- User Menu -->
               <div class="hidden sm:flex items-center space-x-4 text-sm">
-                <.link href={~p"/"} class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                <.link
+                  href={~p"/"}
+                  class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
                   Restaurants
                 </.link>
                 <%= if @current_scope.user.role == "restaurant_owner" do %>
-                  <.link href={~p"/restaurant/dashboard"} class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                  <.link
+                    href={~p"/restaurant/dashboard"}
+                    class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  >
                     My Restaurant
                   </.link>
                 <% end %>
-                <span class="text-gray-700 dark:text-gray-300">Hi, {@current_scope.user.name || String.split(@current_scope.user.email, "@") |> hd()}</span>
-                <.link href={~p"/users/settings"} class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                <span class="text-gray-700 dark:text-gray-300">
+                  Hi, {@current_scope.user.name ||
+                    String.split(@current_scope.user.email, "@") |> hd()}
+                </span>
+                <.link
+                  href={~p"/users/settings"}
+                  class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
                   Settings
                 </.link>
                 <.theme_toggle />
-                <.link href={~p"/users/log-out"} method="delete" class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                <.link
+                  href={~p"/users/log-out"}
+                  method="delete"
+                  class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                >
                   Log out
                 </.link>
               </div>
               
-              <!-- Mobile Menu Button -->
+<!-- Mobile Menu Button -->
               <div class="sm:hidden">
                 <button class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 p-2 transition-colors">
                   <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"></path>
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      stroke-width="2"
+                      d="M4 6h16M4 12h16M4 18h16"
+                    >
+                    </path>
                   </svg>
                 </button>
               </div>
             <% else %>
               <div class="flex items-center space-x-2">
-                <.link href={~p"/users/log-in"} class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                <.link
+                  href={~p"/users/log-in"}
+                  class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
                   Log in
                 </.link>
                 <.theme_toggle />
-                <.link href={~p"/users/register"} class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors">
+                <.link
+                  href={~p"/users/register"}
+                  class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
+                >
                   Sign up
                 </.link>
               </div>

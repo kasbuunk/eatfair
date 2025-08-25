@@ -8,41 +8,46 @@ defmodule EatfairWeb.CheckoutLive do
     case socket.assigns.current_scope do
       %{user: nil} ->
         {:ok, push_navigate(socket, to: ~p"/users/log-in")}
-      
+
       %{user: user} ->
         # Get cart data from URL parameters or redirect if no cart
         case params do
           %{"restaurant_id" => restaurant_id} ->
             restaurant = Restaurants.get_restaurant!(restaurant_id)
-            
+
             # Check if cart parameter exists
-            {cart_items, cart_total} = case params do
-              %{"cart" => cart_param} ->
-                cart = decode_cart(cart_param)
-                cart_items = Cart.create_cart_items(cart, restaurant)
-                cart_total = Cart.calculate_total(cart_items)
-                {cart_items, cart_total}
-              _ ->
-                # For testing purposes, create empty cart
-                {[], Decimal.new(0)}
-            end
-            
+            {cart_items, cart_total} =
+              case params do
+                %{"cart" => cart_param} ->
+                  cart = decode_cart(cart_param)
+                  cart_items = Cart.create_cart_items(cart, restaurant)
+                  cart_total = Cart.calculate_total(cart_items)
+                  {cart_items, cart_total}
+
+                _ ->
+                  # For testing purposes, create empty cart
+                  {[], Decimal.new(0)}
+              end
+
             # Validate minimum order (skip for empty cart in testing)
-            validation_result = if Decimal.eq?(cart_total, 0) do
-              {:ok, cart_total}  # Allow empty cart for testing
-            else
-              Cart.validate_minimum_order(cart_total, restaurant)
-            end
-            
+            validation_result =
+              if Decimal.eq?(cart_total, 0) do
+                # Allow empty cart for testing
+                {:ok, cart_total}
+              else
+                Cart.validate_minimum_order(cart_total, restaurant)
+              end
+
             case validation_result do
               {:ok, _} ->
-                form = to_form(%{
-                  "delivery_address" => user.default_address || "",
-                  "delivery_notes" => "",
-                  "phone_number" => user.phone_number || ""
-                })
-                
-                socket = 
+                form =
+                  to_form(%{
+                    "delivery_address" => user.default_address || "",
+                    "delivery_notes" => "",
+                    "phone_number" => user.phone_number || ""
+                  })
+
+                socket =
                   socket
                   |> assign(:restaurant, restaurant)
                   |> assign(:cart_items, cart_items)
@@ -50,18 +55,18 @@ defmodule EatfairWeb.CheckoutLive do
                   |> assign(:form, form)
                   |> assign(:step, :review)
                   |> assign(:processing, false)
-                
+
                 {:ok, socket}
-              
+
               {:error, :minimum_not_met, min_value} ->
-                socket = 
+                socket =
                   socket
                   |> put_flash(:error, "Minimum order of #{format_price(min_value)} not met")
                   |> push_navigate(to: ~p"/restaurants/#{restaurant_id}")
-                
+
                 {:ok, socket}
             end
-          
+
           _ ->
             {:ok, push_navigate(socket, to: ~p"/")}
         end
@@ -91,15 +96,15 @@ defmodule EatfairWeb.CheckoutLive do
       {:noreply, socket}
     else
       socket = assign(socket, :processing, true)
-      
+
       user = socket.assigns.current_scope.user
       cart_items = socket.assigns.cart_items
       restaurant = socket.assigns.restaurant
       cart_total = socket.assigns.cart_total
-      
+
       # Extract order params
       order_params = Map.take(params, ["delivery_address", "delivery_notes", "phone_number"])
-      
+
       # Create order
       order_attrs = %{
         customer_id: user.id,
@@ -109,9 +114,9 @@ defmodule EatfairWeb.CheckoutLive do
         delivery_notes: order_params["delivery_notes"],
         status: "pending"
       }
-      
+
       # Create order items
-      items_attrs = 
+      items_attrs =
         Enum.map(cart_items, fn item ->
           %{
             meal_id: item.meal_id,
@@ -119,43 +124,44 @@ defmodule EatfairWeb.CheckoutLive do
             customization_options: []
           }
         end)
-      
+
       case Orders.create_order_with_items(order_attrs, items_attrs) do
         {:ok, order} ->
           # Process payment
           payment_attrs = %{
             amount: cart_total
           }
-          
+
           case Orders.process_payment(order.id, payment_attrs) do
             {:ok, payment} ->
-              socket = 
+              socket =
                 socket
                 |> assign(:order, order)
                 |> assign(:payment, payment)
                 |> assign(:step, :success)
                 |> assign(:processing, false)
                 |> put_flash(:info, "Order placed successfully!")
-              
+
               {:noreply, socket}
-            
+
             {:error, _reason} ->
-              socket = 
+              socket =
                 socket
                 |> assign(:processing, false)
                 |> put_flash(:error, "Payment failed. Please try again.")
-              
+
               {:noreply, socket}
           end
-        
+
         {:error, changeset} ->
           form_with_errors = to_form(changeset)
-          socket = 
+
+          socket =
             socket
             |> assign(:processing, false)
             |> assign(:form, form_with_errors)
             |> put_flash(:error, "Please fix the errors below")
-          
+
           {:noreply, socket}
       end
     end

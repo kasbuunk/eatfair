@@ -48,7 +48,9 @@ defmodule Eatfair.Cart do
   """
   def validate_minimum_order(cart_total, restaurant) do
     case restaurant.min_order_value do
-      nil -> {:ok, cart_total}
+      nil ->
+        {:ok, cart_total}
+
       min_value ->
         case Decimal.compare(cart_total, min_value) do
           :lt -> {:error, :minimum_not_met, min_value}

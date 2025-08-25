@@ -7,13 +7,13 @@ defmodule EatfairWeb.RestaurantLive.Index do
   def mount(_params, _session, socket) do
     cuisines = Restaurants.list_cuisines()
     restaurants = Restaurants.list_open_restaurants()
-    
-    socket = 
+
+    socket =
       socket
       |> assign(:cuisines, cuisines)
       |> assign(:selected_cuisine, nil)
       |> stream(:restaurants, restaurants)
-    
+
     {:ok, socket}
   end
 
@@ -30,22 +30,24 @@ defmodule EatfairWeb.RestaurantLive.Index do
   @impl true
   def handle_event("filter_by_cuisine", %{"cuisine_id" => cuisine_id}, socket) do
     selected_cuisine = if cuisine_id == "", do: nil, else: String.to_integer(cuisine_id)
-    
-    restaurants = 
+
+    restaurants =
       case selected_cuisine do
-        nil -> Restaurants.list_open_restaurants()
-        id -> 
+        nil ->
           Restaurants.list_open_restaurants()
-          |> Enum.filter(fn restaurant -> 
+
+        id ->
+          Restaurants.list_open_restaurants()
+          |> Enum.filter(fn restaurant ->
             Enum.any?(restaurant.cuisines, &(&1.id == id))
           end)
       end
-    
-    socket = 
+
+    socket =
       socket
       |> assign(:selected_cuisine, selected_cuisine)
       |> stream(:restaurants, restaurants, reset: true)
-    
+
     {:noreply, socket}
   end
 
@@ -54,11 +56,13 @@ defmodule EatfairWeb.RestaurantLive.Index do
   end
 
   defp format_rating(rating) when is_nil(rating), do: "No rating"
+
   defp format_rating(rating) do
     "#{Decimal.to_float(rating)}/5"
   end
 
   defp format_min_order_value(min_order) when is_nil(min_order), do: ""
+
   defp format_min_order_value(min_order) do
     "#{Decimal.to_float(min_order)}"
   end

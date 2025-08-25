@@ -287,13 +287,15 @@ defmodule EatfairWeb.UserAuth do
     case conn.assigns[:current_scope] do
       %{user: user} when not is_nil(user) ->
         case Eatfair.Restaurants.user_owns_restaurant?(user.id) do
-          true -> conn
+          true ->
+            conn
+
           false ->
             conn
             |> redirect(to: ~p"/restaurant/onboard")
             |> halt()
         end
-        
+
       _ ->
         conn
         |> put_flash(:error, "You must log in to access this page.")

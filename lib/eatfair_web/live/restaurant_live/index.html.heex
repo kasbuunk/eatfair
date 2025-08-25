@@ -5,38 +5,46 @@
       <div class="flex flex-col md:flex-row md:items-center md:justify-between">
         <div>
           <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Order Food Delivery</h1>
-          <p class="mt-2 text-gray-600 dark:text-gray-400">Discover amazing restaurants and get food delivered to your door</p>
+          <p class="mt-2 text-gray-600 dark:text-gray-400">
+            Discover amazing restaurants and get food delivered to your door
+          </p>
         </div>
         
-        <!-- Restaurant Owner CTA -->
+<!-- Restaurant Owner CTA -->
         <div class="mt-4 md:mt-0">
           <.link
-            href={if @current_scope && @current_scope.user, do: ~p"/restaurant/onboard", else: ~p"/users/register"}
+            href={
+              if @current_scope && @current_scope.user,
+                do: ~p"/restaurant/onboard",
+                else: ~p"/users/register"
+            }
             data-test="start-restaurant-cta"
             class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg shadow-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105"
           >
-            <.icon name="hero-plus-circle" class="w-5 h-5 mr-2" />
-            Start Your Restaurant
+            <.icon name="hero-plus-circle" class="w-5 h-5 mr-2" /> Start Your Restaurant
           </.link>
         </div>
       </div>
     </div>
-
-    <!-- Cuisine Filter -->
+    
+<!-- Cuisine Filter -->
     <div class="mb-8">
-      <label for="cuisine-filter" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+      <label
+        for="cuisine-filter"
+        class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
+      >
         Filter by Cuisine
       </label>
-      <select 
-        id="cuisine-filter" 
+      <select
+        id="cuisine-filter"
         phx-change="filter_by_cuisine"
         name="cuisine_id"
         class="block w-full max-w-xs px-3 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors"
       >
         <option value="">All Cuisines</option>
         <%= for cuisine <- @cuisines do %>
-          <option 
-            value={cuisine.id} 
+          <option
+            value={cuisine.id}
             selected={@selected_cuisine == cuisine.id}
           >
             {cuisine.name}
@@ -44,11 +52,15 @@
         <% end %>
       </select>
     </div>
-
-    <!-- Restaurants Grid -->
-    <div id="restaurants" phx-update="stream" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
-      <div 
-        :for={{id, restaurant} <- @streams.restaurants} 
+    
+<!-- Restaurants Grid -->
+    <div
+      id="restaurants"
+      phx-update="stream"
+      class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6"
+    >
+      <div
+        :for={{id, restaurant} <- @streams.restaurants}
         id={id}
         class="bg-white dark:bg-gray-800 rounded-xl shadow-lg overflow-hidden hover:shadow-xl transition-all duration-300 cursor-pointer group"
         phx-click={JS.navigate(~p"/restaurants/#{restaurant}")}
@@ -56,19 +68,22 @@
         <!-- Restaurant Image -->
         <div class="relative h-48 sm:h-52 bg-gray-200 overflow-hidden">
           <%= if restaurant.image_url do %>
-            <img 
-              src={restaurant.image_url} 
+            <img
+              src={restaurant.image_url}
               alt={restaurant.name}
               class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
               data-rating={restaurant.rating && format_rating(restaurant.rating)}
             />
           <% else %>
             <div class="w-full h-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center">
-              <.icon name="hero-building-storefront" class="w-16 h-16 sm:w-20 sm:h-20 text-white opacity-80" />
+              <.icon
+                name="hero-building-storefront"
+                class="w-16 h-16 sm:w-20 sm:h-20 text-white opacity-80"
+              />
             </div>
           <% end %>
           
-          <!-- Rating Badge -->
+<!-- Rating Badge -->
           <%= if restaurant.rating do %>
             <div class="absolute top-2 right-2 sm:top-3 sm:right-3">
               <span class="inline-flex items-center px-2 py-1 sm:px-3 sm:py-1.5 rounded-full text-xs sm:text-sm font-semibold bg-yellow-400 text-yellow-900 shadow-lg">
@@ -79,14 +94,18 @@
           <% end %>
         </div>
         
-        <!-- Restaurant Info -->
+<!-- Restaurant Info -->
         <div class="p-4 sm:p-6">
           <div class="mb-3">
-            <h3 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 mb-1 sm:mb-2 group-hover:text-indigo-600 transition-colors line-clamp-1">{restaurant.name}</h3>
-            <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 line-clamp-2">{restaurant.address}</p>
+            <h3 class="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100 mb-1 sm:mb-2 group-hover:text-indigo-600 transition-colors line-clamp-1">
+              {restaurant.name}
+            </h3>
+            <p class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 line-clamp-2">
+              {restaurant.address}
+            </p>
           </div>
           
-          <!-- Cuisines -->
+<!-- Cuisines -->
           <div class="flex flex-wrap gap-1 sm:gap-2 mb-3">
             <%= for cuisine <- restaurant.cuisines do %>
               <span class="inline-flex items-center px-2 py-0.5 sm:px-2.5 sm:py-1 text-xs font-medium bg-indigo-50 text-indigo-700 rounded-full border border-indigo-200">
@@ -95,36 +114,45 @@
             <% end %>
           </div>
           
-          <!-- Restaurant Details Stack for Mobile, Side-by-side for Desktop -->
+<!-- Restaurant Details Stack for Mobile, Side-by-side for Desktop -->
           <div class="space-y-2 md:space-y-0 md:flex md:items-center md:justify-between text-sm">
             <div class="flex items-center text-emerald-600">
               <.icon name="hero-clock" class="w-4 h-4 mr-1.5 flex-shrink-0" />
-              <span class="font-medium">{format_delivery_time(restaurant.avg_preparation_time)} min</span>
+              <span class="font-medium">
+                {format_delivery_time(restaurant.avg_preparation_time)} min
+              </span>
             </div>
             <%= if restaurant.min_order_value do %>
               <div class="flex items-center text-gray-600 dark:text-gray-400">
                 <.icon name="hero-currency-dollar" class="w-4 h-4 mr-1 flex-shrink-0" />
-                <span class="font-medium">Min ${format_min_order_value(restaurant.min_order_value)}</span>
+                <span class="font-medium">
+                  Min ${format_min_order_value(restaurant.min_order_value)}
+                </span>
               </div>
             <% end %>
           </div>
           
-          <!-- Open Status Indicator -->
+<!-- Open Status Indicator -->
           <div class="mt-3 pt-3 border-t border-gray-100 dark:border-gray-700">
             <div class="flex items-center">
-              <div class="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-emerald-400 rounded-full mr-2 animate-pulse flex-shrink-0"></div>
+              <div class="w-2 h-2 sm:w-2.5 sm:h-2.5 bg-emerald-400 rounded-full mr-2 animate-pulse flex-shrink-0">
+              </div>
               <span class="text-xs sm:text-sm font-medium text-emerald-600">Open now</span>
             </div>
           </div>
         </div>
       </div>
     </div>
-
-    <!-- Empty State -->
+    
+<!-- Empty State -->
     <div class="hidden only:block text-center py-12">
       <.icon name="hero-building-storefront" class="mx-auto w-12 h-12 text-gray-400" />
-      <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">No restaurants found</h3>
-      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">Try selecting a different cuisine or check back later.</p>
+      <h3 class="mt-2 text-sm font-medium text-gray-900 dark:text-gray-100">
+        No restaurants found
+      </h3>
+      <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+        Try selecting a different cuisine or check back later.
+      </p>
     </div>
   </div>
 </Layouts.app>

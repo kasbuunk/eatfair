@@ -12,7 +12,7 @@ defmodule Eatfair.Reviews do
   Returns the list of reviews for a restaurant.
   """
   def list_reviews_for_restaurant(restaurant_id) do
-    from(r in Review, 
+    from(r in Review,
       where: r.restaurant_id == ^restaurant_id,
       order_by: [desc: r.inserted_at],
       preload: [:user]
@@ -61,7 +61,7 @@ defmodule Eatfair.Reviews do
   Calculates the average rating for a restaurant.
   """
   def get_average_rating(restaurant_id) do
-    from(r in Review, 
+    from(r in Review,
       where: r.restaurant_id == ^restaurant_id,
       select: avg(r.rating)
     )
@@ -83,27 +83,28 @@ defmodule Eatfair.Reviews do
     from(r in Review, where: r.user_id == ^user_id and r.restaurant_id == ^restaurant_id)
     |> Repo.exists?()
   end
-  
+
   @doc """
   Checks if a user can review a restaurant based on delivered orders.
   """
   def user_can_review?(user_id, restaurant_id) do
     import Ecto.Query
     alias Eatfair.Orders.Order
-    
+
     # User can review if they have at least one delivered order from this restaurant
     # and haven't already reviewed it
-    delivered_order_exists = 
+    delivered_order_exists =
       from(o in Order,
-        where: o.customer_id == ^user_id and 
-               o.restaurant_id == ^restaurant_id and
-               o.status == "delivered"
+        where:
+          o.customer_id == ^user_id and
+            o.restaurant_id == ^restaurant_id and
+            o.status == "delivered"
       )
       |> Repo.exists?()
-      
+
     delivered_order_exists and not user_has_reviewed?(user_id, restaurant_id)
   end
-  
+
   @doc """
   Gets a delivered order that can be used for creating a review.
   Returns nil if no eligible order exists.
@@ -111,11 +112,12 @@ defmodule Eatfair.Reviews do
   def get_reviewable_order(user_id, restaurant_id) do
     import Ecto.Query
     alias Eatfair.Orders.Order
-    
+
     from(o in Order,
-      where: o.customer_id == ^user_id and 
-             o.restaurant_id == ^restaurant_id and
-             o.status == "delivered",
+      where:
+        o.customer_id == ^user_id and
+          o.restaurant_id == ^restaurant_id and
+          o.status == "delivered",
       order_by: [desc: o.inserted_at],
       limit: 1
     )
