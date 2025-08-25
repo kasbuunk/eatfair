@@ -163,4 +163,40 @@ defmodule Eatfair.Restaurants do
     )
     |> Repo.all()
   end
+
+  @doc """
+  Checks if a user owns any restaurant.
+  Used for authorization in restaurant management pages.
+  """
+  def user_owns_restaurant?(user_id) do
+    Restaurant
+    |> where([r], r.owner_id == ^user_id)
+    |> Repo.exists?()
+  end
+
+  @doc """
+  Gets the restaurant owned by a user.
+  Returns nil if user doesn't own a restaurant.
+  """
+  def get_user_restaurant(user_id) do
+    Restaurant
+    |> where([r], r.owner_id == ^user_id)
+    |> preload([:menus])
+    |> Repo.one()
+  end
+
+  @doc """
+  Calculates estimated delivery time for a restaurant to a given address.
+  Uses simple distance-based calculation for MVP.
+  """
+  def estimate_delivery_time(%Restaurant{} = restaurant, _delivery_address) do
+    # For MVP: Use average values since we don't have real distance calculation yet
+    # Future: Integrate with mapping service for actual distance
+    avg_distance_km = restaurant.delivery_radius_km / 2  # Assume average delivery is half the radius
+    prep_time = restaurant.avg_preparation_time || 30
+    delivery_time = round(avg_distance_km * restaurant.delivery_time_per_km)
+    buffer_time = 5  # Safety buffer
+    
+    prep_time + delivery_time + buffer_time
+  end
 end

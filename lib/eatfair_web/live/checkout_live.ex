@@ -133,8 +133,8 @@ defmodule EatfairWeb.CheckoutLive do
               {:noreply, socket}
           end
         
-        {:error, changeset} ->
-          socket = 
+        {:error, _changeset} ->
+          {:noreply, socket}
             socket
             |> assign(:processing, false)
             |> put_flash(:error, "Failed to create order. Please check your details.")
@@ -163,11 +163,11 @@ defmodule EatfairWeb.CheckoutLive do
     _ -> %{}
   end
 
-  defp encode_cart(cart) do
-    cart
-    |> Jason.encode!()
-    |> URI.encode()
-  end
+  # defp encode_cart(cart) do
+  #   cart
+  #   |> Jason.encode!()
+  #   |> URI.encode()
+  # end
 
   defp format_price(price) do
     "$#{Decimal.to_float(price) |> :erlang.float_to_binary(decimals: 2)}"

@@ -279,6 +279,29 @@ defmodule EatfairWeb.UserAuth do
     end
   end
 
+  @doc """
+  Checks if the current user owns a restaurant and redirects to onboarding if not.
+  Used for restaurant management pages.
+  """
+  def require_restaurant_owner(conn, _opts) do
+    case conn.assigns[:current_scope] do
+      %{user: user} when not is_nil(user) ->
+        case Eatfair.Restaurants.user_owns_restaurant?(user.id) do
+          true -> conn
+          false ->
+            conn
+            |> redirect(to: ~p"/restaurant/onboard")
+            |> halt()
+        end
+        
+      _ ->
+        conn
+        |> put_flash(:error, "You must log in to access this page.")
+        |> redirect(to: ~p"/users/log-in")
+        |> halt()
+    end
+  end
+
   defp maybe_store_return_to(%{method: "GET"} = conn) do
     put_session(conn, :user_return_to, current_path(conn))
   end

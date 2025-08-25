@@ -130,6 +130,54 @@ Independent delivery partners who want to:
 
 The initial release must deliver an excellent user experience for both consumers and restaurant owners rather than compromising quality for feature breadth. If the full feature set cannot be achieved initially, the platform should limit geographic scope or user base rather than deliver a subpar experience. Excellence is essential for achieving the growth velocity needed for long-term success.
 
+## Post-MVP Feature Roadmap
+
+### Advanced Menu Customization System
+**Priority**: Phase 2 Enhancement  
+**Complexity**: High - Requires careful UX and data modeling
+
+#### Feature Requirements
+- **Meal Customization Options**: Toppings, sauces, cooking preferences, portion sizes
+- **Pricing Models**: Fixed price additions, percentage-based pricing, quantity-based pricing
+- **Option Types**: 
+  - Binary (with/without - e.g., "Add cheese +€2")
+  - Quantity-based (0-5 scale - e.g., "Spice level: Mild to Very Hot")
+  - Single selection (choose one - e.g., "Sauce: Marinara, Alfredo, or Pesto")
+  - Multiple selection (choose many - e.g., "Toppings: Mushrooms, Peppers, Olives")
+- **Business Logic**: Minimum/maximum selections, mutually exclusive options, conditional availability
+- **Integration Points**: Cart calculations, order processing, kitchen instructions, pricing display
+
+#### Implementation Considerations
+- Complex schema relationships (meal → customization_groups → options)
+- Dynamic pricing calculations in real-time
+- Mobile-friendly interface for option selection
+- Kitchen workflow integration for custom order preparation
+- Analytics on popular customization choices
+
+*This feature significantly increases order value and customer satisfaction but requires substantial development investment. Postponed to focus on core MVP functionality.*
+
+### Dynamic Delivery Time Estimation
+**Priority**: Phase 2 Enhancement  
+**Complexity**: High - Requires real-time data integration
+
+#### Feature Requirements
+- **Dynamic Preparation Time**: Adjust based on kitchen capacity, current orders, meal complexity
+- **Peak Time Management**: Automatic time adjustments during busy periods
+- **Delivery Route Optimization**: Integration with mapping services for accurate delivery estimates
+- **Real-time Updates**: Live estimation updates as conditions change
+- **Capacity Management**: Order throttling when kitchen reaches capacity limits
+
+#### Implementation Considerations
+- Integration with mapping APIs (Google Maps, MapBox)
+- Real-time kitchen load monitoring
+- Machine learning for preparation time prediction
+- Customer communication for expectation management
+- Restaurant dashboard for capacity control
+
+*Critical for scale but complex to implement. MVP will use simple static estimates with manual adjustments.*
+
+---
+
 ## Future Vision
 
 EatFair aspires to become the standard platform that local food communities use to support their neighborhood restaurants, creating a sustainable alternative to extractive marketplace models. The platform should demonstrate that technology can serve community empowerment rather than concentrate market power, inspiring similar approaches across industries.

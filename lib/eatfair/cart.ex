@@ -3,7 +3,7 @@ defmodule Eatfair.Cart do
   The Cart context for managing cart operations.
   """
 
-  alias Eatfair.Restaurants
+  # alias Eatfair.Restaurants
 
   @doc """
   Represents a cart item structure.

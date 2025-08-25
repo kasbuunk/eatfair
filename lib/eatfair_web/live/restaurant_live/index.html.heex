@@ -2,8 +2,24 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <!-- Header -->
     <div class="mb-8">
-      <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Order Food Delivery</h1>
-      <p class="mt-2 text-gray-600 dark:text-gray-400">Discover amazing restaurants and get food delivered to your door</p>
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between">
+        <div>
+          <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Order Food Delivery</h1>
+          <p class="mt-2 text-gray-600 dark:text-gray-400">Discover amazing restaurants and get food delivered to your door</p>
+        </div>
+        
+        <!-- Restaurant Owner CTA -->
+        <div class="mt-4 md:mt-0">
+          <.link
+            href={if @current_scope && @current_scope.user, do: ~p"/restaurant/onboard", else: ~p"/users/register"}
+            data-test="start-restaurant-cta"
+            class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg shadow-lg hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105"
+          >
+            <.icon name="hero-plus-circle" class="w-5 h-5 mr-2" />
+            Start Your Restaurant
+          </.link>
+        </div>
+      </div>
     </div>
 
     <!-- Cuisine Filter -->
@@ -83,7 +99,7 @@
           <div class="space-y-2 md:space-y-0 md:flex md:items-center md:justify-between text-sm">
             <div class="flex items-center text-emerald-600">
               <.icon name="hero-clock" class="w-4 h-4 mr-1.5 flex-shrink-0" />
-              <span class="font-medium">{format_delivery_time(restaurant.delivery_time)} min</span>
+              <span class="font-medium">{format_delivery_time(restaurant.avg_preparation_time)} min</span>
             </div>
             <%= if restaurant.min_order_value do %>
               <div class="flex items-center text-gray-600 dark:text-gray-400">

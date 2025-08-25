@@ -171,9 +171,9 @@ defmodule EatfairWeb.RestaurantLive.Show do
     end)
   end
 
-  defp cart_item_count(cart) do
-    cart |> Map.values() |> Enum.sum()
-  end
+  # defp cart_item_count(cart) do
+  #   cart |> Map.values() |> Enum.sum()
+  # end
 
   defp encode_cart(cart) do
     cart

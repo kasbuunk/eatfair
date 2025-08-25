@@ -62,6 +62,19 @@ defmodule EatfairWeb.Router do
       live "/users/settings", UserLive.Settings, :edit
       live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
       live "/checkout", CheckoutLive, :index
+      
+      # Restaurant onboarding - available to all authenticated users
+      live "/restaurant/onboard", RestaurantLive.Onboarding, :new
+    end
+
+    # Restaurant management - requires restaurant ownership
+    live_session :require_restaurant_owner,
+      on_mount: [{EatfairWeb.UserAuth, :require_authenticated}] do
+      live "/restaurant/dashboard", RestaurantLive.Dashboard, :index
+      live "/restaurant/profile/edit", RestaurantLive.ProfileEdit, :edit
+      # Future: Menu management routes will go here
+      # live "/restaurant/menu", MenuLive.Management, :index
+      # live "/restaurant/menu/new", MenuLive.Management, :new
     end
 
     post "/users/update-password", UserSessionController, :update_password

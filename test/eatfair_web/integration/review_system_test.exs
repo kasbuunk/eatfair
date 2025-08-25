@@ -3,7 +3,7 @@ defmodule EatfairWeb.ReviewSystemTest do
 
   import Phoenix.LiveViewTest
   import Eatfair.AccountsFixtures
-  import Floki
+  # import Floki
 
   alias Eatfair.{Repo, Reviews}
   alias Eatfair.Reviews.Review

@@ -6,9 +6,9 @@ defmodule EatfairWeb.OrderFlowTest do
   import Eatfair.AccountsFixtures
   import Ecto.Query
 
-  alias Eatfair.{Accounts, Orders, Restaurants, Repo}
-  alias Eatfair.Orders.{Order, OrderItem, Payment}
-  alias Eatfair.Restaurants.{Restaurant, Cuisine, Menu, Meal}
+  alias Eatfair.{Repo, Restaurants}
+  alias Eatfair.Orders.{Order, Payment}
+  alias Eatfair.Restaurants.{Menu, Meal}
 
   describe "Complete order flow: User orders food for delivery" do
     setup do

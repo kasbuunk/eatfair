@@ -57,7 +57,7 @@
           <div class="flex items-center space-x-6 text-gray-500">
             <div class="flex items-center">
               <.icon name="hero-clock" class="w-5 h-5 mr-2" />
-              <span>Delivery: {format_delivery_time(@restaurant.delivery_time)}</span>
+              <span>Delivery: {format_delivery_time(@restaurant.avg_preparation_time)}</span>
             </div>
             <%= if @restaurant.min_order_value do %>
               <div class="flex items-center">
