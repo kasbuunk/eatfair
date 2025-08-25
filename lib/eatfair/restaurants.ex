@@ -410,6 +410,14 @@ defmodule Eatfair.Restaurants do
     |> preload([:menus])
     |> Repo.one()
   end
+  
+  @doc """
+  Gets a restaurant by owner ID.
+  Alias for get_user_restaurant with consistent naming.
+  """
+  def get_restaurant_by_owner(owner_id) do
+    get_user_restaurant(owner_id)
+  end
 
   @doc """
   Calculates estimated delivery time for a restaurant to a given address.

@@ -63,7 +63,11 @@ defmodule EatfairWeb.Router do
       live "/users/settings", UserLive.Settings, :edit
       live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
       live "/users/addresses", UserLive.Addresses, :index
-      live "/checkout", CheckoutLive, :index
+      live "/checkout/:restaurant_id", CheckoutLive, :index
+      
+      # Order tracking - for customers
+      live "/orders/track", OrderTrackingLive, :index
+      live "/orders/track/:id", OrderTrackingLive, :show
       
       # Restaurant onboarding - available to all authenticated users
       live "/restaurant/onboard", RestaurantLive.Onboarding, :new
@@ -78,6 +82,9 @@ defmodule EatfairWeb.Router do
       # Menu management routes
       live "/restaurant/menu", MenuLive.Management, :index
       live "/restaurant/menu/preview", MenuLive.Preview, :preview
+      
+      # Order management for restaurants
+      live "/restaurant/orders", RestaurantOrderManagementLive, :index
     end
 
     post "/users/update-password", UserSessionController, :update_password

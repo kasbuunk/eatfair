@@ -112,7 +112,7 @@ defmodule EatfairWeb.RestaurantLive.Show do
         cart_encoded = encode_cart(socket.assigns.cart)
         restaurant_id = socket.assigns.restaurant.id
         
-        checkout_url = ~p"/checkout?restaurant_id=#{restaurant_id}&cart=#{cart_encoded}"
+        checkout_url = ~p"/checkout/#{restaurant_id}?cart=#{cart_encoded}"
         {:noreply, push_navigate(socket, to: checkout_url)}
     end
   end

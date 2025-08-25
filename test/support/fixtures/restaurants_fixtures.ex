@@ -59,7 +59,40 @@ defmodule Eatfair.RestaurantsFixtures do
     menu
   end
 
-  def meal_fixture(menu, attrs \\ %{}) do
+  def meal_fixture(menu_or_attrs \\ %{}, attrs \\ %{})
+
+  # When called with restaurant_id in attrs (for convenience in tests)
+  def meal_fixture(attrs, %{}) when is_map(attrs) and is_map_key(attrs, :restaurant_id) do
+    restaurant_id = attrs.restaurant_id
+    
+    # Create a default menu for this restaurant if none exists
+    menu = case Restaurants.get_restaurant_menus(restaurant_id) do
+      [] ->
+        {:ok, menu} = Restaurants.create_menu(%{
+          name: "Default Menu",
+          restaurant_id: restaurant_id
+        })
+        menu
+      [menu | _] -> menu
+    end
+    
+    meal_attrs = Map.delete(attrs, :restaurant_id) |> Map.put(:menu_id, menu.id)
+    
+    {:ok, meal} =
+      meal_attrs
+      |> Enum.into(%{
+        name: "Test Meal #{System.unique_integer()}",
+        description: "A delicious test meal",
+        price: Decimal.new("12.50"),
+        is_available: true
+      })
+      |> Restaurants.create_meal()
+
+    meal
+  end
+
+  # Traditional usage with menu object and optional attrs
+  def meal_fixture(menu, attrs) when is_map(menu) do
     {:ok, meal} =
       attrs
       |> Enum.into(%{

@@ -128,6 +128,23 @@ defmodule Eatfair.GeoUtils do
     end
   end
 
+  @doc """
+  Alias for haversine_distance/4 with consistent naming.
+  Used by courier tracking system for ETA calculations.
+  
+  ## Parameters
+  - lat1: Latitude of the first point (float)
+  - lon1: Longitude of the first point (float)
+  - lat2: Latitude of the second point (float)  
+  - lon2: Longitude of the second point (float)
+  
+  ## Returns
+  Distance in kilometers as a float.
+  """
+  def calculate_distance(lat1, lon1, lat2, lon2) do
+    haversine_distance(lat1, lon1, lat2, lon2)
+  end
+
   defp to_radians(degrees) do
     degrees * :math.pi() / 180.0
   end
