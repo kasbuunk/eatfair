@@ -71,10 +71,10 @@ CONSTRAINTS:
 
 ## 🔧 Specialized Work Type Prompts
 
-### Feature Development 
-**One-liner**: `Prioritize and develop the next MVP-critical feature using TDD approach.`
+### Development Work 
+**One-liner**: `Implement the next highest-priority work item from PROJECT_IMPLEMENTATION.md.`
 
-**Full prompt reference**: [START_FEATURE_DEVELOPMENT.md](START_FEATURE_DEVELOPMENT.md)
+**Full prompt reference**: [START_FEATURE_DEVELOPMENT.md](START_FEATURE_DEVELOPMENT.md) - Handles all work item types
 
 ---
 

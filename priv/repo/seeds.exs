@@ -358,6 +358,45 @@ customers_data = [
     role: "customer",
     phone_number: "+31-20-555-9999",
     default_address: "Leidseplein 12, 1017 PT Amsterdam"  # Central Amsterdam for easy manual testing
+  },
+  # ============ ENHANCED SEED DATA - SPECIFIC USER ROLES ============
+  # Consumer with extensive order history
+  %{
+    name: "Jan de Frequent",
+    email: "frequent@example.nl",
+    password: "password123456", 
+    role: "customer",
+    phone_number: "+31-20-555-1011",
+    default_address: "Herengracht 123, 1015 BR Amsterdam"  # Amsterdam Canal District
+  },
+  # Consumer with dietary preferences
+  %{
+    name: "Sophie Vegano",
+    email: "vegan@example.nl",
+    password: "password123456", 
+    role: "customer",
+    phone_number: "+31-20-555-1012",
+    default_address: "Overtoom 215, 1054 HT Amsterdam",  # Amsterdam West
+    dietary_preferences: "vegan,gluten-free"
+  },
+  # Customer on boundary of delivery zones
+  %{
+    name: "Grens Bewoner",
+    email: "boundary@example.nl",
+    password: "password123456", 
+    role: "customer",
+    phone_number: "+31-20-555-1013",
+    default_address: "Amstel 86, 1017 AC Amsterdam"  # Just at boundary of delivery radius
+  },
+  # Test user with multiple addresses
+  %{
+    name: "Multi Address",
+    email: "multi@example.nl",
+    password: "password123456", 
+    role: "customer",
+    phone_number: "+31-20-555-1014",
+    default_address: "Prinsengracht 500, 1017 KJ Amsterdam"  # Primary address
+    # Additional addresses will be added after user creation
   }
 ]
 
@@ -372,20 +411,191 @@ customers =
 
 IO.puts("Created #{length(customers)} sample customers")
 
+# Add multiple addresses for multi-address test user
+multi_user = Enum.find(customers, fn c -> c.email == "multi@example.nl" end)
+if multi_user do
+  additional_addresses = [
+    %{
+      "name" => "Work",
+      "street_address" => "Zuidas 123, Amsterdam",
+      "city" => "Amsterdam",
+      "postal_code" => "1082 XX",
+      "country" => "Netherlands",
+      "latitude" => "52.3380",
+      "longitude" => "4.8725", 
+      "is_default" => false,
+      "user_id" => multi_user.id
+    },
+    %{
+      "name" => "Holiday Home",
+      "street_address" => "Strandweg 25, Bergen aan Zee",
+      "city" => "Bergen",
+      "postal_code" => "1865 TY",
+      "country" => "Netherlands",
+      "latitude" => "52.6581",
+      "longitude" => "4.6288", 
+      "is_default" => false,
+      "user_id" => multi_user.id
+    },
+    %{
+      "name" => "Parents' House",
+      "street_address" => "Hoofdstraat 15, Hilversum",
+      "city" => "Hilversum",
+      "postal_code" => "1213 ER",
+      "country" => "Netherlands",
+      "latitude" => "52.2279",
+      "longitude" => "5.1693", 
+      "is_default" => false,
+      "user_id" => multi_user.id
+    }
+  ]
+  
+  Enum.each(additional_addresses, fn addr_attrs ->
+    Eatfair.Accounts.create_address(addr_attrs)
+  end)
+  
+  IO.puts("Added multiple addresses for test user #{multi_user.email}")
+end
+
+# Create courier users
+couriers_data = [
+  %{
+    name: "Max Speedman",
+    email: "courier1@example.nl",
+    password: "password123456",
+    role: "courier",
+    phone_number: "+31-6-1234-5678",
+    default_address: "Wibautstraat 150, 1091 GR Amsterdam"  # East Amsterdam
+  },
+  %{
+    name: "Fietskoerier Utrecht",
+    email: "courier2@example.nl",
+    password: "password123456",
+    role: "courier",
+    phone_number: "+31-6-2345-6789",
+    default_address: "Vredenburg 40, 3511 BD Utrecht"  # Central Utrecht
+  },
+  %{
+    name: "Test Courier",
+    email: "testcourier@eatfair.nl",
+    password: "password123456",
+    role: "courier",
+    phone_number: "+31-6-9876-5432",
+    default_address: "Prins Hendrikkade 33, 1012 TM Amsterdam"  # Central for testing
+  }
+]
+
+couriers = 
+  Enum.map(couriers_data, fn attrs ->
+    %User{}
+    |> User.registration_changeset(attrs)
+    |> Repo.insert!()
+    |> User.confirm_changeset() 
+    |> Repo.update!()
+  end)
+
+IO.puts("Created #{length(couriers)} courier users")
+
+# Create test orders with different statuses for testing order tracking
+if Mix.env() == :dev do
+  # Create sample order for order tracking testing
+  frequent_user = Enum.find(customers, fn c -> c.email == "frequent@example.nl" end)
+  italian_restaurant = Enum.find(restaurants, fn r -> r.name == "Bella Italia Amsterdam" end)
+  
+  if frequent_user && italian_restaurant do
+    # Get menu and meals
+    italian_menu = 
+      Menu
+      |> where([m], m.restaurant_id == ^italian_restaurant.id)
+      |> limit(1)
+      |> Repo.one()
+      |> Repo.preload(:meals)
+
+    if italian_menu && length(italian_menu.meals) > 0 do
+      # Create orders with different statuses
+      order_statuses = ["confirmed", "preparing", "ready", "out_for_delivery", "delivered"]
+      
+      Enum.each(order_statuses, fn status ->
+        # Create order with specific status
+        {:ok, order} = Eatfair.Orders.create_order(%{
+          customer_id: frequent_user.id,
+          restaurant_id: italian_restaurant.id,
+          delivery_address: "Herengracht 123, 1015 BR Amsterdam",
+          phone_number: frequent_user.phone_number,
+          delivery_notes: "Test order with status: #{status}",
+          total_price: Decimal.new("35.00"),
+          status: status
+        })
+        
+        # Add some items to the order
+        meal1 = Enum.at(italian_menu.meals, 0)
+        meal2 = Enum.at(italian_menu.meals, 1)
+        
+        if meal1 && meal2 do
+          {:ok, _item1} = Eatfair.Orders.create_order_item(%{
+            order_id: order.id,
+            meal_id: meal1.id,
+            quantity: 1,
+            price: meal1.price
+          })
+          
+          {:ok, _item2} = Eatfair.Orders.create_order_item(%{
+            order_id: order.id,
+            meal_id: meal2.id,
+            quantity: 2,
+            price: meal2.price
+          })
+        end
+        
+        # Create payment for the order
+        {:ok, _payment} = Eatfair.Orders.create_payment(%{
+          order_id: order.id,
+          amount: Decimal.new("35.00"),
+          method: "credit_card",
+          status: "completed"
+        })
+      end)
+      
+      IO.puts("Created test orders with different statuses for #{frequent_user.email}")
+    end
+  end
+end
+
 IO.puts("""
 
-🎉 Geographic seed data created successfully!
+🎉 Enhanced seed data created successfully!
 
 📍 Restaurant locations:
 - Amsterdam: Bella Italia, Golden Lotus, Jordaan Bistro  
 - Utrecht: Spice Garden, Utrecht Taco Bar
 
-👤 Sample accounts:
-- Restaurant Owner: marco@bellaitalia.com / password123456
-- Customer (Amsterdam): test@eatfair.nl / password123456
-- Customer (Utrecht): emma@example.nl / password123456
-- Customer (Het Gooi): lisa@example.nl / password123456
+👤 Sample accounts with different roles:
 
-🌟 Ready for location-based search testing!
+📱 CUSTOMERS:
+- Test Customer: test@eatfair.nl / password123456 (Central Amsterdam)
+- Regular Customer: piet@example.nl / password123456 (Amsterdam)
+- Utrecht Customer: emma@example.nl / password123456 (Utrecht)
+- Het Gooi Customer: lisa@example.nl / password123456 (Het Gooi region)
+- Frequent Customer: frequent@example.nl / password123456 (With test orders)
+- Vegan Customer: vegan@example.nl / password123456 (With dietary preferences)
+- Multi-Address User: multi@example.nl / password123456 (With multiple addresses)
+
+🍽️ RESTAURANT OWNERS:
+- Bella Italia: marco@bellaitalia.com / password123456
+- Golden Lotus: wei@goldenlotus.com / password123456 
+- Jordaan Bistro: marie@jordaanbistro.com / password123456
+- Spice Garden: raj@spicegarden.com / password123456
+- Utrecht Taco: carlos@utrechttaco.com / password123456
+
+🚚 COURIERS:
+- Amsterdam Courier: courier1@example.nl / password123456
+- Utrecht Courier: courier2@example.nl / password123456
+- Test Courier: testcourier@eatfair.nl / password123456
+
+📊 TEST DATA:
+- Multiple addresses for multi@example.nl
+- Test orders with all status types for frequent@example.nl
+
+🌟 Ready for comprehensive testing across all user journeys!
 You can now run: mix phx.server
 """)
