@@ -83,4 +83,42 @@ defmodule Eatfair.Reviews do
     from(r in Review, where: r.user_id == ^user_id and r.restaurant_id == ^restaurant_id)
     |> Repo.exists?()
   end
+  
+  @doc """
+  Checks if a user can review a restaurant based on delivered orders.
+  """
+  def user_can_review?(user_id, restaurant_id) do
+    import Ecto.Query
+    alias Eatfair.Orders.Order
+    
+    # User can review if they have at least one delivered order from this restaurant
+    # and haven't already reviewed it
+    delivered_order_exists = 
+      from(o in Order,
+        where: o.customer_id == ^user_id and 
+               o.restaurant_id == ^restaurant_id and
+               o.status == "delivered"
+      )
+      |> Repo.exists?()
+      
+    delivered_order_exists and not user_has_reviewed?(user_id, restaurant_id)
+  end
+  
+  @doc """
+  Gets a delivered order that can be used for creating a review.
+  Returns nil if no eligible order exists.
+  """
+  def get_reviewable_order(user_id, restaurant_id) do
+    import Ecto.Query
+    alias Eatfair.Orders.Order
+    
+    from(o in Order,
+      where: o.customer_id == ^user_id and 
+             o.restaurant_id == ^restaurant_id and
+             o.status == "delivered",
+      order_by: [desc: o.inserted_at],
+      limit: 1
+    )
+    |> Repo.one()
+  end
 end

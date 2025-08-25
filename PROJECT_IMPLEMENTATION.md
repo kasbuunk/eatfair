@@ -286,7 +286,27 @@ This document follows a **Test-Driven Development (TDD)** approach where:
 - Discovery System: 🔴 Significantly Incomplete (40% - missing core search features)
 - Review System: 🔴 Specification Violation (20% - UI works but violates core business rules)
 
-**Current Sprint Focus**: Order tracking and restaurant order management
+## 🎯 Current Recommended Work
+
+**Work Type**: Specification Compliance  
+**Priority**: CRITICAL  
+**Reference Prompt**: [VALIDATE_ALL_TESTS_PASS.md](VALIDATE_ALL_TESTS_PASS.md)  
+
+**Task**: Fix Review System Specification Violation - Reviews Must Require Completed Orders
+
+**TDD Approach Required**:
+1. **Start with existing tests** → `test/eatfair_web/integration/review_system_test.exs`
+2. **Write failing tests** for specification-compliant behavior (reviews only after orders)
+3. **Implement minimum code** to make tests pass
+4. **Refactor** while keeping tests green
+
+**Specification Requirement**: "Post-delivery feedback" means reviews can only be submitted after completing an order
+
+**Success Criteria**: All review tests pass with order-before-review business rule enforced
+
+---
+
+**Previous Sprint Focus**: Order tracking and restaurant order management
 
 ---
 

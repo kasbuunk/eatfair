@@ -151,13 +151,29 @@
             <div class="flex items-center justify-between mb-6">
               <h2 class="text-2xl font-bold text-gray-900">Customer Reviews</h2>
               
-              <%= if @current_scope && @current_scope.user && !@user_has_reviewed do %>
-                <button 
-                  phx-click="toggle_review_form"
-                  class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
-                >
-                  Write a Review
-                </button>
+              <%= cond do %>
+                <% @current_scope && @current_scope.user && @user_can_review -> %>
+                  <button 
+                    phx-click="toggle_review_form"
+                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
+                  >
+                    Write a Review
+                  </button>
+                  
+                <% @current_scope && @current_scope.user && @user_has_orders -> %>
+                  <div class="text-sm text-gray-600 text-right">
+                    <p class="font-medium">Complete your order to leave a review</p>
+                    <p class="text-xs mt-1">Reviews available after delivery</p>
+                  </div>
+                  
+                <% @current_scope && @current_scope.user -> %>
+                  <div class="text-sm text-gray-600 text-right">
+                    <p class="font-medium">Order from this restaurant to leave a review</p>
+                    <p class="text-xs mt-1">Share your experience after delivery</p>
+                  </div>
+                  
+                <% true -> %>
+                  <!-- Not logged in - no action needed -->
               <% end %>
             </div>
             

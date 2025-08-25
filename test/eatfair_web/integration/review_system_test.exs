@@ -65,19 +65,38 @@ defmodule EatfairWeb.ReviewSystemTest do
       menu_id: menu.id
     } |> Repo.insert()
 
-    # Create some reviews
+    # Create delivered orders for the reviewers (so they can leave reviews)
+    {:ok, order1} = Eatfair.Orders.create_order(%{
+      customer_id: reviewer1.id,
+      restaurant_id: restaurant.id,
+      status: "delivered",
+      total_price: Decimal.new("12.99"),
+      delivery_address: "123 Reviewer St"
+    })
+
+    {:ok, order2} = Eatfair.Orders.create_order(%{
+      customer_id: reviewer2.id,
+      restaurant_id: restaurant.id,
+      status: "delivered",
+      total_price: Decimal.new("25.98"),
+      delivery_address: "456 Reviewer Ave"
+    })
+
+    # Create some reviews (now with order_id requirement)
     {:ok, review1} = Reviews.create_review(%{
       rating: 5,
       comment: "Excellent food and service! Highly recommend the pasta.",
       user_id: reviewer1.id,
-      restaurant_id: restaurant.id
+      restaurant_id: restaurant.id,
+      order_id: order1.id
     })
 
     {:ok, review2} = Reviews.create_review(%{
       rating: 4,
       comment: "Good food, fast delivery. Will order again.",
       user_id: reviewer2.id,
-      restaurant_id: restaurant.id
+      restaurant_id: restaurant.id,
+      order_id: order2.id
     })
 
     %{
@@ -142,10 +161,19 @@ defmodule EatfairWeb.ReviewSystemTest do
     end
 
     test "displays review form for logged in users who haven't reviewed", %{conn: conn, user: user, restaurant: restaurant} do
+      # Create a delivered order for the user so they can review
+      {:ok, _order} = Eatfair.Orders.create_order(%{
+        customer_id: user.id,
+        restaurant_id: restaurant.id,
+        status: "delivered",
+        total_price: Decimal.new("30.00"),
+        delivery_address: "123 User St"
+      })
+      
       conn = log_in_user(conn, user)
       {:ok, view, html} = live(conn, ~p"/restaurants/#{restaurant.id}")
 
-      # Assert "Write a Review" button exists for logged-in user
+      # Assert "Write a Review" button exists for logged-in user with delivered order
       assert html =~ "Write a Review"
 
       # Click the write review button
@@ -162,8 +190,17 @@ defmodule EatfairWeb.ReviewSystemTest do
     test "successfully submits a review", %{conn: conn, restaurant: restaurant} do
       # Create a new user who hasn't reviewed yet - use username instead of name
       new_user = user_fixture(%{email: "newuser@example.com"})
+      
+      # Create a delivered order for the user so they can review
+      {:ok, _order} = Eatfair.Orders.create_order(%{
+        customer_id: new_user.id,
+        restaurant_id: restaurant.id,
+        status: "delivered",
+        total_price: Decimal.new("20.00"),
+        delivery_address: "123 New User St"
+      })
+      
       conn = log_in_user(conn, new_user)
-
       {:ok, view, _html} = live(conn, ~p"/restaurants/#{restaurant.id}")
 
       # Click write review button
@@ -210,12 +247,106 @@ defmodule EatfairWeb.ReviewSystemTest do
     end
   end
 
+  describe "Review system specification compliance" do
+    test "user cannot review restaurant without completing an order", %{conn: conn, restaurant: restaurant} do
+      # Create new user who has never placed an order
+      new_user = user_fixture(%{email: "no_orders@example.com"})
+      conn = log_in_user(conn, new_user)
+
+      {:ok, _view, html} = live(conn, ~p"/restaurants/#{restaurant.id}")
+
+      # User should NOT see "Write a Review" button without completed orders
+      refute html =~ "Write a Review"
+      
+      # Should see message encouraging them to order first
+      assert html =~ "Order from this restaurant to leave a review"
+    end
+
+    test "user cannot review restaurant with only pending/confirmed orders", %{conn: conn, restaurant: restaurant, meal: meal} do
+      # Create user with a pending order
+      customer = user_fixture(%{email: "pending_order@example.com"})
+      
+      # Create confirmed order (not yet delivered)
+      {:ok, order} = Eatfair.Orders.create_order(%{
+        customer_id: customer.id,
+        restaurant_id: restaurant.id,
+        status: "confirmed",
+        total_price: Decimal.new("25.00"),
+        delivery_address: "123 Customer St"
+      })
+      
+      conn = log_in_user(conn, customer)
+      {:ok, _view, html} = live(conn, ~p"/restaurants/#{restaurant.id}")
+
+      # Should NOT see review button for non-delivered orders
+      refute html =~ "Write a Review"
+      assert html =~ "Complete your order to leave a review"
+    end
+
+    test "user CAN review restaurant after order is delivered", %{conn: conn, restaurant: restaurant, meal: meal} do
+      # Create user with delivered order
+      customer = user_fixture(%{email: "delivered_order@example.com"})
+      
+      # Create delivered order
+      {:ok, order} = Eatfair.Orders.create_order(%{
+        customer_id: customer.id,
+        restaurant_id: restaurant.id,
+        status: "delivered",
+        total_price: Decimal.new("25.00"),
+        delivery_address: "123 Customer St"
+      })
+      
+      conn = log_in_user(conn, customer)
+      {:ok, view, html} = live(conn, ~p"/restaurants/#{restaurant.id}")
+
+      # Should see review button for delivered orders
+      assert html =~ "Write a Review"
+      
+      # Should be able to submit review
+      view |> element("button", "Write a Review") |> render_click()
+      
+      view
+      |> form("form", review: %{rating: "5", comment: "Great experience after delivery!"})
+      |> render_submit()
+      
+      # Verify review was created
+      review = Repo.get_by(Review, user_id: customer.id, restaurant_id: restaurant.id)
+      assert review != nil
+      assert review.comment == "Great experience after delivery!"
+    end
+
+    test "review form validates order relationship", %{conn: conn, restaurant: restaurant} do
+      # Test direct review creation fails without order
+      user_without_order = user_fixture(%{email: "direct_create@example.com"})
+      
+      # Attempt to create review directly should fail
+      {:error, changeset} = Eatfair.Reviews.create_review(%{
+        rating: 5,
+        comment: "Trying to bypass order requirement",
+        user_id: user_without_order.id,
+        restaurant_id: restaurant.id
+      })
+      
+      # Should have validation error
+      assert changeset.errors[:order_id] != nil
+    end
+  end
+  
   describe "Reviews integration with restaurant data" do
     test "updates restaurant average rating after new review", %{conn: conn, restaurant: restaurant} do
       # Create new user and submit 3-star review
       new_user = user_fixture(%{email: "rater@example.com"})
+      
+      # Create a delivered order for the user so they can review
+      {:ok, _order} = Eatfair.Orders.create_order(%{
+        customer_id: new_user.id,
+        restaurant_id: restaurant.id,
+        status: "delivered",
+        total_price: Decimal.new("15.00"),
+        delivery_address: "123 Rater St"
+      })
+      
       conn = log_in_user(conn, new_user)
-
       {:ok, view, _html} = live(conn, ~p"/restaurants/#{restaurant.id}")
 
       # Submit 3-star review
