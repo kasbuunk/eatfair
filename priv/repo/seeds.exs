@@ -564,6 +564,57 @@ customers =
 
 IO.puts("Created #{length(customers)} sample customers")
 
+# Helper function to parse Dutch addresses
+parse_dutch_address = fn address_string ->
+  # Parse formats like:
+  # "Leidseplein 12, 1017 PT Amsterdam" 
+  # "Damrak 70, 1012 LM Amsterdam"
+  # "Herengracht 123, 1015 BR Amsterdam"
+  parts = String.split(address_string, ",")
+  
+  case parts do
+    [street_part, city_postal_part] ->
+      # Extract postal code and city from "1017 PT Amsterdam" format
+      city_postal = String.trim(city_postal_part)
+      
+      # Dutch postal codes are format: #### XX (4 digits, space, 2 letters)
+      case Regex.run(~r/^(\d{4}\s[A-Z]{2})\s(.+)$/, city_postal) do
+        [_, postal_code, city] ->
+          {
+            String.trim(street_part),
+            String.trim(city),
+            String.trim(postal_code)
+          }
+        _ ->
+          # Fallback: treat as full address with Amsterdam as default
+          {String.trim(street_part), "Amsterdam", "1000 AA"}
+      end
+    _ ->
+      # Fallback for non-standard format
+      {address_string, "Amsterdam", "1000 AA"}
+  end
+end
+
+# Create default Address records for all users with a default_address
+Enum.each(customers, fn user ->
+  if user.default_address && String.trim(user.default_address) != "" do
+    {street, city, postal_code} = parse_dutch_address.(user.default_address)
+    
+    case Eatfair.Accounts.create_address(%{
+           "name" => "Home",
+           "street_address" => street,
+           "city" => city,
+           "postal_code" => postal_code,
+           "country" => "Netherlands",
+           "is_default" => true,
+           "user_id" => user.id
+         }) do
+      {:ok, _addr} -> :ok
+      {:error, changeset} -> IO.puts("⚠️  Failed to create default address for #{user.email}: #{inspect(changeset.errors)}")
+    end
+  end
+end)
+
 # Add multiple addresses for multi-address test user
 multi_user = Enum.find(customers, fn c -> c.email == "multi@example.nl" end)
 
@@ -652,6 +703,26 @@ couriers =
   end)
 
 IO.puts("Created #{length(couriers)} courier users")
+
+# Create default Address records for couriers with a default_address
+Enum.each(couriers, fn user ->
+  if user.default_address && String.trim(user.default_address) != "" do
+    {street, city, postal_code} = parse_dutch_address.(user.default_address)
+    
+    case Eatfair.Accounts.create_address(%{
+           "name" => "Home",
+           "street_address" => street,
+           "city" => city,
+           "postal_code" => postal_code,
+           "country" => "Netherlands",
+           "is_default" => true,
+           "user_id" => user.id
+         }) do
+      {:ok, _addr} -> :ok
+      {:error, changeset} -> IO.puts("⚠️  Failed to create default address for #{user.email}: #{inspect(changeset.errors)}")
+    end
+  end
+end)
 
 # Create test orders with different statuses for testing order tracking
 if Mix.env() == :dev do
