@@ -119,7 +119,7 @@ defmodule EatfairWeb.RestaurantLive.DashboardTest do
       assert_redirect(edit_live, "/restaurant/dashboard")
       
       # Changes are saved and visible
-      {:ok, dashboard_live, html} = live(conn, "/restaurant/dashboard")
+      {:ok, _dashboard_live, html} = live(conn, "/restaurant/dashboard")
       assert html =~ "Award-winning coffee and homemade pastries"
       assert html =~ "25 min"  # Can be "25 min" or "Average prep time: 25 minutes"
     end

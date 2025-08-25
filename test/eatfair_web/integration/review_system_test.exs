@@ -262,12 +262,12 @@ defmodule EatfairWeb.ReviewSystemTest do
       assert html =~ "Order from this restaurant to leave a review"
     end
 
-    test "user cannot review restaurant with only pending/confirmed orders", %{conn: conn, restaurant: restaurant, meal: meal} do
+    test "user cannot review restaurant with only pending/confirmed orders", %{conn: conn, restaurant: restaurant, meal: _meal} do
       # Create user with a pending order
       customer = user_fixture(%{email: "pending_order@example.com"})
       
       # Create confirmed order (not yet delivered)
-      {:ok, order} = Eatfair.Orders.create_order(%{
+      {:ok, _order} = Eatfair.Orders.create_order(%{
         customer_id: customer.id,
         restaurant_id: restaurant.id,
         status: "confirmed",
@@ -283,12 +283,12 @@ defmodule EatfairWeb.ReviewSystemTest do
       assert html =~ "Complete your order to leave a review"
     end
 
-    test "user CAN review restaurant after order is delivered", %{conn: conn, restaurant: restaurant, meal: meal} do
+    test "user CAN review restaurant after order is delivered", %{conn: conn, restaurant: restaurant, meal: _meal} do
       # Create user with delivered order
       customer = user_fixture(%{email: "delivered_order@example.com"})
       
       # Create delivered order
-      {:ok, order} = Eatfair.Orders.create_order(%{
+      {:ok, _order} = Eatfair.Orders.create_order(%{
         customer_id: customer.id,
         restaurant_id: restaurant.id,
         status: "delivered",
@@ -315,7 +315,7 @@ defmodule EatfairWeb.ReviewSystemTest do
       assert review.comment == "Great experience after delivery!"
     end
 
-    test "review form validates order relationship", %{conn: conn, restaurant: restaurant} do
+    test "review form validates order relationship", %{conn: _conn, restaurant: restaurant} do
       # Test direct review creation fails without order
       user_without_order = user_fixture(%{email: "direct_create@example.com"})
       

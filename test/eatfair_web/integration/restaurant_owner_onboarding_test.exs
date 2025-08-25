@@ -113,7 +113,7 @@ defmodule EatfairWeb.Integration.RestaurantOwnerOnboardingTest do
       # 📖 Chapter 7: Sarah verifies her restaurant appears to consumers
       # She opens a new browser (logs out) to see her restaurant as customers would
       conn_consumer = build_conn()
-      {:ok, public_home_live, html} = live(conn_consumer, "/")
+      {:ok, _public_home_live, _html} = live(conn_consumer, "/")
       
       # When she reopens her restaurant, customers can discover it
       dashboard_live
@@ -121,7 +121,7 @@ defmodule EatfairWeb.Integration.RestaurantOwnerOnboardingTest do
       |> render_click()
       
       # Refresh the public view
-      {:ok, public_home_live, html} = live(conn_consumer, "/")
+      {:ok, _public_home_live, html} = live(conn_consumer, "/")
       
       # 🎉 SUCCESS! Sarah's restaurant appears in the discovery experience
       # Future customers can find her authentic dumplings
@@ -239,7 +239,7 @@ defmodule EatfairWeb.Integration.RestaurantOwnerOnboardingTest do
       
       # Sarah logs in and sees only her restaurant
       conn = log_in_user(build_conn(), sarah)
-      {:ok, dashboard_live, html} = live(conn, "/restaurant/dashboard")
+      {:ok, _dashboard_live, html} = live(conn, "/restaurant/dashboard")
       
       # Check for Sarah's Place (may be HTML encoded)
       assert html =~ "Sarah" and html =~ "Place"

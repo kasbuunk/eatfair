@@ -1,13 +1,12 @@
 defmodule EatfairWeb.OrderTrackingTest do
   use EatfairWeb.ConnCase
-  
+
   import Phoenix.LiveViewTest
   import Eatfair.AccountsFixtures
   import Eatfair.RestaurantsFixtures
-  import Eatfair.OrdersFixtures
-
-  alias Eatfair.{Orders, Notifications}
-  alias Eatfair.Repo
+  
+  alias Eatfair.Orders
+  alias Eatfair.Notifications
 
   describe "🎯 The Complete Order Journey: Real-Time Tracking from Placement to Delivery" do
     test "customer experiences seamless order tracking with live status updates", %{conn: conn} do
@@ -32,7 +31,7 @@ defmodule EatfairWeb.OrderTrackingTest do
       conn = log_in_user(conn, customer)
       
       # 📱 Customer visits order tracking page
-      {:ok, tracking_live, html} = live(conn, "/orders/track")
+      {:ok, _tracking_live, html} = live(conn, "/orders/track")
       
       # ✅ Verify initial order tracking display (flexible text matching)
       assert html =~ ~r/order.*(confirmed|placed)/i
@@ -145,7 +144,7 @@ defmodule EatfairWeb.OrderTrackingTest do
       assert render(tracking_live) =~ "Your order is ready"
     end
 
-    test "notification events are created for each status change", %{conn: conn} do
+    test "notification events are created for each status change", %{conn: _conn} do
       # 📢 Setup: Notification system integration
       customer = user_fixture()
       restaurant = restaurant_fixture()
@@ -250,7 +249,7 @@ defmodule EatfairWeb.OrderTrackingTest do
       conn = log_in_user(conn, customer)
       
       # 🚫 Restaurant needs to cancel order (out of ingredients)
-      {:ok, cancelled_order} = Orders.update_order_status(order, "cancelled", %{
+      {:ok, _cancelled_order} = Orders.update_order_status(order, "cancelled", %{
         delay_reason: "Sorry, we ran out of ingredients for this dish."
       })
       
@@ -287,7 +286,7 @@ defmodule EatfairWeb.OrderTrackingTest do
       assert render(delay_tracking_live) =~ "extra 15 minutes"
     end
 
-    test "order status progression validation prevents invalid transitions", %{conn: conn} do
+    test "order status progression validation prevents invalid transitions", %{conn: _conn} do
       # 🔒 Setup: Business rule validation
       customer = user_fixture()
       restaurant = restaurant_fixture()
@@ -385,7 +384,7 @@ defmodule EatfairWeb.OrderTrackingTest do
       meal = meal_fixture(%{restaurant_id: restaurant.id})
       
       # Create orders in different states
-      {:ok, confirmed_order} = Orders.create_order_with_items(%{
+      {:ok, _confirmed_order} = Orders.create_order_with_items(%{
         customer_id: customer1.id,
         restaurant_id: restaurant.id,
         total_price: meal.price,
@@ -393,7 +392,7 @@ defmodule EatfairWeb.OrderTrackingTest do
         status: "confirmed"
       }, [%{meal_id: meal.id, quantity: 1}])
       
-      {:ok, preparing_order} = Orders.create_order_with_items(%{
+      {:ok, _preparing_order} = Orders.create_order_with_items(%{
         customer_id: customer2.id,
         restaurant_id: restaurant.id,
         total_price: meal.price,
@@ -401,7 +400,7 @@ defmodule EatfairWeb.OrderTrackingTest do
         status: "preparing"
       }, [%{meal_id: meal.id, quantity: 2}])
       
-      {:ok, ready_order} = Orders.create_order_with_items(%{
+      {:ok, _ready_order} = Orders.create_order_with_items(%{
         customer_id: customer3.id,
         restaurant_id: restaurant.id,
         total_price: meal.price,
@@ -412,7 +411,7 @@ defmodule EatfairWeb.OrderTrackingTest do
       conn = log_in_user(conn, restaurant_owner)
       
       # 🏪 Restaurant owner visits order management dashboard
-      {:ok, orders_live, html} = live(conn, "/restaurant/orders")
+      {:ok, _orders_live, html} = live(conn, "/restaurant/orders")
       
       # ✅ Should see orders organized by status
       assert html =~ "New Orders"       # confirmed_order section
@@ -446,7 +445,7 @@ defmodule EatfairWeb.OrderTrackingTest do
   end
 
   describe "🔔 Notification System Integration" do
-    test "notification preferences are respected for order status changes", %{conn: conn} do
+    test "notification preferences are respected for order status changes", %{conn: _conn} do
       # ⚙️ Setup: Customer with specific notification preferences
       customer = user_fixture()
       restaurant = restaurant_fixture()
@@ -478,7 +477,7 @@ defmodule EatfairWeb.OrderTrackingTest do
       # In production, this would be marked as "skipped" by notification processor
     end
 
-    test "high priority notifications are created for urgent status changes", %{conn: conn} do
+    test "high priority notifications are created for urgent status changes", %{conn: _conn} do
       # 🚨 Setup: Testing notification priority system
       customer = user_fixture()
       restaurant = restaurant_fixture()
@@ -502,18 +501,5 @@ defmodule EatfairWeb.OrderTrackingTest do
       assert event.priority == "high"
       assert event.data["delay_reason"] == "Restaurant had to close due to emergency"
     end
-  end
-  
-  # 🎯 Helper Functions for Beautiful Test Setup
-  defp create_order_in_status(customer, restaurant, meal, status) do
-    {:ok, order} = Orders.create_order_with_items(%{
-      customer_id: customer.id,
-      restaurant_id: restaurant.id,
-      total_price: meal.price,
-      delivery_address: "#{status} Test Address",
-      status: status
-    }, [%{meal_id: meal.id, quantity: 1}])
-    
-    order
   end
 end

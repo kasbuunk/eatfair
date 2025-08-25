@@ -53,7 +53,8 @@ defmodule Eatfair.Orders.Order do
       :estimated_prep_time_minutes, :actual_prep_time_minutes,
       :is_delayed, :delay_reason, :special_instructions
     ])
-    |> validate_required([:customer_id, :restaurant_id])
+    |> validate_required([:customer_id, :restaurant_id, :delivery_address])
+    |> validate_length(:delivery_address, min: 5, message: "Please provide a complete delivery address")
     |> validate_inclusion(:status, @valid_statuses)
     |> validate_number(:total_price, greater_than_or_equal_to: 0)
     |> validate_number(:estimated_prep_time_minutes, greater_than: 0)

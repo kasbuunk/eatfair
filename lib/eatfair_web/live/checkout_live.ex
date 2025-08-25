@@ -148,11 +148,13 @@ defmodule EatfairWeb.CheckoutLive do
               {:noreply, socket}
           end
         
-        {:error, _changeset} ->
-          {:noreply, socket}
+        {:error, changeset} ->
+          form_with_errors = to_form(changeset)
+          socket = 
             socket
             |> assign(:processing, false)
-            |> put_flash(:error, "Failed to create order. Please check your details.")
+            |> assign(:form, form_with_errors)
+            |> put_flash(:error, "Please fix the errors below")
           
           {:noreply, socket}
       end
