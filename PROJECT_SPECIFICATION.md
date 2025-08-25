@@ -18,7 +18,7 @@ To eliminate the exploitative commission structures of existing food delivery pl
 - **Community First**: Prioritize local economic growth over platform extraction
 - **Excellence Over Scale**: Deliver exceptional user experience rather than rushing geographic expansion
 - **Transparency**: Clear, honest communication about costs, policies, and platform operations
-- **Accessibility**: Ensure the platform works for diverse communities across demographics, languages, and technical comfort levels
+- **Universal Accessibility**: Ensure the platform works for diverse communities across demographics, languages, technical comfort levels, and accessibility needs
 - **Faith in Community**: Operate on the belief that people will support valuable community services
 
 ## Primary User Groups
@@ -55,18 +55,46 @@ Independent delivery partners who want to:
 - **Analytics**: Customer insights, popular items, peak hours, and business performance metrics
 
 ### Consumer Ordering Experience
-- **Restaurant Discovery**: Location-based search with filters for cuisine, price, dietary restrictions, delivery time
+- **Intelligent Restaurant Discovery**: 
+  - Location-based relevance scoring that prioritizes nearby restaurants
+  - Immediate location detection (postal/zip code input, browser geolocation, IP fallback, Amsterdam Central Station default)
+  - Pre-filled location data for authenticated users
+  - Real-time search results that update when location changes
+  - Complete exclusion of irrelevant far-away restaurants from results
+  - Geographic map interface with restaurant pins showing cuisine type and direct links to detail pages
+- **Advanced Filter System**: 
+  - Multi-select cuisine filters (Italian, Thai, Indian, etc.)
+  - Specific food type filters transcending cuisines (pizza, sushi, burgers, healthy bowls)
+  - Appetite-based discovery beyond generic cuisine categories
+  - Intuitive collapsible filter interface that stays out of the way until needed
+  - Filters for price range, dietary restrictions, delivery time, and restaurant ratings
 - **Personalized Recommendations**: Based on order history, preferences, and community trends
 - **Detailed Menu Browsing**: Rich item descriptions, customization options, allergen information
+- **Review-Rich Restaurant Pages**: 
+  - Display customer reviews prominently on restaurant detail pages
+  - Show average ratings calculated from actual customer reviews
+  - Include reviews from verified customers who have completed orders
+  - Handle restaurants with no reviews gracefully with appropriate messaging
 - **Streamlined Ordering**: Cart management, special instructions, and checkout process
-- **Order Tracking**: Real-time updates from preparation through delivery
+- **Order Tracking**: Real-time updates from preparation through delivery with delivery route position and ETA
 - **Account Management**: Addresses, payment methods, dietary preferences, and order history
 
 ### Delivery Coordination System
 - **Courier Onboarding**: Application, verification, and training processes
+- **Courier Interface**: 
+  - Dedicated courier dashboard showing available deliveries to pick up
+  - Multi-delivery route optimization with flexible deviation options
+  - Delivery management showing customer address, delivery notes, phone number, and order identification
+  - Simple approval system requiring restaurant confirmation for new couriers
+  - Real-time delivery status updates with customer ETA communication
 - **Dynamic Dispatch**: Intelligent matching of orders to available couriers
 - **Transparent Compensation**: Restaurant-set delivery fees with no platform extraction
-- **Route Optimization**: Efficient delivery planning and navigation support
+- **Route Optimization**: Efficient delivery planning and navigation support with traffic awareness
+- **Consumer Delivery Tracking**: 
+  - Real-time courier location updates
+  - Position tracking in multi-delivery routes ("You are delivery #2 of 4")
+  - Dynamic ETA updates based on current route progress
+  - Status updates from pickup through delivery completion
 - **Performance Tracking**: Delivery metrics and feedback systems
 - **Community-Driven Service**: Free coordination service to support local entrepreneurship
 
@@ -96,6 +124,94 @@ Independent delivery partners who want to:
 - **Notification System**: Real-time updates for all user types across multiple channels
 - **Data Analytics**: Business intelligence for restaurants and platform optimization
 - **API Ecosystem**: Integration capabilities for POS systems, accounting software, and other business tools
+
+### Accessibility & Universal Design
+- **Visual Accessibility**: 
+  - High contrast mode with systematically improved dark theme readability
+  - Font size scaling and screen reader compatibility
+  - Color-blind friendly design patterns
+- **Interaction Accessibility**: 
+  - Full keyboard navigation support
+  - Touch-friendly mobile interfaces
+  - Voice input compatibility for ordering
+- **Cognitive Accessibility**: 
+  - Clear, simple language throughout the interface
+  - Consistent navigation patterns
+  - Error prevention and recovery guidance
+- **Technical Accessibility**: 
+  - WCAG 2.1 AA compliance as measurable goal
+  - Semantic HTML structure for assistive technologies
+  - Automated accessibility testing in development pipeline
+
+### User Feedback & Community Engagement
+- **Feedback Collection System**: 
+  - Context-sensitive feedback requests throughout user journeys
+  - Database-stored feedback with admin notification triggers
+  - A/B testing framework for optimal feedback timing
+- **Continuous Improvement Loop**: 
+  - User feedback analysis and categorization
+  - Direct integration of feedback into development priorities
+  - Feedback response system to close the loop with users
+- **Community Input Integration**: 
+  - Restaurant owner feedback on platform features
+  - Consumer experience improvement suggestions
+  - Courier workflow optimization based on field experience
+
+### Platform Sustainability & Support
+- **Donation System Architecture**: 
+  - Multi-user donation prompts (customers, restaurant owners, couriers)
+  - A/B testing framework for donation timing and messaging optimization
+  - Transparent donation usage reporting and community impact metrics
+- **Payment Integration**: 
+  - Seamless donation processing alongside order payments
+  - Multiple donation amount options and subscription support
+  - Clear messaging about zero-commission policy and community support model
+
+### Search Engine Optimization & Discoverability
+- **Restaurant SEO Foundation**: 
+  - Individual restaurant pages optimized for local search
+  - Structured data markup for restaurant information (Schema.org)
+  - Meta tag optimization for social media sharing
+- **Local Search Optimization**: 
+  - Geographic SEO targeting for delivery areas
+  - Integration with local business directories
+  - Cuisine-specific landing pages for organic discovery
+- **Content Marketing Framework**: 
+  - Restaurant spotlight features for community engagement
+  - Local food culture content to drive organic traffic
+  - SEO-optimized content architecture for sustainable growth
+
+### Advanced Restaurant Analytics
+- **Business Intelligence Dashboard**: 
+  - Order history analysis with trend identification
+  - Customer loyalty metrics and retention analytics
+  - Revenue optimization recommendations based on data patterns
+- **Market Intelligence**: 
+  - Price elasticity analysis and competitive positioning
+  - Peak time optimization and capacity planning
+  - Seasonal trend analysis for menu planning
+- **Customer Insights**: 
+  - Customer acquisition and retention analytics
+  - Order pattern analysis and personalization opportunities
+  - Consumer dropout rate analysis with improvement recommendations
+- **Performance Metrics**: 
+  - Traffic analysis and conversion optimization
+  - Restaurant exposure metrics and visibility optimization
+  - Administrative analytics for operational efficiency
+
+### Advanced Testing & Quality Assurance
+- **Comprehensive Testing Strategy**: 
+  - High-level integration testing with realistic seed data
+  - Automated user journey testing across all user types
+  - Cross-browser and device compatibility testing
+- **Performance & Load Testing**: 
+  - Realistic load testing with dozens of concurrent users
+  - Database performance testing with large datasets
+  - Real-world scenario testing with complex user interactions
+- **Automated Quality Assurance**: 
+  - Continuous integration testing with comprehensive coverage
+  - Automated accessibility testing integration
+  - Performance regression testing and monitoring
 
 ## Platform Sustainability Model
 
