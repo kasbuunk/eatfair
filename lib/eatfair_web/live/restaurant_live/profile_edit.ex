@@ -83,7 +83,7 @@ defmodule EatfairWeb.RestaurantLive.ProfileEdit do
         
       {[entry], []} ->
         # New image uploaded - save it and delete old one
-        case FileUpload.save_upload(entry, "restaurants") do
+        case FileUpload.save_upload(socket, :restaurant_image, entry, "restaurants") do
           {:ok, image_url} ->
             # Delete old image if it exists
             if socket.assigns.restaurant.image_url do
@@ -91,10 +91,6 @@ defmodule EatfairWeb.RestaurantLive.ProfileEdit do
             end
             
             Map.put(restaurant_params, "image_url", image_url)
-            
-          {:error, _reason} ->
-            # Keep existing image if upload fails
-            restaurant_params
         end
         
       _ ->

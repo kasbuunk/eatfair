@@ -35,7 +35,7 @@
                   Restaurants
                 </.link>
                 <%= if @current_scope.user.role == "restaurant_owner" do %>
-                  <.link href={~p"/admin/dashboard"} class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors">
+                  <.link href={~p"/restaurant/dashboard"} class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors">
                     My Restaurant
                   </.link>
                 <% end %>

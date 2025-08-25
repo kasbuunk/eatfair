@@ -65,7 +65,7 @@ defmodule EatfairWeb.RestaurantLive.Onboarding do
     restaurant_params = maybe_upload_image(socket, restaurant_params)
     
     case Restaurants.create_restaurant(restaurant_params) do
-      {:ok, restaurant} ->
+      {:ok, _restaurant} ->
         # Success! Restaurant owner is born 🎉
         socket =
           socket
@@ -119,12 +119,9 @@ defmodule EatfairWeb.RestaurantLive.Onboarding do
         
       {[entry], []} ->
         # Image uploaded - save it
-        case FileUpload.save_upload(entry, "restaurants") do
+        case FileUpload.save_upload(socket, :restaurant_image, entry, "restaurants") do
           {:ok, image_url} ->
             Map.put(restaurant_params, "image_url", image_url)
-          {:error, _reason} ->
-            # Log error but don't fail onboarding
-            restaurant_params
         end
         
       _ ->

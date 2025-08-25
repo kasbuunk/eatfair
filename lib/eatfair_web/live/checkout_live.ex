@@ -188,10 +188,6 @@ defmodule EatfairWeb.CheckoutLive do
     "$#{Decimal.to_float(price) |> :erlang.float_to_binary(decimals: 2)}"
   end
 
-  defp format_delivery_time(minutes) do
-    "#{minutes} min"
-  end
-
   defp format_order_number(order_id) do
     "##{String.pad_leading(to_string(order_id), 6, "0")}"
   end

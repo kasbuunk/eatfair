@@ -111,16 +111,16 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
     |> assign(:restaurants, restaurants)
   end
 
+  defp apply_filters(socket, params) when is_map(params) do
+    filters = build_filters_from_params(params)
+    apply_filters(socket, filters)
+  end
+
   defp get_current_user_id(socket) do
     case socket.assigns.current_scope do
       %{user: %{id: user_id}} -> user_id
       _ -> nil
     end
-  end
-
-  defp apply_filters(socket, params) when is_map(params) do
-    filters = build_filters_from_params(params)
-    apply_filters(socket, filters)
   end
 
   defp build_filters_from_params(params) do

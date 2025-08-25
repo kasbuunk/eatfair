@@ -1,7 +1,7 @@
 defmodule EatfairWeb.OrderTrackingLive do
   use EatfairWeb, :live_view
   
-  alias Eatfair.{Orders, Notifications}
+  alias Eatfair.Orders
   alias Phoenix.PubSub
 
   @impl true
@@ -301,7 +301,7 @@ defmodule EatfairWeb.OrderTrackingLive do
         ]}>
           <div class="flex-shrink-0 mt-1">
             <%= if is_completed do %>
-              <.icon name="hero-check-circle" class={["h-6 w-6", is_current && "text-blue-600", !is_current && "text-green-600"]}/>
+              <.icon name="hero-check-circle" class={if is_current, do: "h-6 w-6 text-blue-600", else: "h-6 w-6 text-green-600"}/>
             <% else %>
               <div class="h-6 w-6 border-2 border-gray-300 rounded-full"></div>
             <% end %>
