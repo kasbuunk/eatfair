@@ -110,6 +110,30 @@ This project follows a comprehensive documentation-driven development approach:
 
 ## Development Workflow
 
+### TDD Development Checklist
+
+**CRITICAL**: Always follow this checklist for any development work:
+
+#### 🚀 **Start Phase**
+- [ ] Read current status from PROJECT_IMPLEMENTATION.md
+- [ ] Create todo list for work (if 3+ steps required)
+- [ ] **Add final todo**: "Update PROJECT_IMPLEMENTATION.md with progress"
+
+#### 🔄 **During Development**
+- [ ] Write failing tests first
+- [ ] Implement minimum code to make tests pass
+- [ ] **Update PROJECT_IMPLEMENTATION.md** when significant progress made
+- [ ] Refactor while keeping tests green
+
+#### ✅ **Completion Phase** 
+- [ ] All tests pass
+- [ ] **Update PROJECT_IMPLEMENTATION.md**:
+  - [ ] Mark completed features as ✅
+  - [ ] Update progress percentages
+  - [ ] Update "Current Recommended Work" to next priority
+  - [ ] Document any architectural decisions
+- [ ] Mark todos as complete
+
 ### Start Feature Development (Quick Prompt)
 **Use this prompt when you want to make progress without specifying what to work on:**
 
@@ -123,12 +147,14 @@ PROCESS:
 4. Suggest specific feature to implement next
 5. Justify why this feature should be prioritized
 6. Propose TDD approach and test strategy
+7. Plan PROJECT_IMPLEMENTATION.md updates
 
 OUTPUT:
 - Current project status summary
 - Recommended next feature with justification
 - Detailed test-first implementation approach
 - Success criteria and acceptance tests
+- Documentation update plan
 ```
 
 ## Important Notes
@@ -139,4 +165,30 @@ OUTPUT:
 - Prefer LiveView streams over assigns for collections to avoid memory issues
 - Use the built-in `<.input>` and `<.icon>` components instead of external alternatives
 - **TDD is non-negotiable** - write tests first for every feature
+- **Documentation updates are non-negotiable** - PROJECT_IMPLEMENTATION.md must be kept current
 - Reference DOCUMENT_INDEX.md when you need to find specific project information
+
+## Documentation Workflow
+
+**PROJECT_IMPLEMENTATION.md is the single source of truth** for implementation status and must be updated:
+
+### When to Update
+- **During development**: When completing significant milestones or test suites
+- **At completion**: When features are fully implemented and tested
+- **When blocked**: Document what's preventing progress
+- **When pivoting**: Update priorities and current recommended work
+
+### What to Update
+- **Test Coverage**: Add new test files and describe what they cover
+- **Implementation Status**: Mark features as ✅ Complete, 🟡 In Progress, or 🔴 Missing
+- **Progress Tracking**: Update percentages based on actual test coverage
+- **Current Recommended Work**: Always point to the next highest priority
+- **Technical Notes**: Document architectural decisions and trade-offs
+
+### Update Pattern
+```
+1. Complete development work
+2. Ensure all tests pass
+3. Update PROJECT_IMPLEMENTATION.md
+4. Commit both code and documentation together
+```
