@@ -86,7 +86,7 @@ defmodule Eatfair.Orders do
     now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
 
     items_with_order_id =
-      Enum.map(items_attrs, fn %{meal_id: meal_id, quantity: quantity} = attrs ->
+      Enum.map(items_attrs, fn %{meal_id: _meal_id, quantity: _quantity} = attrs ->
         # Only allow specific fields to be inserted to avoid unknown field errors
         # Price is a virtual field and should not be inserted into order_items table directly
         Map.take(attrs, [:meal_id, :quantity])

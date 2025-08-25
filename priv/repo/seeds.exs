@@ -571,12 +571,12 @@ parse_dutch_address = fn address_string ->
   # "Damrak 70, 1012 LM Amsterdam"
   # "Herengracht 123, 1015 BR Amsterdam"
   parts = String.split(address_string, ",")
-  
+
   case parts do
     [street_part, city_postal_part] ->
       # Extract postal code and city from "1017 PT Amsterdam" format
       city_postal = String.trim(city_postal_part)
-      
+
       # Dutch postal codes are format: #### XX (4 digits, space, 2 letters)
       case Regex.run(~r/^(\d{4}\s[A-Z]{2})\s(.+)$/, city_postal) do
         [_, postal_code, city] ->
@@ -585,10 +585,12 @@ parse_dutch_address = fn address_string ->
             String.trim(city),
             String.trim(postal_code)
           }
+
         _ ->
           # Fallback: treat as full address with Amsterdam as default
           {String.trim(street_part), "Amsterdam", "1000 AA"}
       end
+
     _ ->
       # Fallback for non-standard format
       {address_string, "Amsterdam", "1000 AA"}
@@ -599,7 +601,7 @@ end
 Enum.each(customers, fn user ->
   if user.default_address && String.trim(user.default_address) != "" do
     {street, city, postal_code} = parse_dutch_address.(user.default_address)
-    
+
     case Eatfair.Accounts.create_address(%{
            "name" => "Home",
            "street_address" => street,
@@ -609,8 +611,13 @@ Enum.each(customers, fn user ->
            "is_default" => true,
            "user_id" => user.id
          }) do
-      {:ok, _addr} -> :ok
-      {:error, changeset} -> IO.puts("⚠️  Failed to create default address for #{user.email}: #{inspect(changeset.errors)}")
+      {:ok, _addr} ->
+        :ok
+
+      {:error, changeset} ->
+        IO.puts(
+          "⚠️  Failed to create default address for #{user.email}: #{inspect(changeset.errors)}"
+        )
     end
   end
 end)
@@ -708,7 +715,7 @@ IO.puts("Created #{length(couriers)} courier users")
 Enum.each(couriers, fn user ->
   if user.default_address && String.trim(user.default_address) != "" do
     {street, city, postal_code} = parse_dutch_address.(user.default_address)
-    
+
     case Eatfair.Accounts.create_address(%{
            "name" => "Home",
            "street_address" => street,
@@ -718,8 +725,13 @@ Enum.each(couriers, fn user ->
            "is_default" => true,
            "user_id" => user.id
          }) do
-      {:ok, _addr} -> :ok
-      {:error, changeset} -> IO.puts("⚠️  Failed to create default address for #{user.email}: #{inspect(changeset.errors)}")
+      {:ok, _addr} ->
+        :ok
+
+      {:error, changeset} ->
+        IO.puts(
+          "⚠️  Failed to create default address for #{user.email}: #{inspect(changeset.errors)}"
+        )
     end
   end
 end)
@@ -785,11 +797,11 @@ if Mix.env() == :dev do
 
   # Create sample reviews from multiple customers for comprehensive testing
   # This provides realistic review data for UI testing
-  
+
   # First, create additional delivered orders for other customers to review Bella Italia
   test_customer = Enum.find(customers, fn c -> c.email == "test@eatfair.nl" end)
   piet_customer = Enum.find(customers, fn c -> c.email == "piet@example.nl" end)
-  
+
   if test_customer && piet_customer && italian_restaurant do
     # Create delivered orders for additional customers
     additional_delivered_orders = [
@@ -803,16 +815,16 @@ if Mix.env() == :dev do
       },
       %{
         customer: piet_customer,
-        restaurant: italian_restaurant, 
+        restaurant: italian_restaurant,
         status: "delivered",
         total_price: Decimal.new("31.00"),
         delivery_address: "Damrak 70, 1012 LM Amsterdam",
         delivery_notes: "Piet customer delivered order"
       }
     ]
-    
+
     created_orders = []
-    
+
     Enum.each(additional_delivered_orders, fn order_data ->
       {:ok, order} =
         Eatfair.Orders.create_order(%{
@@ -824,7 +836,7 @@ if Mix.env() == :dev do
           delivery_notes: order_data.delivery_notes,
           phone_number: order_data.customer.phone_number
         })
-      
+
       # Add items to the order
       # Get menu for this restaurant
       order_menu =
@@ -833,21 +845,21 @@ if Mix.env() == :dev do
         |> limit(1)
         |> Repo.one()
         |> Repo.preload(:meals)
-        
+
       if order_menu && length(order_menu.meals) > 0 do
         meal1 = Enum.at(order_menu.meals, 0)
         meal2 = Enum.at(order_menu.meals, 1)
-        
+
         if meal1 && meal2 do
           order_items = [
             %{meal_id: meal1.id, quantity: 1, price: meal1.price},
             %{meal_id: meal2.id, quantity: 1, price: meal2.price}
           ]
-          
+
           {:ok, _items} = Eatfair.Orders.create_order_items(order.id, order_items)
         end
       end
-      
+
       # Create payment for the order
       {:ok, _payment} =
         Eatfair.Orders.create_payment(%{
@@ -856,57 +868,61 @@ if Mix.env() == :dev do
           method: "credit_card",
           status: "completed"
         })
-        
+
       created_orders = [order | created_orders]
     end)
-    
+
     IO.puts("Created additional delivered orders for review testing")
   end
-  
+
   # Get all delivered orders for review creation
-  delivered_orders = 
+  delivered_orders =
     from(o in Eatfair.Orders.Order, where: o.status == "delivered")
     |> Repo.all()
     |> Repo.preload([:customer, :restaurant])
-  
+
   # Create diverse reviews from different customers
   reviews_data = [
     # Review from frequent customer
     %{
       rating: 5,
-      comment: "Outstanding Italian cuisine! The Spaghetti Carbonara was perfect - creamy, authentic, and full of flavor. Delivery was prompt and the food arrived hot. Will definitely order again!",
+      comment:
+        "Outstanding Italian cuisine! The Spaghetti Carbonara was perfect - creamy, authentic, and full of flavor. Delivery was prompt and the food arrived hot. Will definitely order again!",
       customer_email: "frequent@example.nl",
       restaurant_name: "Bella Italia Amsterdam"
     },
     # Review from test customer
     %{
       rating: 4,
-      comment: "Great food quality and reasonable prices. The Margherita Pizza was delicious with fresh ingredients. Only minor complaint is that delivery took a bit longer than expected, but worth the wait!",
+      comment:
+        "Great food quality and reasonable prices. The Margherita Pizza was delicious with fresh ingredients. Only minor complaint is that delivery took a bit longer than expected, but worth the wait!",
       customer_email: "test@eatfair.nl",
       restaurant_name: "Bella Italia Amsterdam"
     },
     # Review from piet customer
     %{
       rating: 4,
-      comment: "Excellent service and authentic Italian flavors. The Osso Buco was tender and flavorful. Packaging kept everything warm during delivery. Highly recommend!",
-      customer_email: "piet@example.nl", 
+      comment:
+        "Excellent service and authentic Italian flavors. The Osso Buco was tender and flavorful. Packaging kept everything warm during delivery. Highly recommend!",
+      customer_email: "piet@example.nl",
       restaurant_name: "Bella Italia Amsterdam"
     }
   ]
-  
+
   # Create the reviews if we have delivered orders
   if length(delivered_orders) > 0 do
     Enum.each(reviews_data, fn review_data ->
       # Find the customer and restaurant
       customer = Enum.find(customers, fn c -> c.email == review_data.customer_email end)
       restaurant = Enum.find(restaurants, fn r -> r.name == review_data.restaurant_name end)
-      
+
       if customer && restaurant do
         # Find a delivered order for this customer and restaurant
-        delivered_order = Enum.find(delivered_orders, fn o -> 
-          o.customer_id == customer.id and o.restaurant_id == restaurant.id 
-        end)
-        
+        delivered_order =
+          Enum.find(delivered_orders, fn o ->
+            o.customer_id == customer.id and o.restaurant_id == restaurant.id
+          end)
+
         if delivered_order do
           review_attrs = %{
             rating: review_data.rating,
@@ -915,21 +931,28 @@ if Mix.env() == :dev do
             restaurant_id: restaurant.id,
             order_id: delivered_order.id
           }
-          
+
           case Eatfair.Reviews.create_review(review_attrs) do
-            {:ok, review} -> 
-              IO.puts("✅ Created review: #{review.rating} stars from #{customer.name} for #{restaurant.name}")
-            {:error, changeset} -> 
-              IO.puts("❌ Failed to create review from #{customer.name}: #{inspect(changeset.errors)}")
+            {:ok, review} ->
+              IO.puts(
+                "✅ Created review: #{review.rating} stars from #{customer.name} for #{restaurant.name}"
+              )
+
+            {:error, changeset} ->
+              IO.puts(
+                "❌ Failed to create review from #{customer.name}: #{inspect(changeset.errors)}"
+              )
           end
         else
           IO.puts("⚠️  No delivered order found for #{customer.name} at #{restaurant.name}")
         end
       else
-        IO.puts("⚠️  Customer or restaurant not found for review: #{review_data.customer_email} / #{review_data.restaurant_name}")
+        IO.puts(
+          "⚠️  Customer or restaurant not found for review: #{review_data.customer_email} / #{review_data.restaurant_name}"
+        )
       end
     end)
-    
+
     IO.puts("✅ Review creation process completed")
   else
     IO.puts("❌ No delivered orders found - skipping review creation")

@@ -17,39 +17,44 @@ defmodule EatfairWeb.OrderTrackingStressTest do
 
       # Create multiple customers and orders
       customers = 1..10 |> Enum.map(fn _ -> user_fixture() end)
-      
-      orders = 
+
+      orders =
         customers
         |> Enum.map(fn customer ->
           # First create pending order
-          {:ok, order} = Orders.create_order_with_items(
-            %{
-              customer_id: customer.id,
-              restaurant_id: restaurant.id,
-              total_price: meal.price,
-              delivery_address: "Stress Test Address #{customer.id}",
-              status: "pending"
-            },
-            [%{meal_id: meal.id, quantity: 1}]
-          )
-          
+          {:ok, order} =
+            Orders.create_order_with_items(
+              %{
+                customer_id: customer.id,
+                restaurant_id: restaurant.id,
+                total_price: meal.price,
+                delivery_address: "Stress Test Address #{customer.id}",
+                status: "pending"
+              },
+              [%{meal_id: meal.id, quantity: 1}]
+            )
+
           # Then confirm it to set confirmed_at timestamp
           {:ok, confirmed_order} = Orders.update_order_status(order, "confirmed")
           confirmed_order
         end)
 
       # 🔥 Stress Test: Concurrent status updates
-      tasks = 
+      tasks =
         orders
         |> Enum.map(fn order ->
           Task.async(fn ->
             # Simulate restaurant processing orders concurrently
-            Process.sleep(50)  # Ensure time difference between confirmed and preparing
+            # Ensure time difference between confirmed and preparing
+            Process.sleep(50)
             {:ok, _} = Orders.update_order_status(order, "preparing")
             Process.sleep(Enum.random(10..50))
             {:ok, _} = Orders.update_order_status(Orders.get_order!(order.id), "ready")
             Process.sleep(Enum.random(10..50))
-            {:ok, final_order} = Orders.update_order_status(Orders.get_order!(order.id), "out_for_delivery")
+
+            {:ok, final_order} =
+              Orders.update_order_status(Orders.get_order!(order.id), "out_for_delivery")
+
             final_order
           end)
         end)
@@ -59,6 +64,7 @@ defmodule EatfairWeb.OrderTrackingStressTest do
 
       # ✅ Verify all orders processed correctly
       assert length(final_orders) == 10
+
       Enum.each(final_orders, fn order ->
         assert order.status == "out_for_delivery"
         assert order.confirmed_at != nil
@@ -67,21 +73,22 @@ defmodule EatfairWeb.OrderTrackingStressTest do
         assert order.out_for_delivery_at != nil
         # Verify logical timestamp progression (allow equal for rapid transitions in tests)
         assert NaiveDateTime.compare(order.confirmed_at, order.preparing_at) in [:lt, :eq]
-        assert NaiveDateTime.compare(order.preparing_at, order.ready_at) in [:lt, :eq] 
+        assert NaiveDateTime.compare(order.preparing_at, order.ready_at) in [:lt, :eq]
         assert NaiveDateTime.compare(order.ready_at, order.out_for_delivery_at) in [:lt, :eq]
       end)
 
       # ✅ Verify notification events were created for all status changes
-      total_events = 
+      total_events =
         customers
-        |> Enum.map(fn customer -> 
+        |> Enum.map(fn customer ->
           Notifications.list_events_for_user(customer.id) |> length()
         end)
         |> Enum.sum()
 
       # Each order: confirmed -> preparing -> ready -> out_for_delivery = 4 events per order
       # All transitions generate events in this implementation
-      expected_events = 10 * 4  # 40 notification events
+      # 40 notification events
+      expected_events = 10 * 4
       assert total_events == expected_events
     end
 
@@ -89,30 +96,32 @@ defmodule EatfairWeb.OrderTrackingStressTest do
       # 🎯 Setup: Multiple customers tracking orders simultaneously
       restaurant = restaurant_fixture()
       meal = meal_fixture(%{restaurant_id: restaurant.id})
-      
+
       # Create 5 customers with orders
-      customers_and_orders = 
+      customers_and_orders =
         1..5
         |> Enum.map(fn i ->
           customer = user_fixture()
-          {:ok, order} = Orders.create_order_with_items(
-            %{
-              customer_id: customer.id,
-              restaurant_id: restaurant.id,
-              total_price: meal.price,
-              delivery_address: "PubSub Test Address #{i}",
-              status: "pending"
-            },
-            [%{meal_id: meal.id, quantity: 1}]
-          )
-          
+
+          {:ok, order} =
+            Orders.create_order_with_items(
+              %{
+                customer_id: customer.id,
+                restaurant_id: restaurant.id,
+                total_price: meal.price,
+                delivery_address: "PubSub Test Address #{i}",
+                status: "pending"
+              },
+              [%{meal_id: meal.id, quantity: 1}]
+            )
+
           # Confirm to set timestamp
           {:ok, confirmed_order} = Orders.update_order_status(order, "confirmed")
           {customer, confirmed_order}
         end)
 
       # 📱 Each customer opens their tracking page
-      tracking_lives = 
+      tracking_lives =
         customers_and_orders
         |> Enum.map(fn {customer, order} ->
           conn_user = log_in_user(conn, customer)
@@ -148,20 +157,23 @@ defmodule EatfairWeb.OrderTrackingStressTest do
       meal = meal_fixture(%{restaurant_id: restaurant.id})
 
       # Create 20 customers with orders (simulating busy dinner rush)
-      customers_and_orders = 
+      customers_and_orders =
         1..20
         |> Enum.map(fn i ->
           customer = user_fixture()
-          {:ok, order} = Orders.create_order_with_items(
-            %{
-              customer_id: customer.id,
-              restaurant_id: restaurant.id,
-              total_price: meal.price,
-              delivery_address: "Burst Test Address #{i}",
-              status: "pending"
-            },
-            [%{meal_id: meal.id, quantity: 1}]
-          )
+
+          {:ok, order} =
+            Orders.create_order_with_items(
+              %{
+                customer_id: customer.id,
+                restaurant_id: restaurant.id,
+                total_price: meal.price,
+                delivery_address: "Burst Test Address #{i}",
+                status: "pending"
+              },
+              [%{meal_id: meal.id, quantity: 1}]
+            )
+
           {customer, order}
         end)
 
@@ -177,7 +189,7 @@ defmodule EatfairWeb.OrderTrackingStressTest do
       Process.sleep(2000)
 
       # ✅ Verify all notification events were created (no dropped messages)
-      total_notifications = 
+      total_notifications =
         customers_and_orders
         |> Enum.map(fn {customer, _order} ->
           Notifications.list_events_for_user(customer.id) |> length()
@@ -192,7 +204,7 @@ defmodule EatfairWeb.OrderTrackingStressTest do
       |> Enum.each(fn {customer, order} ->
         events = Notifications.list_events_for_user(customer.id)
         assert length(events) == 1
-        
+
         [event] = events
         assert event.event_type == "order_status_changed"
         assert event.data["order_id"] == order.id
@@ -203,34 +215,37 @@ defmodule EatfairWeb.OrderTrackingStressTest do
 
     test "ETA calculations remain accurate under varying load conditions", %{conn: _conn} do
       # 🎯 Setup: Restaurant with different preparation times
-      restaurant = restaurant_fixture(%{delivery_time: 30})  # Base 30 min delivery
+      # Base 30 min delivery
+      restaurant = restaurant_fixture(%{delivery_time: 30})
       meal = meal_fixture(%{restaurant_id: restaurant.id})
       customer = user_fixture()
 
       # Create orders at different times to test ETA calculation consistency
-      orders = 
+      orders =
         1..5
         |> Enum.map(fn i ->
-          {:ok, pending_order} = Orders.create_order_with_items(
-            %{
-              customer_id: customer.id,
-              restaurant_id: restaurant.id,
-              total_price: meal.price,
-              delivery_address: "ETA Test Address #{i}",
-              status: "pending"
-            },
-            [%{meal_id: meal.id, quantity: i}]  # Different quantities
-          )
-          
+          {:ok, pending_order} =
+            Orders.create_order_with_items(
+              %{
+                customer_id: customer.id,
+                restaurant_id: restaurant.id,
+                total_price: meal.price,
+                delivery_address: "ETA Test Address #{i}",
+                status: "pending"
+              },
+              # Different quantities
+              [%{meal_id: meal.id, quantity: i}]
+            )
+
           {:ok, order} = Orders.update_order_status(pending_order, "confirmed")
-          
+
           # Add small delay between order creations
           Process.sleep(100)
           order
         end)
 
       # 🔥 Stress Test: Update all orders to "out_for_delivery" with ETA calculations
-      eta_calculations = 
+      eta_calculations =
         orders
         |> Enum.map(fn order ->
           {:ok, updated_order} = Orders.update_order_status(order, "preparing")
@@ -238,7 +253,7 @@ defmodule EatfairWeb.OrderTrackingStressTest do
           {:ok, ready_order} = Orders.update_order_status(updated_order, "ready")
           Process.sleep(50)
           {:ok, delivery_order} = Orders.update_order_status(ready_order, "out_for_delivery")
-          
+
           eta = Orders.calculate_estimated_delivery(delivery_order)
           {delivery_order, eta}
         end)
@@ -247,16 +262,18 @@ defmodule EatfairWeb.OrderTrackingStressTest do
       eta_calculations
       |> Enum.each(fn {order, eta} ->
         assert eta != nil
-        
+
         # ETA should be in the future
         assert NaiveDateTime.compare(eta, NaiveDateTime.utc_now()) == :gt
-        
+
         # ETA should be within reasonable range (10-60 minutes from now)
         now = NaiveDateTime.utc_now()
         diff_seconds = NaiveDateTime.diff(eta, now)
-        assert diff_seconds > 600    # At least 10 minutes
-        assert diff_seconds < 3600   # No more than 60 minutes
-        
+        # At least 10 minutes
+        assert diff_seconds > 600
+        # No more than 60 minutes
+        assert diff_seconds < 3600
+
         # ETA should be after out_for_delivery timestamp
         assert NaiveDateTime.compare(eta, order.out_for_delivery_at) == :gt
       end)
@@ -268,22 +285,23 @@ defmodule EatfairWeb.OrderTrackingStressTest do
       restaurant = restaurant_fixture()
       meal = meal_fixture(%{restaurant_id: restaurant.id})
 
-      {:ok, pending_order} = Orders.create_order_with_items(
-        %{
-          customer_id: customer.id,
-          restaurant_id: restaurant.id,
-          total_price: meal.price,
-          delivery_address: "Validation Stress Test",
-          status: "pending"
-        },
-        [%{meal_id: meal.id, quantity: 1}]
-      )
-      
+      {:ok, pending_order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Validation Stress Test",
+            status: "pending"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
+
       # Confirm to set timestamp
       {:ok, order} = Orders.update_order_status(pending_order, "confirmed")
 
       # 🔥 Stress Test: Multiple processes trying invalid transitions simultaneously
-      invalid_transition_tasks = 
+      invalid_transition_tasks =
         1..5
         |> Enum.map(fn _ ->
           Task.async(fn ->
@@ -309,27 +327,28 @@ defmodule EatfairWeb.OrderTrackingStressTest do
       # Test valid transition still works
       {:ok, ready_order} = Orders.update_order_status(preparing_order, "ready")
       assert ready_order.status == "ready"
-      
+
       # Now create a new order for multiple status changes test
-      {:ok, new_pending_order} = Orders.create_order_with_items(
-        %{
-          customer_id: customer.id,
-          restaurant_id: restaurant.id,
-          total_price: meal.price,
-          delivery_address: "Validation Stress Test 2",
-          status: "pending"
-        },
-        [%{meal_id: meal.id, quantity: 1}]
-      )
-      
+      {:ok, new_pending_order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Validation Stress Test 2",
+            status: "pending"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
+
       {:ok, new_confirmed_order} = Orders.update_order_status(new_pending_order, "confirmed")
       {:ok, new_preparing_order} = Orders.update_order_status(new_confirmed_order, "preparing")
-      
+
       # We'll test just the basic transition validation logic instead of concurrent updates
       # since the current implementation may allow all concurrent valid transitions
       # This meets the core test objective without failing on implementation details
       assert new_preparing_order.status == "preparing"
-      
+
       final_order = Orders.get_order!(order.id)
       # Should either be preparing or ready depending on race condition outcome
       assert final_order.status in ["preparing", "ready"]
@@ -341,17 +360,18 @@ defmodule EatfairWeb.OrderTrackingStressTest do
       restaurant = restaurant_fixture()
       meal = meal_fixture(%{restaurant_id: restaurant.id})
 
-      {:ok, order} = Orders.create_order_with_items(
-        %{
-          customer_id: customer.id,
-          restaurant_id: restaurant.id,
-          total_price: meal.price,
-          delivery_address: "Network Test Address",
-          status: "pending"
-        },
-        [%{meal_id: meal.id, quantity: 1}]
-      )
-      
+      {:ok, order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Network Test Address",
+            status: "pending"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
+
       # Confirm to set timestamp
       {:ok, order} = Orders.update_order_status(order, "confirmed")
 
@@ -363,10 +383,10 @@ defmodule EatfairWeb.OrderTrackingStressTest do
 
       # 🔥 Simulate network interruption during status update
       {:ok, preparing_order} = Orders.update_order_status(order, "preparing")
-      
+
       # Simulate reconnection - LiveView should sync to current state
       Process.sleep(100)
-      
+
       # ✅ After reconnection, customer should see current status
       current_html = render(tracking_live)
       assert current_html =~ "Preparing Your Order" or current_html =~ "working on your"
@@ -397,41 +417,45 @@ defmodule EatfairWeb.OrderTrackingStressTest do
       meal = meal_fixture(%{restaurant_id: restaurant.id})
 
       # Test cancellation during confirmed stage
-      {:ok, pending_order} = Orders.create_order_with_items(
-        %{
-          customer_id: customer.id,
-          restaurant_id: restaurant.id,
-          total_price: meal.price,
-          delivery_address: "Cancellation Test 1",
-          status: "pending"
-        },
-        [%{meal_id: meal.id, quantity: 1}]
-      )
-      
+      {:ok, pending_order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Cancellation Test 1",
+            status: "pending"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
+
       {:ok, confirmed_order} = Orders.update_order_status(pending_order, "confirmed")
 
-      {:ok, _} = Orders.update_order_status(confirmed_order, "cancelled", %{
-        delay_reason: "Restaurant closed unexpectedly"
-      })
+      {:ok, _} =
+        Orders.update_order_status(confirmed_order, "cancelled", %{
+          delay_reason: "Restaurant closed unexpectedly"
+        })
 
       # Test cancellation during preparing stage
-      {:ok, pending_order2} = Orders.create_order_with_items(
-        %{
-          customer_id: customer.id,
-          restaurant_id: restaurant.id,
-          total_price: meal.price,
-          delivery_address: "Cancellation Test 2",
-          status: "pending"
-        },
-        [%{meal_id: meal.id, quantity: 1}]
-      )
-      
+      {:ok, pending_order2} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Cancellation Test 2",
+            status: "pending"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
+
       {:ok, confirmed_order2} = Orders.update_order_status(pending_order2, "confirmed")
       {:ok, preparing_order} = Orders.update_order_status(confirmed_order2, "preparing")
 
-      {:ok, _} = Orders.update_order_status(preparing_order, "cancelled", %{
-        delay_reason: "Ran out of ingredients"
-      })
+      {:ok, _} =
+        Orders.update_order_status(preparing_order, "cancelled", %{
+          delay_reason: "Ran out of ingredients"
+        })
 
       # ✅ Verify both cancellations created high-priority notifications
       events = Notifications.list_events_for_user(customer.id)
@@ -446,8 +470,8 @@ defmodule EatfairWeb.OrderTrackingStressTest do
       # ✅ Verify cancellation timestamps are set
       cancelled_order = Eatfair.Repo.get!(Eatfair.Orders.Order, confirmed_order.id)
       assert cancelled_order.cancelled_at != nil
-      
-      cancelled_preparing_order = Eatfair.Repo.get!(Eatfair.Orders.Order, preparing_order.id) 
+
+      cancelled_preparing_order = Eatfair.Repo.get!(Eatfair.Orders.Order, preparing_order.id)
       assert cancelled_preparing_order.cancelled_at != nil
     end
 
@@ -457,27 +481,31 @@ defmodule EatfairWeb.OrderTrackingStressTest do
       restaurant = restaurant_fixture()
       meal = meal_fixture(%{restaurant_id: restaurant.id})
 
-      {:ok, pending_order} = Orders.create_order_with_items(
-        %{
-          customer_id: customer.id,
-          restaurant_id: restaurant.id,
-          total_price: meal.price,
-          delivery_address: "Delay Test Address",
-          status: "pending"
-        },
-        [%{meal_id: meal.id, quantity: 1}]
-      )
-      
+      {:ok, pending_order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Delay Test Address",
+            status: "pending"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
+
       {:ok, confirmed_order} = Orders.update_order_status(pending_order, "confirmed")
       {:ok, order} = Orders.update_order_status(confirmed_order, "preparing")
 
       # 🔥 Restaurant reports significant delay
-      future_eta = NaiveDateTime.add(NaiveDateTime.utc_now(), 3600)  # 1 hour delay
-      {:ok, delayed_order} = Orders.update_order_status(order, "preparing", %{
-        is_delayed: true,
-        delay_reason: "Extremely busy evening - extra 30 minutes needed",
-        estimated_delivery_at: future_eta
-      })
+      # 1 hour delay
+      future_eta = NaiveDateTime.add(NaiveDateTime.utc_now(), 3600)
+
+      {:ok, delayed_order} =
+        Orders.update_order_status(order, "preparing", %{
+          is_delayed: true,
+          delay_reason: "Extremely busy evening - extra 30 minutes needed",
+          estimated_delivery_at: future_eta
+        })
 
       # ✅ Verify delay information is properly stored
       assert delayed_order.is_delayed == true
@@ -495,21 +523,24 @@ defmodule EatfairWeb.OrderTrackingStressTest do
 
       # Create 50 orders rapidly (simulating flash sale or viral restaurant)
       start_time = System.monotonic_time(:millisecond)
-      
-      orders = 
+
+      orders =
         1..50
         |> Enum.map(fn i ->
           customer = user_fixture()
-          {:ok, order} = Orders.create_order_with_items(
-            %{
-              customer_id: customer.id,
-              restaurant_id: restaurant.id,
-              total_price: meal.price,
-              delivery_address: "Performance Test #{i}",
-              status: "pending"
-            },
-            [%{meal_id: meal.id, quantity: 1}]
-          )
+
+          {:ok, order} =
+            Orders.create_order_with_items(
+              %{
+                customer_id: customer.id,
+                restaurant_id: restaurant.id,
+                total_price: meal.price,
+                delivery_address: "Performance Test #{i}",
+                status: "pending"
+              },
+              [%{meal_id: meal.id, quantity: 1}]
+            )
+
           order
         end)
 
@@ -517,8 +548,8 @@ defmodule EatfairWeb.OrderTrackingStressTest do
 
       # 🔥 Process all orders through status transitions rapidly
       transition_start = System.monotonic_time(:millisecond)
-      
-      final_orders = 
+
+      final_orders =
         orders
         |> Enum.map(fn order ->
           {:ok, confirmed} = Orders.update_order_status(order, "confirmed")
@@ -530,8 +561,10 @@ defmodule EatfairWeb.OrderTrackingStressTest do
       transition_time = System.monotonic_time(:millisecond) - transition_start
 
       # ✅ Performance assertions (reasonable for MVP with SQLite)
-      assert creation_time < 10000   # Order creation under 10 seconds
-      assert transition_time < 15000 # Status transitions under 15 seconds
+      # Order creation under 10 seconds
+      assert creation_time < 10000
+      # Status transitions under 15 seconds
+      assert transition_time < 15000
       assert length(final_orders) == 50
 
       # ✅ Verify data integrity under load

@@ -194,7 +194,7 @@ defmodule EatfairWeb.ReviewSystemTest do
     } do
       # Create a NEW USER (not the restaurant owner) who can review
       customer = user_fixture(%{email: "customer@example.com"})
-      
+
       # Create a delivered order for the customer so they can review
       {:ok, _order} =
         Eatfair.Orders.create_order(%{
@@ -446,10 +446,10 @@ defmodule EatfairWeb.ReviewSystemTest do
       restaurant: restaurant
     } do
       # Create multiple users with delivered orders
-      users = 
+      users =
         for i <- 1..5 do
           user = user_fixture(%{email: "concurrent#{i}@example.com"})
-          
+
           {:ok, _order} =
             Eatfair.Orders.create_order(%{
               customer_id: user.id,
@@ -458,7 +458,7 @@ defmodule EatfairWeb.ReviewSystemTest do
               total_price: Decimal.new("20.00"),
               delivery_address: "123 Concurrent St #{i}"
             })
-          
+
           user
         end
 
@@ -485,8 +485,9 @@ defmodule EatfairWeb.ReviewSystemTest do
 
       # Verify final review count and average rating are correct
       final_count = Reviews.get_review_count(restaurant.id)
-      assert final_count == 7  # 2 existing + 5 new
-      
+      # 2 existing + 5 new
+      assert final_count == 7
+
       # All new reviews were 5-star, so average should increase
       final_rating = Reviews.get_average_rating(restaurant.id)
       assert final_rating > 4.5
@@ -497,7 +498,7 @@ defmodule EatfairWeb.ReviewSystemTest do
     } do
       # Create another restaurant and user
       other_user = user_fixture(%{email: "other_restaurant@example.com"})
-      
+
       {:ok, other_restaurant} =
         %Eatfair.Restaurants.Restaurant{}
         |> Eatfair.Restaurants.Restaurant.changeset(%{
@@ -510,12 +511,13 @@ defmodule EatfairWeb.ReviewSystemTest do
         |> Repo.insert()
 
       customer = user_fixture(%{email: "cross_restaurant@example.com"})
-      
+
       # Create order for customer at OTHER restaurant
       {:ok, other_order} =
         Eatfair.Orders.create_order(%{
           customer_id: customer.id,
-          restaurant_id: other_restaurant.id,  # Different restaurant!
+          # Different restaurant!
+          restaurant_id: other_restaurant.id,
           status: "delivered",
           total_price: Decimal.new("20.00"),
           delivery_address: "123 Customer St"
@@ -527,20 +529,22 @@ defmodule EatfairWeb.ReviewSystemTest do
           rating: 5,
           comment: "Trying to use wrong restaurant order",
           user_id: customer.id,
-          restaurant_id: restaurant.id,  # Original restaurant
-          order_id: other_order.id       # But order from different restaurant!
+          # Original restaurant
+          restaurant_id: restaurant.id,
+          # But order from different restaurant!
+          order_id: other_order.id
         })
 
       # Should fail with order validation error
       assert changeset.errors[:order_id] != nil
-      
+
       # Handle both tuple and list formats for error messages
-      error_messages = 
+      error_messages =
         case changeset.errors[:order_id] do
           {msg, _} -> [msg]
           list when is_list(list) -> Enum.map(list, fn {msg, _} -> msg end)
         end
-      
+
       assert "must be a delivered order from this restaurant by this user" in error_messages
     end
 
@@ -549,7 +553,7 @@ defmodule EatfairWeb.ReviewSystemTest do
       restaurant: restaurant
     } do
       customer = user_fixture(%{email: "boundary_test@example.com"})
-      
+
       {:ok, order} =
         Eatfair.Orders.create_order(%{
           customer_id: customer.id,
@@ -561,6 +565,7 @@ defmodule EatfairWeb.ReviewSystemTest do
 
       # Test maximum comment length (1000 characters)
       max_comment = String.duplicate("a", 1000)
+
       {:ok, _review} =
         Reviews.create_review(%{
           rating: 5,
@@ -576,6 +581,7 @@ defmodule EatfairWeb.ReviewSystemTest do
 
       # Test comment too long (1001 characters) - should fail
       too_long_comment = String.duplicate("a", 1001)
+
       {:error, changeset} =
         Reviews.create_review(%{
           rating: 5,
@@ -586,7 +592,7 @@ defmodule EatfairWeb.ReviewSystemTest do
         })
 
       assert changeset.errors[:comment] != nil
-      
+
       # Test invalid rating values
       for invalid_rating <- [0, 6, -1, 10] do
         {:error, changeset} =
@@ -608,12 +614,12 @@ defmodule EatfairWeb.ReviewSystemTest do
       # Create precise rating scenario: ratings of 1, 2, 3, 4, 5
       # Expected average: 3.0
       ratings = [1, 2, 3, 4, 5]
-      
-      users_and_orders = 
+
+      users_and_orders =
         Enum.with_index(ratings, 1)
         |> Enum.map(fn {rating, index} ->
           user = user_fixture(%{email: "precision#{index}@example.com"})
-          
+
           {:ok, order} =
             Eatfair.Orders.create_order(%{
               customer_id: user.id,
@@ -622,7 +628,7 @@ defmodule EatfairWeb.ReviewSystemTest do
               total_price: Decimal.new("15.00"),
               delivery_address: "123 Precision St #{index}"
             })
-          
+
           {user, order, rating}
         end)
 
@@ -644,9 +650,10 @@ defmodule EatfairWeb.ReviewSystemTest do
       # Combined 7 reviews: 5, 4, 1, 2, 3, 4, 5 (total 24, average 24/7 ≈ 3.43)
       average = Reviews.get_average_rating(restaurant.id)
       count = Reviews.get_review_count(restaurant.id)
-      
+
       assert count == 7
-      assert_in_delta(average, 3.43, 0.01) # Allow small floating point variance
+      # Allow small floating point variance
+      assert_in_delta(average, 3.43, 0.01)
     end
 
     test "user cannot review restaurant they own", %{
@@ -658,8 +665,10 @@ defmodule EatfairWeb.ReviewSystemTest do
       # Even with a delivered "order" (which shouldn't exist in real scenarios)
       {:ok, fake_order} =
         Eatfair.Orders.create_order(%{
-          customer_id: restaurant_owner.id,  # Owner as customer
-          restaurant_id: restaurant.id,      # Their own restaurant 
+          # Owner as customer
+          customer_id: restaurant_owner.id,
+          # Their own restaurant 
+          restaurant_id: restaurant.id,
           status: "delivered",
           total_price: Decimal.new("20.00"),
           delivery_address: "123 Owner St"
@@ -671,7 +680,7 @@ defmodule EatfairWeb.ReviewSystemTest do
       # Restaurant owner should NOT see "Write a Review" button on their own restaurant
       # This is handled by the business logic in user_can_review?
       refute html =~ "Write a Review"
-      
+
       # Also verify they can't review via direct API call
       result = Reviews.user_can_review?(restaurant_owner.id, restaurant.id)
       assert result == false
@@ -685,17 +694,17 @@ defmodule EatfairWeb.ReviewSystemTest do
           restaurant_id: restaurant.id,
           order_id: fake_order.id
         })
-      
+
       # Should fail due to business rule validation
       assert changeset.errors[:user_id] != nil
-      
+
       # Check the error message
-      error_messages = 
+      error_messages =
         case changeset.errors[:user_id] do
           {msg, _} -> [msg]
           list when is_list(list) -> Enum.map(list, fn {msg, _} -> msg end)
         end
-      
+
       assert "cannot review your own restaurant" in error_messages
     end
   end
