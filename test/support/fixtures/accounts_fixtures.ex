@@ -41,6 +41,34 @@ defmodule Eatfair.AccountsFixtures do
     user
   end
 
+  def confirmed_user_fixture(attrs \\ %{}) do
+    default_address = Map.get(attrs, :default_address)
+    attrs = Map.delete(attrs, :default_address)
+    
+    user = unconfirmed_user_fixture(attrs)
+    
+    # Manually confirm the user by setting confirmed_at
+    changeset = user
+    |> Ecto.Changeset.change(%{confirmed_at: DateTime.utc_now() |> DateTime.truncate(:second)})
+    
+    {:ok, user} = Eatfair.Repo.update(changeset)
+    
+    # Create default address if specified
+    if default_address do
+      {:ok, _address} = Accounts.create_address(%{
+        "name" => "Home",
+        "street_address" => default_address,
+        "city" => "Amsterdam", # Default city
+        "postal_code" => "1012 AB", # Default postal code
+        "country" => "Netherlands",
+        "is_default" => true,
+        "user_id" => user.id
+      })
+    end
+    
+    user
+  end
+
   def user_scope_fixture do
     user = user_fixture()
     user_scope_fixture(user)
@@ -85,5 +113,28 @@ defmodule Eatfair.AccountsFixtures do
       from(ut in Accounts.UserToken, where: ut.token == ^token),
       set: [inserted_at: dt, authenticated_at: dt]
     )
+  end
+
+  @doc """
+  Generate address for a user.
+  """
+  def address_fixture(attrs \\ %{}) do
+    user = attrs[:user] || user_fixture()
+    
+    attrs =
+      attrs
+      |> Map.delete(:user)
+      |> Enum.into(%{
+        name: "Home",
+        street_address: "Prinsengracht 100, Amsterdam",
+        city: "Amsterdam",
+        postal_code: "1015 EA",
+        country: "Netherlands",
+        is_default: true,
+        user_id: user.id
+      })
+
+    {:ok, address} = Accounts.create_address(attrs)
+    address
   end
 end

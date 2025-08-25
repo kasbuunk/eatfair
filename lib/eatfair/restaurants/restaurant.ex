@@ -18,6 +18,13 @@ defmodule Eatfair.Restaurants.Restaurant do
     field :rating, :decimal
     field :image_url, :string
     field :cuisine_types, {:array, :string}, default: []
+    
+    # Geographic fields for location-based search
+    field :latitude, :decimal
+    field :longitude, :decimal
+    field :city, :string
+    field :postal_code, :string
+    field :country, :string, default: "Netherlands"
 
     belongs_to :owner, User
     many_to_many :cuisines, Cuisine, join_through: "restaurant_cuisines"
@@ -40,7 +47,8 @@ defmodule Eatfair.Restaurants.Restaurant do
     |> cast(attrs, [
       :name, :address, :description, :avg_preparation_time, 
       :delivery_radius_km, :delivery_time_per_km, :min_order_value, 
-      :is_open, :rating, :image_url, :cuisine_types, :owner_id
+      :is_open, :rating, :image_url, :cuisine_types, :owner_id,
+      :latitude, :longitude, :city, :postal_code, :country
     ])
     |> validate_required([:name, :address, :owner_id])
     |> validate_length(:name, min: 2, max: 100)

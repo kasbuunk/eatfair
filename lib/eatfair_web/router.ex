@@ -23,6 +23,7 @@ defmodule EatfairWeb.Router do
     live_session :current_user,
       on_mount: [{EatfairWeb.UserAuth, :mount_current_scope}] do
       live "/", RestaurantLive.Index, :index
+      live "/restaurants/discover", RestaurantLive.Discovery, :index
       live "/restaurants/:id", RestaurantLive.Show, :show
       live "/users/register", UserLive.Registration, :new
       live "/users/log-in", UserLive.Login, :new
@@ -61,6 +62,7 @@ defmodule EatfairWeb.Router do
       on_mount: [{EatfairWeb.UserAuth, :require_authenticated}] do
       live "/users/settings", UserLive.Settings, :edit
       live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
+      live "/users/addresses", UserLive.Addresses, :index
       live "/checkout", CheckoutLive, :index
       
       # Restaurant onboarding - available to all authenticated users

@@ -122,6 +122,152 @@ defmodule Eatfair.Restaurants do
   end
 
   @doc """
+  Returns the list of restaurants with location data for discovery.
+  """
+  def list_restaurants_with_location_data do
+    Restaurant
+    |> where([r], r.is_open == true)
+    |> preload([:cuisines, :menus])
+    |> Repo.all()
+  end
+
+  @doc """
+  Searches restaurants by name.
+  """
+  def search_restaurants(query) when is_binary(query) do
+    search_query = "%#{String.downcase(query)}%"
+    
+    Restaurant
+    |> where([r], r.is_open == true)
+    |> where([r], like(fragment("lower(?)", r.name), ^search_query))
+    |> preload([:cuisines, :menus])
+    |> Repo.all()
+  end
+
+  @doc """
+  Filters restaurants by various criteria.
+  """
+  def filter_restaurants(filters) when is_map(filters) do
+    Restaurant
+    |> where([r], r.is_open == true)
+    |> apply_cuisine_filter(filters[:cuisine])
+    |> apply_price_filter(filters[:max_price])
+    |> apply_delivery_time_filter(filters[:max_delivery_time])
+    |> preload([:cuisines, :menus])
+    |> Repo.all()
+  end
+
+  @doc """
+  Returns restaurants within delivery range of a user's location.
+  Filters by the user's default address if available.
+  """
+  def list_restaurants_for_user(user_id) when is_integer(user_id) do
+    case get_user_location(user_id) do
+      nil -> 
+        # No address found, return all open restaurants
+        list_open_restaurants()
+      
+      {lat, lon} ->
+        # Filter restaurants by delivery range
+        list_open_restaurants()
+        |> Enum.filter(&within_delivery_range?(&1, lat, lon))
+    end
+  end
+
+  @doc """
+  Filters restaurants by location and other criteria.
+  """
+  def filter_restaurants_with_location(filters, user_id) when is_map(filters) and is_integer(user_id) do
+    base_restaurants = case get_user_location(user_id) do
+      nil -> 
+        # No location filtering, use regular filter
+        filter_restaurants(filters)
+      
+      {lat, lon} ->
+        # Apply location filtering first, then other filters
+        filter_restaurants(filters)
+        |> Enum.filter(&within_delivery_range?(&1, lat, lon))
+    end
+    
+    base_restaurants
+  end
+
+  @doc """
+  Searches restaurants by name with location filtering.
+  """
+  def search_restaurants_with_location(query, user_id) when is_binary(query) and is_integer(user_id) do
+    base_restaurants = search_restaurants(query)
+    
+    case get_user_location(user_id) do
+      nil -> base_restaurants
+      {lat, lon} -> 
+        base_restaurants
+        |> Enum.filter(&within_delivery_range?(&1, lat, lon))
+    end
+  end
+
+  @doc """
+  Checks if a restaurant can deliver to a specific location.
+  """
+  def can_deliver_to_location?(restaurant_id, user_id) when is_integer(restaurant_id) and is_integer(user_id) do
+    restaurant = get_restaurant!(restaurant_id)
+    
+    case get_user_location(user_id) do
+      nil -> false  # No location available
+      {lat, lon} -> within_delivery_range?(restaurant, lat, lon)
+    end
+  end
+
+  defp get_user_location(user_id) do
+    # Get user's default address coordinates
+    case Eatfair.Accounts.list_user_addresses(user_id) do
+      [] -> nil
+      addresses -> 
+        default_address = Enum.find(addresses, &(&1.is_default)) || List.first(addresses)
+        
+        case default_address do
+          %{latitude: lat, longitude: lon} when not is_nil(lat) and not is_nil(lon) ->
+            {lat, lon}
+          _ -> 
+            nil
+        end
+    end
+  end
+
+  defp within_delivery_range?(restaurant, customer_lat, customer_lon) do
+    Eatfair.GeoUtils.within_delivery_range?(
+      restaurant.latitude, 
+      restaurant.longitude, 
+      customer_lat, 
+      customer_lon, 
+      restaurant.delivery_radius_km
+    )
+  end
+
+  defp apply_cuisine_filter(query, nil), do: query
+  defp apply_cuisine_filter(query, ""), do: query
+  defp apply_cuisine_filter(query, cuisine) do
+    query
+    |> join(:inner, [r], c in assoc(r, :cuisines))
+    |> where([r, c], c.name == ^cuisine)
+  end
+
+  defp apply_price_filter(query, nil), do: query
+  defp apply_price_filter(query, ""), do: query
+  defp apply_price_filter(query, max_price) when is_binary(max_price) do
+    {price_decimal, _} = Decimal.new(max_price) |> Decimal.to_float() |> Float.to_string() |> Float.parse()
+    price_decimal = Decimal.from_float(price_decimal)
+    where(query, [r], r.min_order_value <= ^price_decimal)
+  end
+
+  defp apply_delivery_time_filter(query, nil), do: query
+  defp apply_delivery_time_filter(query, ""), do: query
+  defp apply_delivery_time_filter(query, max_time) when is_binary(max_time) do
+    {time_int, _} = Integer.parse(max_time)
+    where(query, [r], r.avg_preparation_time <= ^time_int)
+  end
+
+  @doc """
   Returns the list of cuisines.
   """
   def list_cuisines do

@@ -13,6 +13,8 @@ defmodule Eatfair.Accounts.User do
     field :phone_number, :string
     field :default_address, :string
 
+    has_many :addresses, Eatfair.Accounts.Address
+
     timestamps(type: :utc_datetime)
   end
 

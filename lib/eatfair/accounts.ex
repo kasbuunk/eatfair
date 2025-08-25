@@ -6,7 +6,7 @@ defmodule Eatfair.Accounts do
   import Ecto.Query, warn: false
   alias Eatfair.Repo
 
-  alias Eatfair.Accounts.{User, UserToken, UserNotifier}
+  alias Eatfair.Accounts.{User, UserToken, UserNotifier, Address}
 
   ## Database getters
 
@@ -279,6 +279,192 @@ defmodule Eatfair.Accounts do
   def delete_user_session_token(token) do
     Repo.delete_all(from(UserToken, where: [token: ^token, context: "session"]))
     :ok
+  end
+
+  ## Address management
+
+  @doc """
+  Returns the list of addresses for a user.
+
+  ## Examples
+
+      iex> list_user_addresses(user_id)
+      [%Address{}, ...]
+
+  """
+  def list_user_addresses(user_id) do
+    Repo.all(from a in Address, where: a.user_id == ^user_id, order_by: [desc: a.is_default, asc: a.inserted_at])
+  end
+
+  @doc """
+  Gets a single address.
+
+  Raises `Ecto.NoResultsError` if the Address does not exist.
+
+  ## Examples
+
+      iex> get_address!(123)
+      %Address{}
+
+      iex> get_address!(456)
+      ** (Ecto.NoResultsError)
+
+  """
+  def get_address!(id), do: Repo.get!(Address, id)
+
+  @doc """
+  Creates an address.
+
+  ## Examples
+
+      iex> create_address(%{field: value})
+      {:ok, %Address{}}
+
+      iex> create_address(%{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def create_address(attrs \\ %{}) do
+    # Geocode the address if we don't have coordinates
+    attrs = maybe_geocode_address(attrs)
+    
+    result = 
+      %Address{}
+      |> Address.changeset(attrs)
+      |> Repo.insert()
+    
+    case result do
+      {:ok, address} -> 
+        # If this is set as default, unset other defaults for this user
+        if address.is_default do
+          unset_other_default_addresses(address.user_id, address.id)
+        end
+        {:ok, address}
+      error -> error
+    end
+  end
+
+  defp maybe_geocode_address(attrs) do
+    # Only geocode if we don't have coordinates and we have an address
+    if is_nil(attrs["latitude"]) && is_nil(attrs["longitude"]) && attrs["street_address"] do
+      address_string = build_address_string(attrs)
+      
+      case Eatfair.GeoUtils.geocode_address(address_string) do
+        {:ok, %{latitude: lat, longitude: lon}} ->
+          attrs
+          |> Map.put("latitude", Decimal.new(Float.to_string(lat)))
+          |> Map.put("longitude", Decimal.new(Float.to_string(lon)))
+        
+        {:error, :not_found} ->
+          # Try with just the city if full address doesn't work
+          city_string = attrs["city"] || ""
+          case Eatfair.GeoUtils.geocode_address(city_string) do
+            {:ok, %{latitude: lat, longitude: lon}} ->
+              attrs
+              |> Map.put("latitude", Decimal.new(Float.to_string(lat)))
+              |> Map.put("longitude", Decimal.new(Float.to_string(lon)))
+            _ ->
+              attrs
+          end
+      end
+    else
+      attrs
+    end
+  end
+
+  defp build_address_string(attrs) do
+    [attrs["street_address"], attrs["city"], attrs["country"]]
+    |> Enum.filter(&(&1 && String.trim(&1) != ""))
+    |> Enum.join(", ")
+  end
+
+  @doc """
+  Updates an address.
+
+  ## Examples
+
+      iex> update_address(address, %{field: new_value})
+      {:ok, %Address{}}
+
+      iex> update_address(address, %{field: bad_value})
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def update_address(%Address{} = address, attrs) do
+    address
+    |> Address.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Deletes an address.
+
+  ## Examples
+
+      iex> delete_address(address)
+      {:ok, %Address{}}
+
+      iex> delete_address(address)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def delete_address(%Address{} = address) do
+    Repo.delete(address)
+  end
+
+  @doc """
+  Returns an `%Ecto.Changeset{}` for tracking address changes.
+
+  ## Examples
+
+      iex> change_address(address)
+      %Ecto.Changeset{data: %Address{}}
+
+  """
+  def change_address(%Address{} = address, attrs \\ %{}) do
+    Address.changeset(address, attrs)
+  end
+
+  @doc """
+  Sets an address as the default for a user.
+
+  ## Examples
+
+      iex> set_default_address(user_id, address_id)
+      {:ok, %Address{}}
+
+      iex> set_default_address(user_id, invalid_address_id)
+      {:error, %Ecto.Changeset{}}
+
+  """
+  def set_default_address(user_id, address_id) do
+    address = Repo.get!(Address, address_id)
+    
+    # Verify the address belongs to the user
+    if address.user_id != user_id do
+      {:error, :not_found}
+    else
+      Repo.transact(fn ->
+        # First unset all other default addresses for this user
+        Repo.update_all(
+          from(a in Address, where: a.user_id == ^user_id and a.id != ^address_id),
+          set: [is_default: false]
+        )
+        
+        # Then set this address as default
+        case Repo.update(Address.changeset(address, %{is_default: true})) do
+          {:ok, updated_address} -> {:ok, updated_address}
+          error -> error
+        end
+      end)
+    end
+  end
+
+  defp unset_other_default_addresses(user_id, current_address_id) do
+    Repo.update_all(
+      from(a in Address, where: a.user_id == ^user_id and a.id != ^current_address_id),
+      set: [is_default: false]
+    )
   end
 
   ## Token helper

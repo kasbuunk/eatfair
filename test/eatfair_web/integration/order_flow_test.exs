@@ -16,8 +16,20 @@ defmodule EatfairWeb.OrderFlowTest do
       user = user_fixture(%{
         email: "test@example.com",
         name: "Test User",
-        phone_number: "555-0123",
-        default_address: "123 Test St, Test City"
+        phone_number: "555-0123"
+      })
+      
+      # Create address with explicit coordinates that are close to restaurant
+      {:ok, _address} = Eatfair.Accounts.create_address(%{
+        "name" => "Home",
+        "street_address" => "Damrak 1, Amsterdam",
+        "city" => "Amsterdam",
+        "postal_code" => "1012 LG",
+        "country" => "Netherlands",
+        "latitude" => "52.3702",  # Very close to restaurant
+        "longitude" => "4.8952", 
+        "is_default" => true,
+        "user_id" => user.id
       })
 
       # Create test restaurant with owner
@@ -29,7 +41,10 @@ defmodule EatfairWeb.OrderFlowTest do
 
       {:ok, restaurant} = Restaurants.create_restaurant(%{
           name: "Test Pizza Place",
-          address: "456 Pizza Ave, Food City",
+          address: "Nieuwmarkt 10, Amsterdam",  # Close to user location
+          latitude: Decimal.new("52.3702"),
+          longitude: Decimal.new("4.9002"),
+          delivery_radius_km: 5,  # 5km delivery radius
           delivery_time: 40,
           min_order_value: Decimal.new("15.00"),
           is_open: true,

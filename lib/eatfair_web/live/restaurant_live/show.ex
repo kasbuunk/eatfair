@@ -24,6 +24,12 @@ defmodule EatfairWeb.RestaurantLive.Show do
       _ -> false
     end
     
+    # Check if delivery is available to user's location
+    delivery_available = case socket.assigns.current_scope do
+      %{user: user} -> Restaurants.can_deliver_to_location?(String.to_integer(id), user.id)
+      _ -> false  # Not logged in users can't order
+    end
+    
     socket = 
       socket
       |> assign(:restaurant, restaurant)
@@ -34,6 +40,7 @@ defmodule EatfairWeb.RestaurantLive.Show do
       |> assign(:review_count, review_count)
       |> assign(:user_can_review, user_can_review)
       |> assign(:user_has_orders, user_has_orders)
+      |> assign(:delivery_available, delivery_available)
       |> assign(:review_form, to_form(Reviews.change_review(%Review{})))
       |> assign(:show_review_form, false)
     

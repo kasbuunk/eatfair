@@ -19,12 +19,23 @@ alias Eatfair.Restaurants.{Restaurant, Cuisine, Menu, Meal}
 
 # Clear existing data in development
 if Mix.env() == :dev do
+  # Delete in dependency order
   Repo.delete_all(Meal)
   Repo.delete_all(Menu)
   Repo.delete_all(from(r in "restaurant_cuisines"))
+  
+  # Delete addresses table if exists
+  try do
+    Repo.delete_all(from(a in "addresses"))
+  rescue
+    _ -> :ok
+  end
+  
   Repo.delete_all(Restaurant)
   Repo.delete_all(Cuisine)
-  Repo.delete_all(from(u in User, where: u.role == "restaurant_owner"))
+  
+  # Delete all users to avoid conflicts
+  Repo.delete_all(User)
 end
 
 # Create cuisines
@@ -48,28 +59,35 @@ restaurant_owners = [
     email: "marco@bellaitalia.com",
     password: "password123456",
     role: "restaurant_owner",
-    phone_number: "+1-555-0101",
+    phone_number: "+31-20-555-0101",
   },
   %{
     name: "Wei Chen",
     email: "wei@goldenlotus.com", 
     password: "password123456",
     role: "restaurant_owner",
-    phone_number: "+1-555-0102",
+    phone_number: "+31-20-555-0102",
   },
   %{
-    name: "Maria Garcia",
-    email: "maria@tacofiesta.com",
+    name: "Marie Dubois",
+    email: "marie@jordaanbistro.com",
     password: "password123456", 
     role: "restaurant_owner",
-    phone_number: "+1-555-0103",
+    phone_number: "+31-20-555-0103",
   },
   %{
     name: "Raj Patel",
     email: "raj@spicegarden.com",
     password: "password123456",
     role: "restaurant_owner", 
-    phone_number: "+1-555-0104",
+    phone_number: "+31-30-555-0104",
+  },
+  %{
+    name: "Carlos Mendoza",
+    email: "carlos@utrechttaco.com",
+    password: "password123456",
+    role: "restaurant_owner", 
+    phone_number: "+31-30-555-0105",
   }
 ]
 
@@ -85,12 +103,20 @@ owners =
 
 IO.puts("Created #{length(owners)} restaurant owners")
 
-# Create restaurants with realistic data
+# Create restaurants with realistic Netherlands geographic data
+# Distributed around Amsterdam, Utrecht, Het Gooi for testing location-based search
 restaurants_data = [
+  # Amsterdam restaurants
   %{
-    name: "Bella Italia",
-    address: "123 Little Italy St, New York, NY 10013",
-    delivery_time: 45,
+    name: "Bella Italia Amsterdam",
+    address: "Nieuwmarkt 15, 1012 CR Amsterdam",
+    latitude: Decimal.new("52.3702"),
+    longitude: Decimal.new("4.9002"),
+    city: "Amsterdam",
+    postal_code: "1012 CR",
+    country: "Netherlands",
+    avg_preparation_time: 45,
+    delivery_radius_km: 8,
     min_order_value: Decimal.new("15.00"),
     rating: Decimal.new("4.5"),
     image_url: "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=400&h=300&fit=crop&crop=center",
@@ -99,8 +125,14 @@ restaurants_data = [
   },
   %{
     name: "Golden Lotus",
-    address: "456 Chinatown Ave, New York, NY 10013", 
-    delivery_time: 30,
+    address: "Zeedijk 106, 1012 BB Amsterdam",
+    latitude: Decimal.new("52.3744"),
+    longitude: Decimal.new("4.9006"),
+    city: "Amsterdam",
+    postal_code: "1012 BB",
+    country: "Netherlands",
+    avg_preparation_time: 30,
+    delivery_radius_km: 6,
     min_order_value: Decimal.new("20.00"),
     rating: Decimal.new("4.2"),
     image_url: "https://static.designmynight.com/uploads/2024/05/Gouqi-London-Chinese-Restaurant-Review.jpg",
@@ -108,24 +140,54 @@ restaurants_data = [
     cuisine_names: ["Chinese"]
   },
   %{
-    name: "Taco Fiesta",
-    address: "789 Mission District, San Francisco, CA 94103",
-    delivery_time: 25,
-    min_order_value: Decimal.new("12.00"), 
-    rating: Decimal.new("4.7"),
-    image_url: "https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?w=400&h=300&fit=crop&crop=center",
+    name: "Jordaan Bistro",
+    address: "Prinsengracht 287, 1016 GW Amsterdam",
+    latitude: Decimal.new("52.3747"),
+    longitude: Decimal.new("4.8841"),
+    city: "Amsterdam",
+    postal_code: "1016 GW",
+    country: "Netherlands",
+    avg_preparation_time: 35,
+    delivery_radius_km: 7,
+    min_order_value: Decimal.new("22.00"),
+    rating: Decimal.new("4.6"),
+    image_url: "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=400&h=300&fit=crop&crop=center",
     owner_id: Enum.at(owners, 2).id,
-    cuisine_names: ["Mexican"]
+    cuisine_names: ["French"]
   },
+  
+  # Utrecht restaurants
   %{
-    name: "Spice Garden",
-    address: "321 Curry Lane, Austin, TX 78701",
-    delivery_time: 40,
+    name: "Spice Garden Utrecht",
+    address: "Oudegracht 158, 3511 AZ Utrecht",
+    latitude: Decimal.new("52.0907"),
+    longitude: Decimal.new("5.1214"),
+    city: "Utrecht",
+    postal_code: "3511 AZ",
+    country: "Netherlands",
+    avg_preparation_time: 40,
+    delivery_radius_km: 10,
     min_order_value: Decimal.new("18.00"),
     rating: Decimal.new("4.3"),
     image_url: "https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=400&h=300&fit=crop&crop=center",
     owner_id: Enum.at(owners, 3).id,
     cuisine_names: ["Indian"]
+  },
+  %{
+    name: "Utrecht Taco Bar",
+    address: "Nobelstraat 149, 3512 EM Utrecht",
+    latitude: Decimal.new("52.0840"),
+    longitude: Decimal.new("5.1293"),
+    city: "Utrecht",
+    postal_code: "3512 EM",
+    country: "Netherlands",
+    avg_preparation_time: 25,
+    delivery_radius_km: 5,
+    min_order_value: Decimal.new("12.00"),
+    rating: Decimal.new("4.7"),
+    image_url: "https://images.unsplash.com/photo-1551504734-5ee1c4a1479b?w=400&h=300&fit=crop&crop=center",
+    owner_id: Enum.at(owners, 4).id,
+    cuisine_names: ["Mexican"]
   }
 ]
 
@@ -263,23 +325,39 @@ end)
 
 IO.puts("Created menus and meals for all restaurants")
 
-# Create some sample customers
+# Create sample customers with Netherlands addresses for geographic testing
 customers_data = [
   %{
-    name: "John Doe",
-    email: "john@example.com",
+    name: "Piet van Amsterdam",
+    email: "piet@example.nl",
     password: "password123456", 
     role: "customer",
-    phone_number: "+1-555-1001",
-    default_address: "100 Main St, New York, NY 10001"
+    phone_number: "+31-20-555-1001",
+    default_address: "Damrak 70, 1012 LM Amsterdam"  # Near Amsterdam restaurants
   },
   %{
-    name: "Jane Smith", 
-    email: "jane@example.com",
+    name: "Emma Janssen", 
+    email: "emma@example.nl",
     password: "password123456",
     role: "customer", 
-    phone_number: "+1-555-1002",
-    default_address: "200 Oak Ave, San Francisco, CA 94102"
+    phone_number: "+31-30-555-1002",
+    default_address: "Lange Nieuwstraat 22, 3512 PH Utrecht"  # Near Utrecht restaurants
+  },
+  %{
+    name: "Lisa de Vries",
+    email: "lisa@example.nl", 
+    password: "password123456",
+    role: "customer",
+    phone_number: "+31-35-555-1003",
+    default_address: "Kerkstraat 15, 1251 RE Laren"  # Het Gooi area - should test distance filtering
+  },
+  %{
+    name: "Test Customer",
+    email: "test@eatfair.nl",
+    password: "password123456",
+    role: "customer",
+    phone_number: "+31-20-555-9999",
+    default_address: "Leidseplein 12, 1017 PT Amsterdam"  # Central Amsterdam for easy manual testing
   }
 ]
 
@@ -296,11 +374,18 @@ IO.puts("Created #{length(customers)} sample customers")
 
 IO.puts("""
 
-🎉 Seed data created successfully!
+🎉 Geographic seed data created successfully!
 
-Sample accounts:
+📍 Restaurant locations:
+- Amsterdam: Bella Italia, Golden Lotus, Jordaan Bistro  
+- Utrecht: Spice Garden, Utrecht Taco Bar
+
+👤 Sample accounts:
 - Restaurant Owner: marco@bellaitalia.com / password123456
-- Customer: john@example.com / password123456
+- Customer (Amsterdam): test@eatfair.nl / password123456
+- Customer (Utrecht): emma@example.nl / password123456
+- Customer (Het Gooi): lisa@example.nl / password123456
 
+🌟 Ready for location-based search testing!
 You can now run: mix phx.server
 """)
