@@ -10,6 +10,7 @@
 - **[ARCHITECTURAL_DECISION_RECORDS.md](ARCHITECTURAL_DECISION_RECORDS.md)** - Technical decisions (Phoenix LiveView, SQLite, scope-based auth) and design philosophy
 - **[DEVELOPMENT_INTERACTION_NOTES.md](DEVELOPMENT_INTERACTION_NOTES.md)** - Development personality: pragmatic MVP focus, test quality over code quality, anti-sycophancy
 - **[DEVELOPMENT_PROMPTS.md](DEVELOPMENT_PROMPTS.md)** - Reusable prompt templates for feature development, code review, debugging, and quality assurance
+- **[PRIORITIZE_WORK.md](PRIORITIZE_WORK.md)** - Comprehensive work prioritization system for balancing feature development, quality engineering, and technical debt
 
 ## Technical Reference Documents  
 

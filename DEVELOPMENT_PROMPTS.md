@@ -4,6 +4,15 @@
 
 ---
 
+## Work Prioritization
+
+### Master Work Prioritization
+**One-liner**: `Analyze EatFair's current state and recommend the most impactful work to do right now.`
+
+**Full prompt system**: See [PRIORITIZE_WORK.md](PRIORITIZE_WORK.md) for comprehensive work prioritization covering feature development, quality engineering, technical debt, user experience, and more.
+
+---
+
 ## Feature Development Prompts
 
 ### Complete Feature Development Cycle
