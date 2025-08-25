@@ -86,23 +86,37 @@ defmodule Eatfair.Reviews do
 
   @doc """
   Checks if a user can review a restaurant based on delivered orders.
+  Prevents restaurant owners from reviewing their own restaurants.
   """
   def user_can_review?(user_id, restaurant_id) do
     import Ecto.Query
     alias Eatfair.Orders.Order
+    alias Eatfair.Restaurants.Restaurant
 
-    # User can review if they have at least one delivered order from this restaurant
-    # and haven't already reviewed it
-    delivered_order_exists =
-      from(o in Order,
-        where:
-          o.customer_id == ^user_id and
-            o.restaurant_id == ^restaurant_id and
-            o.status == "delivered"
+    # First check: User cannot review their own restaurant
+    is_restaurant_owner =
+      from(r in Restaurant,
+        where: r.id == ^restaurant_id and r.owner_id == ^user_id
       )
       |> Repo.exists?()
 
-    delivered_order_exists and not user_has_reviewed?(user_id, restaurant_id)
+    # If user owns the restaurant, they cannot review it
+    if is_restaurant_owner do
+      false
+    else
+      # User can review if they have at least one delivered order from this restaurant
+      # and haven't already reviewed it
+      delivered_order_exists =
+        from(o in Order,
+          where:
+            o.customer_id == ^user_id and
+              o.restaurant_id == ^restaurant_id and
+              o.status == "delivered"
+        )
+        |> Repo.exists?()
+
+      delivered_order_exists and not user_has_reviewed?(user_id, restaurant_id)
+    end
   end
 
   @doc """

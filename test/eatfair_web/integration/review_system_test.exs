@@ -190,23 +190,25 @@ defmodule EatfairWeb.ReviewSystemTest do
 
     test "displays review form for logged in users who haven't reviewed", %{
       conn: conn,
-      user: user,
       restaurant: restaurant
     } do
-      # Create a delivered order for the user so they can review
+      # Create a NEW USER (not the restaurant owner) who can review
+      customer = user_fixture(%{email: "customer@example.com"})
+      
+      # Create a delivered order for the customer so they can review
       {:ok, _order} =
         Eatfair.Orders.create_order(%{
-          customer_id: user.id,
+          customer_id: customer.id,
           restaurant_id: restaurant.id,
           status: "delivered",
           total_price: Decimal.new("30.00"),
-          delivery_address: "123 User St"
+          delivery_address: "123 Customer St"
         })
 
-      conn = log_in_user(conn, user)
+      conn = log_in_user(conn, customer)
       {:ok, view, html} = live(conn, ~p"/restaurants/#{restaurant.id}")
 
-      # Assert "Write a Review" button exists for logged-in user with delivered order
+      # Assert "Write a Review" button exists for logged-in customer with delivered order
       assert html =~ "Write a Review"
 
       # Click the write review button
@@ -435,6 +437,266 @@ defmodule EatfairWeb.ReviewSystemTest do
       # Just verify both reviews appear - ordering is less critical for this test
       assert html =~ "Bob Johnson"
       assert html =~ "Alice Smith"
+    end
+  end
+
+  describe "🔒 Advanced Authorization & Edge Case Testing" do
+    test "concurrent review submissions maintain data integrity", %{
+      conn: conn,
+      restaurant: restaurant
+    } do
+      # Create multiple users with delivered orders
+      users = 
+        for i <- 1..5 do
+          user = user_fixture(%{email: "concurrent#{i}@example.com"})
+          
+          {:ok, _order} =
+            Eatfair.Orders.create_order(%{
+              customer_id: user.id,
+              restaurant_id: restaurant.id,
+              status: "delivered",
+              total_price: Decimal.new("20.00"),
+              delivery_address: "123 Concurrent St #{i}"
+            })
+          
+          user
+        end
+
+      # Submit reviews concurrently using Task.async
+      tasks =
+        Enum.map(users, fn user ->
+          Task.async(fn ->
+            Reviews.create_review(%{
+              rating: 5,
+              comment: "Concurrent review test",
+              user_id: user.id,
+              restaurant_id: restaurant.id,
+              order_id: Repo.get_by(Eatfair.Orders.Order, customer_id: user.id).id
+            })
+          end)
+        end)
+
+      # Wait for all tasks to complete
+      results = Enum.map(tasks, &Task.await/1)
+
+      # Verify all reviews were created successfully
+      successful_reviews = Enum.count(results, &match?({:ok, _}, &1))
+      assert successful_reviews == 5
+
+      # Verify final review count and average rating are correct
+      final_count = Reviews.get_review_count(restaurant.id)
+      assert final_count == 7  # 2 existing + 5 new
+      
+      # All new reviews were 5-star, so average should increase
+      final_rating = Reviews.get_average_rating(restaurant.id)
+      assert final_rating > 4.5
+    end
+
+    test "prevents review creation with order from different restaurant", %{
+      restaurant: restaurant
+    } do
+      # Create another restaurant and user
+      other_user = user_fixture(%{email: "other_restaurant@example.com"})
+      
+      {:ok, other_restaurant} =
+        %Eatfair.Restaurants.Restaurant{}
+        |> Eatfair.Restaurants.Restaurant.changeset(%{
+          name: "Other Restaurant",
+          address: "456 Other St",
+          delivery_time: 25,
+          min_order_value: Decimal.new("12.00"),
+          owner_id: other_user.id
+        })
+        |> Repo.insert()
+
+      customer = user_fixture(%{email: "cross_restaurant@example.com"})
+      
+      # Create order for customer at OTHER restaurant
+      {:ok, other_order} =
+        Eatfair.Orders.create_order(%{
+          customer_id: customer.id,
+          restaurant_id: other_restaurant.id,  # Different restaurant!
+          status: "delivered",
+          total_price: Decimal.new("20.00"),
+          delivery_address: "123 Customer St"
+        })
+
+      # Attempt to create review for ORIGINAL restaurant using order from OTHER restaurant
+      {:error, changeset} =
+        Reviews.create_review(%{
+          rating: 5,
+          comment: "Trying to use wrong restaurant order",
+          user_id: customer.id,
+          restaurant_id: restaurant.id,  # Original restaurant
+          order_id: other_order.id       # But order from different restaurant!
+        })
+
+      # Should fail with order validation error
+      assert changeset.errors[:order_id] != nil
+      
+      # Handle both tuple and list formats for error messages
+      error_messages = 
+        case changeset.errors[:order_id] do
+          {msg, _} -> [msg]
+          list when is_list(list) -> Enum.map(list, fn {msg, _} -> msg end)
+        end
+      
+      assert "must be a delivered order from this restaurant by this user" in error_messages
+    end
+
+    test "validates comment length boundaries and rating range", %{
+      conn: conn,
+      restaurant: restaurant
+    } do
+      customer = user_fixture(%{email: "boundary_test@example.com"})
+      
+      {:ok, order} =
+        Eatfair.Orders.create_order(%{
+          customer_id: customer.id,
+          restaurant_id: restaurant.id,
+          status: "delivered",
+          total_price: Decimal.new("25.00"),
+          delivery_address: "123 Boundary St"
+        })
+
+      # Test maximum comment length (1000 characters)
+      max_comment = String.duplicate("a", 1000)
+      {:ok, _review} =
+        Reviews.create_review(%{
+          rating: 5,
+          comment: max_comment,
+          user_id: customer.id,
+          restaurant_id: restaurant.id,
+          order_id: order.id
+        })
+
+      # Clean up for next test
+      import Ecto.Query
+      Repo.delete_all(from r in Review, where: r.user_id == ^customer.id)
+
+      # Test comment too long (1001 characters) - should fail
+      too_long_comment = String.duplicate("a", 1001)
+      {:error, changeset} =
+        Reviews.create_review(%{
+          rating: 5,
+          comment: too_long_comment,
+          user_id: customer.id,
+          restaurant_id: restaurant.id,
+          order_id: order.id
+        })
+
+      assert changeset.errors[:comment] != nil
+      
+      # Test invalid rating values
+      for invalid_rating <- [0, 6, -1, 10] do
+        {:error, changeset} =
+          Reviews.create_review(%{
+            rating: invalid_rating,
+            comment: "Test comment",
+            user_id: customer.id,
+            restaurant_id: restaurant.id,
+            order_id: order.id
+          })
+
+        assert changeset.errors[:rating] != nil
+      end
+    end
+
+    test "rating calculation accuracy with decimal precision", %{
+      restaurant: restaurant
+    } do
+      # Create precise rating scenario: ratings of 1, 2, 3, 4, 5
+      # Expected average: 3.0
+      ratings = [1, 2, 3, 4, 5]
+      
+      users_and_orders = 
+        Enum.with_index(ratings, 1)
+        |> Enum.map(fn {rating, index} ->
+          user = user_fixture(%{email: "precision#{index}@example.com"})
+          
+          {:ok, order} =
+            Eatfair.Orders.create_order(%{
+              customer_id: user.id,
+              restaurant_id: restaurant.id,
+              status: "delivered",
+              total_price: Decimal.new("15.00"),
+              delivery_address: "123 Precision St #{index}"
+            })
+          
+          {user, order, rating}
+        end)
+
+      # Create reviews with precise ratings
+      Enum.each(users_and_orders, fn {user, order, rating} ->
+        {:ok, _review} =
+          Reviews.create_review(%{
+            rating: rating,
+            comment: "Rating #{rating} test",
+            user_id: user.id,
+            restaurant_id: restaurant.id,
+            order_id: order.id
+          })
+      end)
+
+      # Verify exact average calculation
+      # Original 2 reviews: 5, 4 (average 4.5)
+      # New 5 reviews: 1, 2, 3, 4, 5 (average 3.0) 
+      # Combined 7 reviews: 5, 4, 1, 2, 3, 4, 5 (total 24, average 24/7 ≈ 3.43)
+      average = Reviews.get_average_rating(restaurant.id)
+      count = Reviews.get_review_count(restaurant.id)
+      
+      assert count == 7
+      assert_in_delta(average, 3.43, 0.01) # Allow small floating point variance
+    end
+
+    test "user cannot review restaurant they own", %{
+      conn: conn,
+      user: restaurant_owner,
+      restaurant: restaurant
+    } do
+      # Restaurant owner tries to review their own restaurant
+      # Even with a delivered "order" (which shouldn't exist in real scenarios)
+      {:ok, fake_order} =
+        Eatfair.Orders.create_order(%{
+          customer_id: restaurant_owner.id,  # Owner as customer
+          restaurant_id: restaurant.id,      # Their own restaurant 
+          status: "delivered",
+          total_price: Decimal.new("20.00"),
+          delivery_address: "123 Owner St"
+        })
+
+      conn = log_in_user(conn, restaurant_owner)
+      {:ok, _view, html} = live(conn, ~p"/restaurants/#{restaurant.id}")
+
+      # Restaurant owner should NOT see "Write a Review" button on their own restaurant
+      # This is handled by the business logic in user_can_review?
+      refute html =~ "Write a Review"
+      
+      # Also verify they can't review via direct API call
+      result = Reviews.user_can_review?(restaurant_owner.id, restaurant.id)
+      assert result == false
+
+      # Direct review creation should also fail
+      {:error, changeset} =
+        Reviews.create_review(%{
+          rating: 5,
+          comment: "Owner reviewing own restaurant",
+          user_id: restaurant_owner.id,
+          restaurant_id: restaurant.id,
+          order_id: fake_order.id
+        })
+      
+      # Should fail due to business rule validation
+      assert changeset.errors[:user_id] != nil
+      
+      # Check the error message
+      error_messages = 
+        case changeset.errors[:user_id] do
+          {msg, _} -> [msg]
+          list when is_list(list) -> Enum.map(list, fn {msg, _} -> msg end)
+        end
+      
+      assert "cannot review your own restaurant" in error_messages
     end
   end
 end

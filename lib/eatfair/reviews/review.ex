@@ -39,7 +39,9 @@ defmodule Eatfair.Reviews.Review do
         restaurant_id = get_change(changeset, :restaurant_id)
 
         if user_id && restaurant_id do
-          validate_order_relationship(changeset, order_id, user_id, restaurant_id)
+          changeset
+          |> validate_order_relationship(order_id, user_id, restaurant_id)
+          |> validate_user_not_restaurant_owner(user_id, restaurant_id)
         else
           changeset
         end
@@ -69,6 +71,28 @@ defmodule Eatfair.Reviews.Review do
           :order_id,
           "must be a delivered order from this restaurant by this user"
         )
+    end
+  end
+
+  defp validate_user_not_restaurant_owner(changeset, user_id, restaurant_id) do
+    import Ecto.Query
+
+    # Check if user owns the restaurant
+    query =
+      from(r in Restaurant,
+        where: r.id == ^restaurant_id and r.owner_id == ^user_id
+      )
+
+    case Eatfair.Repo.exists?(query) do
+      true ->
+        add_error(
+          changeset,
+          :user_id,
+          "cannot review your own restaurant"
+        )
+
+      false ->
+        changeset
     end
   end
 end
