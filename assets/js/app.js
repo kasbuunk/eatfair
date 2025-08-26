@@ -25,11 +25,50 @@ import {LiveSocket} from "phoenix_live_view"
 import {hooks as colocatedHooks} from "phoenix-colocated/eatfair"
 import topbar from "../vendor/topbar"
 
+// Geolocation functionality
+const GeolocationHook = {
+  mounted() {
+    this.handleEvent("request_geolocation", () => {
+      this.requestUserLocation()
+    })
+  },
+  
+  requestUserLocation() {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          this.pushEvent("geolocation_success", {
+            latitude: position.coords.latitude,
+            longitude: position.coords.longitude,
+            accuracy: position.coords.accuracy
+          })
+        },
+        (error) => {
+          this.pushEvent("geolocation_error", {
+            error: error.message,
+            code: error.code
+          })
+        },
+        {
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 600000 // 10 minutes cache
+        }
+      )
+    } else {
+      this.pushEvent("geolocation_error", {
+        error: "Geolocation is not supported by this browser",
+        code: -1
+      })
+    }
+  }
+}
+
 const csrfToken = document.querySelector("meta[name='csrf-token']").getAttribute("content")
 const liveSocket = new LiveSocket("/live", Socket, {
   longPollFallbackMs: 2500,
   params: {_csrf_token: csrfToken},
-  hooks: {...colocatedHooks},
+  hooks: {...colocatedHooks, GeolocationHook},
 })
 
 // Show progress bar on live navigation and form submits
