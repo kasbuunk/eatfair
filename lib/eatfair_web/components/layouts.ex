@@ -90,47 +90,4 @@ defmodule EatfairWeb.Layouts do
     """
   end
 
-  @doc """
-  Provides dark vs light theme toggle based on themes defined in app.css.
-
-  See <head> in root.html.heex which applies the theme before page load.
-  """
-  def theme_toggle(assigns) do
-    ~H"""
-    <div class="relative flex flex-row items-center border-2 border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 rounded-full p-1 transition-colors">
-      <button
-        class="flex p-2 cursor-pointer rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-        phx-click={JS.dispatch("phx:set-theme")}
-        data-phx-theme="system"
-        title="System theme"
-      >
-        <.icon
-          name="hero-computer-desktop"
-          class="w-4 h-4 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
-        />
-      </button>
-
-      <button
-        class="flex p-2 cursor-pointer rounded-full hover:bg-yellow-100 dark:hover:bg-yellow-700 transition-colors"
-        phx-click={JS.dispatch("phx:set-theme")}
-        data-phx-theme="light"
-        title="Light theme"
-      >
-        <.icon name="hero-sun" class="w-4 h-4 text-yellow-500 hover:text-yellow-600" />
-      </button>
-
-      <button
-        class="flex p-2 cursor-pointer rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
-        phx-click={JS.dispatch("phx:set-theme")}
-        data-phx-theme="dark"
-        title="Dark theme"
-      >
-        <.icon
-          name="hero-moon"
-          class="w-4 h-4 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
-        />
-      </button>
-    </div>
-    """
-  end
 end

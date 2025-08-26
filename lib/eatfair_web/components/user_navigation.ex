@@ -1,31 +1,38 @@
 defmodule EatfairWeb.UserNavigation do
   @moduledoc """
-  User navigation component that provides access to user account features
+  Unified navigation component that provides complete navigation functionality
+  including theme toggle, authentication, and all user navigation features
   """
   use EatfairWeb, :html
 
   @doc """
-  Renders user navigation with dropdown menu for authenticated users
+  Renders unified navigation bar with theme toggle and all navigation features
   """
   attr :current_scope, :map, required: true
 
   def user_nav(assigns) do
     ~H"""
-    <nav class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
+    <nav class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
           <!-- Logo / Brand -->
-          <div class="flex-shrink-0">
-            <.link navigate={~p"/"} class="flex items-center">
-              <span class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">🍽️ EatFair</span>
+          <div class="flex items-center">
+            <.link 
+              navigate={~p"/"} 
+              class="flex items-center space-x-2 text-xl font-bold text-indigo-600 dark:text-indigo-400 hover:text-indigo-700 dark:hover:text-indigo-300 transition-colors"
+            >
+              <div class="w-8 h-8 bg-indigo-600 dark:bg-indigo-500 rounded-lg flex items-center justify-center">
+                <span class="text-white font-bold text-sm">🍕</span>
+              </div>
+              <span>Eatfair</span>
             </.link>
           </div>
 
           <!-- Main Navigation -->
-          <div class="hidden md:flex md:items-center md:space-x-6">
+          <div class="hidden md:flex md:items-center md:space-x-4">
             <.link 
               navigate={~p"/restaurants/discover"} 
-              class="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 text-sm font-medium transition-colors"
+              class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors"
             >
               Discover Restaurants
             </.link>
@@ -34,20 +41,34 @@ defmodule EatfairWeb.UserNavigation do
               <!-- Order Tracking -->
               <.link 
                 navigate={~p"/orders/track"} 
-                class="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 text-sm font-medium transition-colors"
+                class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 Track Orders
               </.link>
+
+              <!-- Restaurant Dashboard (if owner) -->
+              <%= if @current_scope.user.role == "restaurant_owner" do %>
+                <.link
+                  navigate={~p"/restaurant/dashboard"}
+                  class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  My Restaurant
+                </.link>
+              <% end %>
+
+              <!-- User Greeting -->
+              <span class="text-gray-700 dark:text-gray-300 text-sm">
+                Hi, {@current_scope.user.name || String.split(@current_scope.user.email, "@") |> hd()}
+              </span>
 
               <!-- User Dropdown -->
               <div class="relative" data-dropdown="user-menu">
                 <button 
                   type="button"
-                  class="flex items-center space-x-2 text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 text-sm font-medium transition-colors"
+                  class="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors"
                   onclick="toggleDropdown('user-menu')"
                 >
                   <.icon name="hero-user-circle" class="w-5 h-5" />
-                  <span>{@current_scope.user.email |> String.split("@") |> List.first()}</span>
                   <.icon name="hero-chevron-down" class="w-4 h-4" />
                 </button>
 
@@ -94,18 +115,24 @@ defmodule EatfairWeb.UserNavigation do
                   </div>
                 </div>
               </div>
+
+              <!-- Theme Toggle -->
+              <.theme_toggle />
             <% else %>
               <!-- Unauthenticated User Links -->
               <.link 
                 navigate={~p"/users/log-in"} 
-                class="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 px-3 py-2 text-sm font-medium transition-colors"
+                class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 Log In
               </.link>
               
+              <!-- Theme Toggle for unauthenticated users -->
+              <.theme_toggle />
+              
               <.link 
                 navigate={~p"/users/register"} 
-                class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded-md text-sm font-medium transition-colors"
               >
                 Sign Up
               </.link>
@@ -113,10 +140,10 @@ defmodule EatfairWeb.UserNavigation do
           </div>
 
           <!-- Mobile menu button -->
-          <div class="md:hidden">
+          <div class="sm:hidden">
             <button 
               type="button"
-              class="text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400"
+              class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 p-2 transition-colors"
               onclick="toggleMobileMenu()"
             >
               <.icon name="hero-bars-3" class="w-6 h-6" />
@@ -125,11 +152,11 @@ defmodule EatfairWeb.UserNavigation do
         </div>
 
         <!-- Mobile Navigation -->
-        <div id="mobile-menu" class="hidden md:hidden pb-4">
+        <div id="mobile-menu" class="hidden sm:hidden pb-4">
           <div class="space-y-2">
             <.link 
               navigate={~p"/restaurants/discover"} 
-              class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md"
+              class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
             >
               Discover Restaurants
             </.link>
@@ -137,14 +164,23 @@ defmodule EatfairWeb.UserNavigation do
             <%= if @current_scope && @current_scope.user do %>
               <.link 
                 navigate={~p"/orders/track"} 
-                class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md"
+                class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
               >
                 Track Orders
               </.link>
 
+              <%= if @current_scope.user.role == "restaurant_owner" do %>
+                <.link
+                  navigate={~p"/restaurant/dashboard"}
+                  class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
+                >
+                  My Restaurant
+                </.link>
+              <% end %>
+
               <.link 
                 navigate={~p"/users/addresses"} 
-                class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md"
+                class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
               >
                 <.icon name="hero-map-pin" class="w-4 h-4 mr-2 inline" />
                 Manage Addresses
@@ -152,29 +188,36 @@ defmodule EatfairWeb.UserNavigation do
 
               <.link 
                 navigate={~p"/users/settings"} 
-                class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md"
+                class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
               >
                 Account Settings
               </.link>
 
               <.link 
+                navigate={~p"/restaurant/onboard"}
+                class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
+              >
+                Start Your Restaurant
+              </.link>
+
+              <.link 
                 href={~p"/users/log-out"} 
                 method="delete"
-                class="block px-3 py-2 text-base font-medium text-red-600 dark:text-red-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md"
+                class="block px-3 py-2 text-base font-medium text-red-600 dark:text-red-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
               >
                 Log Out
               </.link>
             <% else %>
               <.link 
                 navigate={~p"/users/log-in"} 
-                class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-indigo-600 dark:hover:text-indigo-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md"
+                class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
               >
                 Log In
               </.link>
               
               <.link 
                 navigate={~p"/users/register"} 
-                class="block px-3 py-2 text-base font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-md"
+                class="block px-3 py-2 text-base font-medium bg-indigo-600 hover:bg-indigo-700 text-white rounded-md transition-colors"
               >
                 Sign Up
               </.link>
@@ -203,6 +246,48 @@ defmodule EatfairWeb.UserNavigation do
         menu.classList.toggle('hidden');
       }
     </script>
+    """
+  end
+
+  @doc """
+  Theme toggle component - provides dark vs light theme toggle
+  """
+  def theme_toggle(assigns) do
+    ~H"""
+    <div class="relative flex flex-row items-center border-2 border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 rounded-full p-1 transition-colors">
+      <button
+        class="flex p-2 cursor-pointer rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+        phx-click={JS.dispatch("phx:set-theme")}
+        data-phx-theme="system"
+        title="System theme"
+      >
+        <.icon
+          name="hero-computer-desktop"
+          class="w-4 h-4 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
+        />
+      </button>
+
+      <button
+        class="flex p-2 cursor-pointer rounded-full hover:bg-yellow-100 dark:hover:bg-yellow-700 transition-colors"
+        phx-click={JS.dispatch("phx:set-theme")}
+        data-phx-theme="light"
+        title="Light theme"
+      >
+        <.icon name="hero-sun" class="w-4 h-4 text-yellow-500 hover:text-yellow-600" />
+      </button>
+
+      <button
+        class="flex p-2 cursor-pointer rounded-full hover:bg-gray-200 dark:hover:bg-gray-600 transition-colors"
+        phx-click={JS.dispatch("phx:set-theme")}
+        data-phx-theme="dark"
+        title="Dark theme"
+      >
+        <.icon
+          name="hero-moon"
+          class="w-4 h-4 text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100"
+        />
+      </button>
+    </div>
     """
   end
 end

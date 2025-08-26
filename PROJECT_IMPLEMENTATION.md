@@ -13,7 +13,7 @@ This document follows a **Test-Driven Development (TDD)** approach where:
 ## Core User Journeys & Test Coverage
 
 ### 1. Consumer Onboarding Journey
-**Status**: ✅ Complete with Full Address Management  
+**Status**: ✅ Complete with Full Address Management & Unified Navigation  
 **Specification Mapping**: Primary User Groups → Consumers  
 **Priority**: MVP Critical → **IMPLEMENTED**
 
@@ -24,6 +24,7 @@ This document follows a **Test-Driven Development (TDD)** approach where:
 - ✅ **Email Confirmation** → `test/eatfair_web/live/user_live/confirmation_test.exs`
 - ✅ **Account Settings** → `test/eatfair_web/live/user_live/settings_test.exs`
 - ✅ **Address Management** → `test/eatfair_web/integration/address_management_test.exs` (5 comprehensive tests)
+- ✅ **Unified Navigation** → Single navbar with all functionality across all pages
 - 🔴 **Dietary Preferences Setup** → Not implemented (Phase 2 feature)
 - 🔴 **Payment Method Addition** → Not implemented (Phase 2 feature)
 
@@ -31,6 +32,13 @@ This document follows a **Test-Driven Development (TDD)** approach where:
 - ✅ **Complete User Registration Flow** → Users can sign up, confirm email, and log in
 - ✅ **Account Management** → Users can update email, password, and profile settings
 - ✅ **Full Address Management System** → Complete CRUD for user delivery addresses
+- ✅ **Unified Navigation System** → Single reusable navbar component (`EatfairWeb.UserNavigation`) with:
+  - Theme toggle (dark/light/system mode) for both authenticated and unauthenticated users
+  - Discover Restaurants link prominently featured
+  - Complete user dropdown menu with all account features
+  - Restaurant dashboard link (for restaurant owners)
+  - Responsive mobile design with hamburger menu
+  - Consistent branding and styling across all pages
 - ✅ **Navigation Integration** → Address management accessible via navigation dropdown and prompts
 - ✅ **Location Detection Features** → Browser geolocation and postal code lookup (framework ready)
 - ✅ **Address-Aware Restaurant Discovery** → Restaurants filtered by delivery availability to user's address
