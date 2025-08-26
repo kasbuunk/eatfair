@@ -20,6 +20,7 @@ defmodule Eatfair.Orders.Order do
   schema "orders" do
     field :status, :string, default: "pending"
     field :total_price, :decimal
+    field :courier_assigned_at, :naive_datetime
     field :delivery_address, :string
     field :delivery_notes, :string
 
