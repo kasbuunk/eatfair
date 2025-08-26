@@ -226,11 +226,6 @@ defmodule EatfairWeb.RestaurantLive.Show do
     "#{Decimal.to_float(rating)}/5"
   end
 
-  defp format_average_rating(rating) when is_nil(rating), do: "0.0"
-
-  defp format_average_rating(rating) when is_float(rating) do
-    :erlang.float_to_binary(rating, decimals: 1)
-  end
 
   defp user_has_any_orders?(user_id, restaurant_id) do
     import Ecto.Query

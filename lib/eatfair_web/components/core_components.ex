@@ -419,6 +419,21 @@ defmodule EatfairWeb.CoreComponents do
     """
   end
 
+  @doc """
+  Formats a rating average to one decimal place.
+  Returns "0.0" for nil ratings.
+  """
+  def format_average_rating(rating) when is_nil(rating), do: "0.0"
+
+  def format_average_rating(rating) when is_float(rating) do
+    :erlang.float_to_binary(rating, decimals: 1)
+  end
+
+  def format_average_rating(rating) do
+    # Handle Decimal values if any
+    rating |> Decimal.to_float() |> :erlang.float_to_binary(decimals: 1)
+  end
+
   ## JS Commands
 
   def show(js \\ %JS{}, selector) do

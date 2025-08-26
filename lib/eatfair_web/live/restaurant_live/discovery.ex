@@ -162,4 +162,5 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
       _ -> false
     end
   end
+
 end

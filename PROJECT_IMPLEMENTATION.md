@@ -714,6 +714,44 @@ This document follows a **Test-Driven Development (TDD)** approach where:
 
 **Quality Engineering Status**: **COMPLETE** - Authentication & Authorization system validated as production-ready with comprehensive security hardening
 
+#### 7. Rating Display Enhancement - Calculated Averages Implementation ✅ **COMPLETED**
+**Type**: User Experience Enhancement
+**Effort**: Completed in 0.5 days (August 26, 2025)
+**Priority**: User Feedback Implementation → **RESOLVED**
+
+**Issue Resolution**: Successfully implemented feedback to show rating averages with one decimal point for restaurants that have at least one rating, replacing static rating fields with dynamic calculations from actual reviews.
+
+**Implementation Results**:
+✅ **Enhanced Restaurants Context**: Modified all restaurant listing functions (`list_open_restaurants`, `search_restaurants`, `filter_restaurants`, etc.) to include calculated rating averages  
+✅ **Dynamic Rating Calculation**: Added `populate_rating_data/1` function that efficiently calculates averages from actual Review records in a single query  
+✅ **One Decimal Point Formatting**: Created shared `EatfairWeb.CoreComponents.format_average_rating/1` helper for consistent formatting across all views  
+✅ **Restaurant Discovery Integration**: Updated discovery template to show "4.5 (3 reviews)" format for restaurants with reviews  
+✅ **Restaurant Detail Page Integration**: Updated restaurant show page to consistently display calculated averages with one decimal point  
+✅ **No Reviews Handling**: Restaurants without reviews gracefully omit rating display rather than showing "0.0"  
+
+**Technical Achievements**:
+- Enhanced `Eatfair.Restaurants.populate_rating_data/1` with efficient single-query rating aggregation
+- Created shared `EatfairWeb.CoreComponents.format_average_rating/1` helper function
+- Updated restaurant discovery and detail templates to use calculated ratings
+- Removed duplicate helper functions in favor of shared component
+- Added comprehensive test coverage with `test/eatfair_web/integration/rating_display_test.exs`
+
+**User Experience Improvements**:
+- Restaurant cards now show authentic rating averages: "4.7 (12 reviews)" instead of static values
+- Consistent one decimal point formatting across all restaurant displays
+- Only restaurants with actual reviews show rating information
+- Clear review count provides context for rating reliability
+
+**Test Coverage Enhancement**:
+✅ **Comprehensive Testing**: Added 4 new tests validating rating display functionality  
+✅ **Format Validation**: Tests ensure ratings display with exactly one decimal point  
+✅ **Integration Testing**: Verified rating display works in both discovery and detail views  
+✅ **Edge Case Coverage**: Tested restaurants without reviews don't show inappropriate rating displays  
+
+**Specification Compliance**: ✅ **ENHANCED** - Restaurant discovery experience now shows authentic customer feedback with proper precision formatting
+
+**Production Readiness**: ✅ **READY** - Rating display enhancement provides accurate, user-friendly rating information
+
 ---
 
 ### 🟢 **NICE TO HAVE WORK ITEMS**

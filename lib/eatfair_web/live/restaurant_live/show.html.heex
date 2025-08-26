@@ -88,7 +88,7 @@
             <%= if @average_rating do %>
               <div class="flex items-center">
                 <.icon name="hero-star-solid" class="w-4 h-4 text-yellow-400 mr-1" />
-                <span class="font-medium">{format_average_rating(@average_rating)}</span>
+                <span class="font-medium">{EatfairWeb.CoreComponents.format_average_rating(@average_rating)}</span>
                 <span class="ml-1">({@review_count} reviews)</span>
               </div>
             <% else %>
