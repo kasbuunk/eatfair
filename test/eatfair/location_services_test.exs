@@ -116,7 +116,10 @@ defmodule Eatfair.LocationServicesTest do
         "Invalid Location 99999XX", 
         "QWERTY12345ASDFGH",
         "🏠🏠🏠🏠🏠🏠🏠🏠🏠🏠",
-        "ZZXXYY999NOTREAL"
+        "ZZXXYY999NOTREAL",
+        "Random Street Name",
+        "🏠 Unicode Location Test",
+        "XYZ999"
       ]
       
       for location <- unknown_locations do
@@ -140,8 +143,8 @@ defmodule Eatfair.LocationServicesTest do
       assert is_binary(log_output)
     end
     
-    test "returns error when Google Maps API is unavailable" do
-      # Test that system properly fails when API is not available
+    test "fallback works when Google Maps API is unavailable" do
+      # Test fallback system by temporarily clearing API key
       original_env = System.get_env("GOOGLE_MAPS_API_KEY")
       original_config = Application.get_env(:eatfair, :google_maps, [])
       
@@ -150,8 +153,12 @@ defmodule Eatfair.LocationServicesTest do
         System.delete_env("GOOGLE_MAPS_API_KEY")
         Application.put_env(:eatfair, :google_maps, api_key: nil)
         
-        # Should return error when API is unavailable
-        assert {:error, :not_found} = LocationServices.geocode_address("Amsterdam")
+        # Should fall back to hardcoded Dutch cities
+        assert {:ok, result} = LocationServices.geocode_address("Amsterdam")
+        assert result.latitude == 52.3676
+        assert result.longitude == 4.9041
+        assert result.confidence == :low
+        assert result.source == :fallback
         
       after
         # Restore original config and env

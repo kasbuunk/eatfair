@@ -75,6 +75,10 @@ config :logger, :default_formatter,
 config :eatfair, :google_maps,
   api_key: System.get_env("GOOGLE_MAPS_API_KEY")
 
+# Configure Google Maps API
+config :eatfair, :google_maps,
+  api_key: System.get_env("GOOGLE_MAPS_API_KEY")
+
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 
