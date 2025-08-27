@@ -43,5 +43,5 @@ Each item should be linked as: `[Brief Description](backlog/item_filename.md)`
 
 **Related Documents:**
 - [Definition of Done](documentation/definition_of_done.md) - Criteria for marking items complete
-- [System Constitution](prompts/warp.md) - Global principles and operational rules
-- [Agent Types](prompts/agents.md) - Roles and responsibilities for different agent types
+- [System Constitution](WARP.md) - Global principles and operational rules
+- [Agent Types](AGENTS.md) - Roles and responsibilities for different agent types
