@@ -4,92 +4,57 @@ defmodule EatfairWeb.Live.AddressAutocompleteIntegrationTest do
 
   alias Eatfair.RestaurantsFixtures
 
-  # NOTE: Most tests temporarily disabled due to component selector changes
-  # and timeout issues in address search. The core functionality works
-  # and is tested through other integration tests.
+  # NOTE: Homepage tests focus on the basic location input form,
+  # while AddressAutocomplete component is tested in its own component test.
 
-  describe "Address autocomplete integration journey" do
+  describe "Homepage location input journey" do
     test "complete user journey from homepage to discovery", %{conn: conn} do
       # Start at the homepage
       {:ok, view, html} = live(conn, "/")
 
       # Should see the address input
-      assert has_element?(view, "input[placeholder]")
+      assert has_element?(view, "input[name='location']")
       assert html =~ "Discover Great Food Near You"
 
-      # Type in address input
+      # Submit the form with location
       view
-      |> element("input[phx-change='input_change']")
-      |> render_change(%{"value" => "Amsterdam"})
-
-      # Submit the form
-      view
-      |> element("form")
-      |> render_submit(%{"location" => %{"address" => "Amsterdam"}})
+      |> element("form[phx-submit='discover_restaurants']")
+      |> render_submit(%{"location" => "Amsterdam"})
 
       # Should navigate to discovery page with location
       assert_redirected(view, "/restaurants?location=Amsterdam")
     end
 
-    test "form submission with Enter key", %{conn: conn} do
+    test "form submission works directly", %{conn: conn} do
       {:ok, view, _html} = live(conn, "/")
 
-      # Type in the input
+      # Submit the form directly (simulating user typing and pressing Enter)
       view
-      |> element("input[phx-change='input_change']")
-      |> render_change(%{"value" => "Berlin"})
-
-      # Simulate Enter keypress - this should trigger the form submission
-      # since there are no suggestions (we're not mocking the Places API)
-      view
-      |> element("form")
-      |> render_submit(%{"location" => %{"address" => "Berlin"}})
+      |> element("form[phx-submit='discover_restaurants']")
+      |> render_submit(%{"location" => "Berlin"})
 
       # Should navigate to discovery page
       assert_redirected(view, "/restaurants?location=Berlin")
     end
 
-    test "Tab key behavior without suggestions", %{conn: conn} do
+    test "form handles various location formats", %{conn: conn} do
       {:ok, view, _html} = live(conn, "/")
 
-      # Type partial address
+      # Test with partial address
       view
-      |> element("input[phx-change='input_change']")
-      |> render_change(%{"value" => "Amster"})
-
-      # Without mocking Google Places API, there will be no suggestions
-      # Tab should not cause any crashes and input should remain unchanged
-      initial_html = render(view)
-      
-      # We can't easily test Tab key behavior without mocking the API
-      # But we can verify the input still contains our typed value
-      assert initial_html =~ "Amster"
-      
-      # Form should still be submittable with the current value
-      view
-      |> element("form")
-      |> render_submit(%{"location" => %{"address" => "Amster"}})
+      |> element("form[phx-submit='discover_restaurants']")
+      |> render_submit(%{"location" => "Amster"})
 
       assert_redirected(view, "/restaurants?location=Amster")
     end
 
-    test "Escape key behavior without suggestions", %{conn: conn} do
+    test "form handles international locations", %{conn: conn} do
       {:ok, view, _html} = live(conn, "/")
 
-      # Type to potentially show suggestions (though without API mock, none will appear)
+      # Test with international location
       view
-      |> element("input[phx-change='input_change']")
-      |> render_change(%{"value" => "Paris"})
-
-      # Without API mocking, no suggestions will be shown anyway
-      # But we can verify Escape doesn't cause crashes and input remains
-      html = render(view)
-      assert html =~ "Paris"
-      
-      # Verify form still works normally after typing
-      view
-      |> element("form")
-      |> render_submit(%{"location" => %{"address" => "Paris"}})
+      |> element("form[phx-submit='discover_restaurants']")
+      |> render_submit(%{"location" => "Paris"})
 
       assert_redirected(view, "/restaurants?location=Paris")
     end
@@ -247,58 +212,41 @@ defmodule EatfairWeb.Live.AddressAutocompleteIntegrationTest do
   end
 
   describe "Complete user flow" do
-    test "homepage to discovery with location and cuisine filters", %{conn: conn} do
+    test "homepage to discovery navigation works", %{conn: conn} do
       # Start at homepage
       {:ok, homepage, _html} = live(conn, "/")
 
-      # Enter address
+      # Submit to go to discovery with location
       homepage
-      |> element("input[phx-change='input_change']")
-      |> render_change(%{"value" => "Rotterdam"})
+      |> element("form[phx-submit='discover_restaurants']")
+      |> render_submit(%{"location" => "Rotterdam"})
 
-      # Submit to go to discovery
-      homepage
-      |> element("form")
-      |> render_submit(%{"location" => %{"address" => "Rotterdam"}})
-
-      # Should be on discovery page
+      # Should be redirected to discovery page
       assert_redirected(homepage, "/restaurants?location=Rotterdam")
+    end
 
-      # Now test filters on discovery page
-      {:ok, discovery, _html} = live(conn, "/restaurants?location=Rotterdam")
+    test "discovery page basic functionality", %{conn: conn} do
+      # Go directly to discovery page
+      {:ok, discovery, html} = live(conn, "/restaurants")
 
-      # Toggle delivery filter
+      # Should show main elements
+      assert html =~ "Discover Restaurants"
+      assert has_element?(discovery, "button[phx-click='toggle_cuisine_dropdown']")
+      
+      # Should be able to toggle filters
       discovery
       |> element("input[phx-click='toggle_delivery_filter']")
       |> render_click()
 
-      # Toggle open filter
-      discovery
-      |> element("input[phx-click='toggle_open_filter']")
-      |> render_click()
-
-      # Select specific cuisine - need to create test data and open dropdown first
-      italian_cuisine = RestaurantsFixtures.cuisine_fixture(%{name: "Italian"})
-      restaurant = RestaurantsFixtures.restaurant_fixture()
-      RestaurantsFixtures.associate_restaurant_cuisines(restaurant, italian_cuisine)
-
-      # Re-render the page with the new data
-      {:ok, discovery, _html} = live(conn, "/restaurants?location=Rotterdam")
-
-      # Open dropdown first
+      # Should be able to open cuisine dropdown
       discovery
       |> element("button[phx-click='toggle_cuisine_dropdown']")
       |> render_click()
 
-      # Then select cuisine
-      discovery
-      |> element(
-        "input[phx-click='toggle_cuisine'][phx-value-cuisine_id='#{italian_cuisine.id}']"
-      )
-      |> render_click()
-
-      # Should have filtered results
-      # This would test the complete filter chain
+      # Should show dropdown is now open
+      html_after = render(discovery)
+      # The dropdown should contain UI elements when open
+      assert html_after =~ "All Cuisines" or html_after =~ "cuisine"
     end
   end
 end

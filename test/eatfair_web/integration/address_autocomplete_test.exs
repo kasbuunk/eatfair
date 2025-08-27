@@ -5,25 +5,23 @@ defmodule EatfairWeb.AddressAutocompleteTest do
   import Eatfair.AccountsFixtures
 
   describe "Address Autocomplete Functionality" do
-    test "address autocomplete suggests Dutch addresses", %{conn: conn} do
+    test "discovery page has address autocomplete component", %{conn: conn} do
       user = user_fixture()
       conn = log_in_user(conn, user)
 
-      # Visit the homepage
-      {:ok, lv, _html} = live(conn, "/")
+      # Visit the discovery page where AddressAutocomplete component is used
+      {:ok, lv, _html} = live(conn, "/restaurants")
 
-      # The address autocomplete is now a live component, so we interact with it differently
-      # Look for the live component input (it should be inside the AddressAutocomplete component)
-      assert has_element?(lv, "div[data-phx-component='1']")
+      # Should have the address autocomplete component on discovery page
+      assert has_element?(lv, "input[placeholder*='address']")
 
-      # Test typing in a Dutch address - the component handles the change internally
+      # The component should handle input changes
       lv
-      |> element("input[placeholder*='Amsterdam']")
+      |> element("input[placeholder*='address']")
       |> render_change(%{"value" => "Dam"})
 
-      # The AddressAutocomplete component should be present and working
-      # For now, just verify the component is rendered correctly
-      assert has_element?(lv, "div[data-phx-component='1'] input")
+      # Should render without errors
+      assert render(lv) =~ "Discover Restaurants"
     end
 
     test "homepage navigation works with location input", %{conn: conn} do

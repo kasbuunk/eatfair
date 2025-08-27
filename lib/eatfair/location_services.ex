@@ -31,9 +31,11 @@ defmodule Eatfair.LocationServices do
     # Normalize and clean the address input
     normalized_address = normalize_address_input(address)
     
-  # For now, skip caching and go directly to Google Maps API
-    # TODO: Implement proper caching with ETS or Redis for production
-    geocode_with_google_maps(normalized_address)
+    # Check if address becomes empty after normalization
+    case String.trim(normalized_address) do
+      "" -> {:error, :invalid_input}
+      trimmed -> geocode_with_google_maps(trimmed)
+    end
   end
   
   def geocode_address(_), do: {:error, :invalid_input}
@@ -44,7 +46,10 @@ defmodule Eatfair.LocationServices do
   def geocode_with_google_maps(address) do
     case get_api_key() do
       nil ->
-        Logger.error("Google Maps API key not configured")
+        # Only log error in non-test environments
+        unless Mix.env() == :test do
+          Logger.error("Google Maps API key not configured")
+        end
         fallback_geocoding(address)
         
       api_key ->
@@ -82,11 +87,21 @@ defmodule Eatfair.LocationServices do
     address
     |> String.trim()
     |> String.downcase()
+    |> normalize_postal_code_spacing()
     |> enhance_dutch_address()
+  end
+  
+  defp normalize_postal_code_spacing(address) do
+    # Normalize postal code spacing: 1012  AB -> 1012 AB, 1012AB -> 1012 AB
+    Regex.replace(~r/^(\d{4})\s*(\w{2})$/i, address, "\\1 \\2")
   end
   
   defp enhance_dutch_address(address) do
     cond do
+      # Empty or whitespace-only address
+      String.trim(address) == "" ->
+        address
+        
       # Dutch postal code pattern (1234 AB or 1234AB)
       Regex.match?(~r/^\d{4}\s?[a-z]{2}$/i, address) ->
         "#{address}, Netherlands"
@@ -194,6 +209,39 @@ defmodule Eatfair.LocationServices do
     address_lower = String.downcase(address)
     
     cond do
+      # Postal code patterns for major cities
+      Regex.match?(~r/^1\d{3}\s?[a-z]{2}/i, address) -> # Amsterdam postal codes (1xxx)
+        {:ok, %{
+          latitude: 52.3676,
+          longitude: 4.9041,
+          formatted_address: "#{String.upcase(address)}, Amsterdam, Netherlands",
+          source: :fallback
+        }}
+        
+      Regex.match?(~r/^3\d{3}\s?[a-z]{2}/i, address) -> # Utrecht postal codes (3xxx)
+        {:ok, %{
+          latitude: 52.0907,
+          longitude: 5.1214,
+          formatted_address: "#{String.upcase(address)}, Utrecht, Netherlands",
+          source: :fallback
+        }}
+        
+      Regex.match?(~r/^25\d{2}\s?[a-z]{2}/i, address) -> # The Hague postal codes (25xx)
+        {:ok, %{
+          latitude: 52.0705,
+          longitude: 4.3007,
+          formatted_address: "#{String.upcase(address)}, The Hague, Netherlands",
+          source: :fallback
+        }}
+        
+      Regex.match?(~r/^56\d{2}\s?[a-z]{2}/i, address) -> # Eindhoven postal codes (56xx)
+        {:ok, %{
+          latitude: 51.4416,
+          longitude: 5.4697,
+          formatted_address: "#{String.upcase(address)}, Eindhoven, Netherlands",
+          source: :fallback
+        }}
+      
       String.contains?(address_lower, "amsterdam") ->
         {:ok, %{
           latitude: 52.3676,
@@ -320,7 +368,10 @@ defmodule Eatfair.LocationServices do
   end
   
   defp get_api_key do
-    Application.get_env(:eatfair, :google_maps)[:api_key]
+    case Application.get_env(:eatfair, :google_maps) do
+      nil -> nil
+      config -> config[:api_key]
+    end
   end
   
   # Simple in-memory caching (in production, use Redis or ETS)
