@@ -63,6 +63,10 @@ config :eatfair, EatfairWeb.Endpoint,
 # Enable dev routes for dashboard and mailbox
 config :eatfair, dev_routes: true
 
+# Configure logger backends for development
+config :logger,
+  backends: [:console, {LoggerFileBackend, :file_log}]
+
 # Include minimal metadata in development console logs, full metadata in file logs
 config :logger, :default_formatter, format: "[$level] $message\n"
 

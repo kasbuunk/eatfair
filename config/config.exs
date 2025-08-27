@@ -70,16 +70,6 @@ config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id, :version]
 
-# Add structured logging to file for development observability
-config :logger,
-  backends: [:console, {LoggerFileBackend, :file_log}]
-
-# Configure file logging backend for request correlation
-config :logger, :file_log,
-  path: "log/eatfair_development.log",
-  level: :info,
-  format: "$time [$level] $message $metadata\n",
-  metadata: [:request_id, :version, :user_id, :session_id]
 
 # Configure Google Maps API
 config :eatfair, :google_maps,

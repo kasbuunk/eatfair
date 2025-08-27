@@ -48,6 +48,18 @@ if config_env() == :prod do
   port = String.to_integer(System.get_env("PORT") || "4000")
 
   config :eatfair, :dns_cluster_query, System.get_env("DNS_CLUSTER_QUERY")
+  
+  # Google Maps API configuration for production
+  google_maps_api_key =
+    System.get_env("GOOGLE_MAPS_API_KEY") ||
+      raise """
+      environment variable GOOGLE_MAPS_API_KEY is missing.
+      This is required for location geocoding functionality.
+      You can get an API key from Google Cloud Console.
+      """
+      
+  config :eatfair, :google_maps,
+    api_key: google_maps_api_key
 
   config :eatfair, EatfairWeb.Endpoint,
     url: [host: host, port: 443, scheme: "https"],

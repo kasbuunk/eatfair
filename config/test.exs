@@ -26,6 +26,11 @@ config :eatfair, Eatfair.Mailer, adapter: Swoosh.Adapters.Test
 # Disable swoosh api client as it is only required for production adapters
 config :swoosh, :api_client, false
 
+# Configure Google Maps API for test environment
+# Use fallback geocoding in tests to avoid API calls and improve test speed
+config :eatfair, :google_maps,
+  api_key: nil  # This will force fallback geocoding in tests
+
 # Print only warnings and errors during test
 config :logger, level: :warning
 
