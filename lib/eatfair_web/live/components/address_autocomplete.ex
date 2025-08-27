@@ -29,6 +29,31 @@ defmodule EatfairWeb.Live.Components.AddressAutocomplete do
 
   @impl true
   def handle_event("input_change", %{"value" => query}, socket) do
+    handle_input_change(query, socket)
+  end
+
+  @impl true 
+  def handle_event("input_change", %{"_target" => _target} = params, socket) do
+    # Handle malformed input_change events that come with _target instead of value
+    # This prevents FunctionClauseError crashes when forms send unexpected parameters
+    query = Map.get(params, "value", "")
+    handle_input_change(query, socket)
+  end
+
+  @impl true
+  def handle_event("input_change", params, socket) when is_map(params) do
+    # Defensive catch-all for any other input_change parameter patterns
+    # Extract query from various possible parameter structures
+    query = 
+      cond do
+        is_binary(params["value"]) -> params["value"]
+        true -> ""
+      end
+    handle_input_change(query, socket)
+  end
+
+  # Extracted helper function for input change logic
+  defp handle_input_change(query, socket) when is_binary(query) do
     # Safely get suggestions, handling any errors gracefully
     suggestions =
       if String.length(String.trim(query)) >= 2 do
@@ -52,7 +77,8 @@ defmodule EatfairWeb.Live.Components.AddressAutocomplete do
           input_change: query
         )
       else
-        send(self(), {"input_change", query})
+        # Send message to parent LiveView process
+        send(socket.root_pid, {"input_change", query})
       end
     rescue
       _ ->
@@ -66,6 +92,12 @@ defmodule EatfairWeb.Live.Components.AddressAutocomplete do
      |> assign(:suggestions, suggestions)
      |> assign(:show_suggestions, length(suggestions) > 0)
      |> assign(:selected_index, -1)}
+  end
+
+  # Handle non-string query values defensively  
+  defp handle_input_change(_query, socket) do
+    # If query is not a string, treat as empty input
+    handle_input_change("", socket)
   end
 
   @impl true
@@ -88,7 +120,7 @@ defmodule EatfairWeb.Live.Components.AddressAutocomplete do
                 address_selected: selected_address
               )
             else
-              send(self(), {socket.assigns.event, selected_address})
+              send(socket.root_pid, {socket.assigns.event, selected_address})
             end
           rescue
             # Continue even if parent communication fails
@@ -142,7 +174,7 @@ defmodule EatfairWeb.Live.Components.AddressAutocomplete do
           address_selected: selected_address
         )
       else
-        send(self(), {socket.assigns.event, selected_address})
+        send(socket.root_pid, {socket.assigns.event, selected_address})
       end
 
       {:noreply, assign(socket, :show_suggestions, false)}
@@ -176,6 +208,14 @@ defmodule EatfairWeb.Live.Components.AddressAutocomplete do
   end
 
   @impl true
+  def handle_event("keyboard_navigation", _params, socket) do
+    # Catch-all clause for any keyboard input that isn't navigation
+    # This prevents FunctionClauseError crashes when users type regular characters
+    # Regular typing should be handled by input_change event, not keyboard_navigation
+    {:noreply, socket}
+  end
+
+  @impl true
   def handle_event("focus", _params, socket) do
     suggestions =
       if String.length(String.trim(socket.assigns.query)) >= 2 do
@@ -193,12 +233,19 @@ defmodule EatfairWeb.Live.Components.AddressAutocomplete do
     {:noreply, assign(socket, :show_suggestions, false)}
   end
 
+  # Catch-all handler for any unhandled events (prevents crashes from form events or other unexpected events)
+  @impl true
+  def handle_event(_event, _params, socket) do
+    {:noreply, socket}
+  end
+
   @impl true
   def render(assigns) do
     ~H"""
     <div class="relative">
       <input
         type="text"
+        name="address_input"
         value={@query}
         placeholder={@placeholder}
         class={["w-full", @class]}

@@ -99,48 +99,35 @@ defmodule Eatfair.GeoUtils do
     distance <= delivery_radius_km
   end
 
-  @doc """
-  Geocodes a simple address string to approximate coordinates for testing purposes.
-  This is a basic implementation for development/testing. In production, you would
-  use a proper geocoding service like Google Maps API or OpenStreetMap Nominatim.
+@doc """
+  Geocodes an address using professional LocationServices with Google Maps API integration.
+  
+  This function now delegates to Eatfair.LocationServices for intelligent address parsing,
+  Google Maps API integration, and comprehensive fallback strategies.
 
   ## Examples
 
-      iex> Eatfair.GeoUtils.geocode_address("Amsterdam, Netherlands")
+      iex> Eatfair.GeoUtils.geocode_address("Amsterdam")
       {:ok, %{latitude: 52.3676, longitude: 4.9041}}
       
-      iex> Eatfair.GeoUtils.geocode_address("Unknown Location")
-      {:error, :not_found}
+      iex> Eatfair.GeoUtils.geocode_address("1012 AB")
+      {:ok, %{latitude: 52.3702, longitude: 4.8952}}
+      
+      iex> Eatfair.GeoUtils.geocode_address("Hilversum")
+      {:ok, %{latitude: 52.2215, longitude: 5.1719}}
   """
   def geocode_address(address) when is_binary(address) do
-    # Simple geocoding for common test locations
-    # In production, this would call a real geocoding API
-    address_lower = String.downcase(address)
-
-    cond do
-      String.contains?(address_lower, "amsterdam") ->
-        {:ok, %{latitude: 52.3676, longitude: 4.9041}}
-
-      String.contains?(address_lower, "utrecht") ->
-        {:ok, %{latitude: 52.0907, longitude: 5.1214}}
-
-      String.contains?(address_lower, "damrak") ->
-        {:ok, %{latitude: 52.3702, longitude: 4.8952}}
-
-      String.contains?(address_lower, "nieuwmarkt") ->
-        {:ok, %{latitude: 52.3720, longitude: 4.9002}}
-
-      String.contains?(address_lower, "prinsengracht") ->
-        {:ok, %{latitude: 52.3738, longitude: 4.8840}}
-
-      String.contains?(address_lower, "herengracht") ->
-        {:ok, %{latitude: 52.3707, longitude: 4.8897}}
-
-      String.contains?(address_lower, "amstelpark") ->
-        {:ok, %{latitude: 52.3400, longitude: 4.8900}}
-
-      true ->
-        {:error, :not_found}
+    # Delegate to the professional LocationServices module
+    case Eatfair.LocationServices.geocode_address(address) do
+      {:ok, result} ->
+        # Convert to the expected format for backward compatibility
+        {:ok, %{
+          latitude: result.latitude,
+          longitude: result.longitude
+        }}
+        
+      {:error, reason} ->
+        {:error, reason}
     end
   end
 

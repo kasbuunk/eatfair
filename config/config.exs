@@ -81,6 +81,10 @@ config :logger, :file_log,
   format: "$time [$level] $message $metadata\n",
   metadata: [:request_id, :version, :user_id, :session_id]
 
+# Configure Google Maps API
+config :eatfair, :google_maps,
+  api_key: System.get_env("GOOGLE_MAPS_API_KEY")
+
 # Use Jason for JSON parsing in Phoenix
 config :phoenix, :json_library, Jason
 

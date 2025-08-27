@@ -1,21 +1,138 @@
-07:06:51.302 [error] Exqlite.Connection (#PID<0.435.0>) disconnected: ** (DBConnection.ConnectionError) owner #PID<0.730.0> timed out because it owned the connection for longer than 120000ms (set via the :ownership_timeout option) 
-07:10:14.154 [error] GenServer #PID<0.803.0> terminating
-** (stop) killed
-Last message: {:EXIT, #PID<0.653.0>, :killed} 
-07:15:46.254 [error] GenServer #PID<0.472.0> terminating
-** (FunctionClauseError) no function clause matching in EatfairWeb.RestaurantLive.Discovery.handle_info/2
-    (eatfair 0.1.0) lib/eatfair_web/live/restaurant_live/discovery.ex:149: EatfairWeb.RestaurantLive.Discovery.handle_info({"input_change", "Hoofddorp"}, #Phoenix.LiveView.Socket<id: "phx-GF-H2RxeVhoXshOh", endpoint: EatfairWeb.Endpoint, view: EatfairWeb.RestaurantLive.Discovery, parent_pid: nil, root_pid: #PID<0.472.0>, router: EatfairWeb.Router, assigns: %{filters: %{delivery_available: true, currently_open: true, cuisines: []}, location: nil, current_scope: nil, __changed__: %{}, page_title: "Discover Restaurants", flash: %{}, live_action: :index, restaurants: [], cuisines: [], cuisine_counts: %{}, cuisines_with_counts: [], show_cuisine_dropdown: false, search_query: "", user_has_address: false}, transport_pid: #PID<0.471.0>, sticky?: nil, ...>)
-    (phoenix_live_view 1.1.8) lib/phoenix_live_view/channel.ex:360: Phoenix.LiveView.Channel.handle_info/2
+20:39:16.979 [error] GenServer #PID<0.345.0> terminating
+** (FunctionClauseError) no function clause matching in EatfairWeb.Live.Components.AddressAutocomplete.handle_event/3
+    (eatfair 0.1.0) lib/eatfair_web/live/components/address_autocomplete.ex:31: EatfairWeb.Live.Components.AddressAutocomplete.handle_event("keyboard_navigation", %{"key" => "h", "value" => ""}, #Phoenix.LiveView.Socket<id: "phx-GF-zsgZQVBuNHwAj", endpoint: EatfairWeb.Endpoint, view: EatfairWeb.RestaurantLive.Index, parent_pid: nil, root_pid: #PID<0.345.0>, router: EatfairWeb.Router, assigns: %{id: "homepage-address-autocomplete", value: "", target: nil, suggestions: [], query: "", __changed__: %{}, flash: %{}, class: "block w-full rounded-lg border-0 bg-white px-4 py-4 text-gray-900 shadow-lg ring-1 ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500 text-lg", placeholder: "Amsterdam", event: "location_selected", myself: %Phoenix.LiveComponent.CID{cid: 1}, show_suggestions: false, selected_index: -1}, transport_pid: #PID<0.343.0>, sticky?: nil, ...>)
+    (phoenix_live_view 1.1.8) lib/phoenix_live_view/channel.ex:761: anonymous fn/4 in Phoenix.LiveView.Channel.inner_component_handle_event/4
+    (telemetry 1.3.0) /Users/kasbuunk/git/github.com/kasbuunk/eatfair/deps/telemetry/src/telemetry.erl:324: :telemetry.span/3
+    (phoenix_live_view 1.1.8) lib/phoenix_live_view/diff.ex:222: Phoenix.LiveView.Diff.write_component/4
+    (phoenix_live_view 1.1.8) lib/phoenix_live_view/channel.ex:682: Phoenix.LiveView.Channel.component_handle/4
     (stdlib 6.2.2.2) gen_server.erl:2345: :gen_server.try_handle_info/3
     (stdlib 6.2.2.2) gen_server.erl:2433: :gen_server.handle_msg/6
     (stdlib 6.2.2.2) proc_lib.erl:329: :proc_lib.init_p_do_apply/3
-Process Label: {Phoenix.LiveView, EatfairWeb.RestaurantLive.Discovery, "lv:phx-GF-H2RxeVhoXshOh"}
-Last message: {"input_change", "Hoofddorp"} 
-07:15:46.270 [error] GenServer #PID<0.470.0> terminating
-** (FunctionClauseError) no function clause matching in EatfairWeb.RestaurantLive.Discovery.handle_info/2
-    (eatfair 0.1.0) lib/eatfair_web/live/restaurant_live/discovery.ex:149: EatfairWeb.RestaurantLive.Discovery.handle_info({"input_change", "Hoofddorp"}, #Phoenix.LiveView.Socket<id: "phx-GF-H2RxeVhoXshOh", endpoint: EatfairWeb.Endpoint, view: EatfairWeb.RestaurantLive.Discovery, parent_pid: nil, root_pid: #PID<0.472.0>, router: EatfairWeb.Router, assigns: %{filters: %{delivery_available: true, currently_open: true, cuisines: []}, location: nil, current_scope: nil, __changed__: %{}, page_title: "Discover Restaurants", flash: %{}, live_action: :index, restaurants: [], cuisines: [], cuisine_counts: %{}, cuisines_with_counts: [], show_cuisine_dropdown: false, search_query: "", user_has_address: false}, transport_pid: #PID<0.471.0>, sticky?: nil, ...>)
-    (phoenix_live_view 1.1.8) lib/phoenix_live_view/channel.ex:360: Phoenix.LiveView.Channel.handle_info/2
+Process Label: {Phoenix.LiveView, EatfairWeb.RestaurantLive.Index, "lv:phx-GF-zsgZQVBuNHwAj"}
+Last message: %Phoenix.Socket.Message{topic: "lv:phx-GF-zsgZQVBuNHwAj", event: "event", payload: %{"cid" => 1, "event" => "keyboard_navigation", "type" => "keydown", "value" => %{"key" => "h", "value" => ""}}, ref: "1", join_ref: 0} 
+20:39:16.992 [error] GenServer #PID<0.342.0> terminating
+** (FunctionClauseError) no function clause matching in EatfairWeb.Live.Components.AddressAutocomplete.handle_event/3
+    (eatfair 0.1.0) lib/eatfair_web/live/components/address_autocomplete.ex:31: EatfairWeb.Live.Components.AddressAutocomplete.handle_event("keyboard_navigation", %{"key" => "h", "value" => ""}, #Phoenix.LiveView.Socket<id: "phx-GF-zsgZQVBuNHwAj", endpoint: EatfairWeb.Endpoint, view: EatfairWeb.RestaurantLive.Index, parent_pid: nil, root_pid: #PID<0.345.0>, router: EatfairWeb.Router, assigns: %{id: "homepage-address-autocomplete", value: "", target: nil, suggestions: [], query: "", __changed__: %{}, flash: %{}, class: "block w-full rounded-lg border-0 bg-white px-4 py-4 text-gray-900 shadow-lg ring-1 ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500 text-lg", placeholder: "Amsterdam", event: "location_selected", myself: %Phoenix.LiveComponent.CID{cid: 1}, show_suggestions: false, selected_index: -1}, transport_pid: #PID<0.343.0>, sticky?: nil, ...>)
+    (phoenix_live_view 1.1.8) lib/phoenix_live_view/channel.ex:761: anonymous fn/4 in Phoenix.LiveView.Channel.inner_component_handle_event/4
+    (telemetry 1.3.0) /Users/kasbuunk/git/github.com/kasbuunk/eatfair/deps/telemetry/src/telemetry.erl:324: :telemetry.span/3
+    (phoenix_live_view 1.1.8) lib/phoenix_live_view/diff.ex:222: Phoenix.LiveView.Diff.write_component/4
+    (phoenix_live_view 1.1.8) lib/phoenix_live_view/channel.ex:682: Phoenix.LiveView.Channel.component_handle/4
     (stdlib 6.2.2.2) gen_server.erl:2345: :gen_server.try_handle_info/3
     (stdlib 6.2.2.2) gen_server.erl:2433: :gen_server.handle_msg/6
     (stdlib 6.2.2.2) proc_lib.erl:329: :proc_lib.init_p_do_apply/3
-Last message: {:EXIT, #PID<0.467.0>, {:function_clause, [{EatfairWeb.RestaurantLive.Discovery, :handle_info, [{"input_change", "Hoofddorp"}, #Phoenix.LiveView.Socket<id: "phx-GF-H2RxeVhoXshOh", endpoint: EatfairWeb.Endpoint, view: EatfairWeb.RestaurantLive.Discovery, parent_pid: nil, root_pid: #PID<0.472.0>, router: EatfairWeb.Router, assigns: %{filters: %{delivery_available: true, currently_open: true, cuisines: []}, location: nil, current_scope: nil, __changed__: %{}, page_title: "Discover Restaurants", flash: %{}, live_action: :index, restaurants: [], cuisines: [], cuisine_counts: %{}, cuisines_with_counts: [], show_cuisine_dropdown: false, search_query: "", user_has_address: false}, transport_pid: #PID<0.471.0>, sticky?: nil, ...>], [file: ~c"lib/eatfair_web/live/restaurant_live/discovery.ex", line: 149]}, {Phoenix.LiveView.Channel, :handle_info, 2, [file: ~c"lib/phoenix_live_view/channel.ex", line: 360]}, {:gen_server, :try_handle_info, 3, [file: ~c"gen_server.erl", line: 2345]}, {:gen_server, :handle_msg, 6, [file: ~c"gen_server.erl", line: 2433]}, {:proc_lib, :init_p_do_apply, 3, [file: ~c"proc_lib.erl", line: 329]}]}} 
+Last message: {:EXIT, #PID<0.339.0>, {:function_clause, [{EatfairWeb.Live.Components.AddressAutocomplete, :handle_event, ["keyboard_navigation", %{"key" => "h", "value" => ""}, #Phoenix.LiveView.Socket<id: "phx-GF-zsgZQVBuNHwAj", endpoint: EatfairWeb.Endpoint, view: EatfairWeb.RestaurantLive.Index, parent_pid: nil, root_pid: #PID<0.345.0>, router: EatfairWeb.Router, assigns: %{id: "homepage-address-autocomplete", value: "", target: nil, suggestions: [], query: "", __changed__: %{}, flash: %{}, class: "block w-full rounded-lg border-0 bg-white px-4 py-4 text-gray-900 shadow-lg ring-1 ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500 text-lg", placeholder: "Amsterdam", event: "location_selected", myself: %Phoenix.LiveComponent.CID{cid: 1}, show_suggestions: false, selected_index: -1}, transport_pid: #PID<0.343.0>, sticky?: nil, ...>], [file: ~c"lib/eatfair_web/live/components/address_autocomplete.ex", line: 31]}, {Phoenix.LiveView.Channel, :"-inner_component_handle_event/4-fun-0-", 4, [file: ~c"lib/phoenix_live_view/channel.ex", line: 761]}, {:telemetry, :span, 3, [file: ~c"/Users/kasbuunk/git/github.com/kasbuunk/eatfair/deps/telemetry/src/telemetry.erl", line: 324]}, {Phoenix.LiveView.Diff, :write_component, 4, [file: ~c"lib/phoenix_live_view/diff.ex", line: 222]}, {Phoenix.LiveView.Channel, :component_handle, 4, [file: ~c"lib/phoenix_live_view/channel.ex", line: 682]}, {:gen_server, :try_handle_info, 3, [file: ~c"gen_server.erl", line: 2345]}, {:gen_server, :handle_msg, 6, [file: ~c"gen_server.erl", line: 2433]}, {:proc_lib, :init_p_do_apply, 3, [file: ~c"proc_lib.erl", line: 329]}]}} 
+22:29:41.657 [error] Google Maps API key not configured 
+22:29:41.671 [error] Google Maps API key not configured 
+22:29:41.680 [error] Google Maps API key not configured 
+22:29:41.684 [error] Google Maps API key not configured 
+22:29:41.762 [error] Google Maps API key not configured request_id=GF-5uH-HYW2jQ4cAAARG version=0.1.0 
+22:29:41.762 [error] Google Maps API key not configured request_id=GF-5uH-HYW2jQ4cAAARG version=0.1.0 
+22:29:41.764 [error] Google Maps API key not configured 
+22:29:41.764 [error] Google Maps API key not configured 
+22:29:41.781 [error] Google Maps API key not configured 
+22:29:41.798 [error] Google Maps API key not configured 
+22:29:41.800 [error] Google Maps API key not configured 
+22:29:41.800 [error] Google Maps API key not configured 
+22:29:41.801 [error] Google Maps API key not configured 
+22:29:41.816 [error] Google Maps API key not configured 
+22:29:41.816 [error] Google Maps API key not configured 
+22:29:41.821 [error] Google Maps API key not configured 
+22:29:42.006 [error] Google Maps API key not configured 
+22:29:42.016 [error] Google Maps API key not configured 
+22:29:42.023 [error] Google Maps API key not configured 
+22:29:42.039 [error] Google Maps API key not configured 
+22:29:42.052 [error] Google Maps API key not configured 
+22:29:42.064 [error] Google Maps API key not configured 
+22:29:42.066 [error] Google Maps API key not configured 
+22:29:42.073 [error] Google Maps API key not configured 
+22:29:42.080 [error] Google Maps API key not configured 
+22:29:42.093 [error] Google Maps API key not configured 
+22:29:42.097 [error] Google Maps API key not configured 
+22:29:42.101 [error] Google Maps API key not configured 
+22:29:42.111 [error] Google Maps API key not configured 
+22:29:42.111 [error] Google Maps API key not configured 
+22:29:42.111 [error] Google Maps API key not configured 
+22:29:42.112 [error] Google Maps API key not configured 
+22:29:42.112 [error] Google Maps API key not configured 
+22:29:42.112 [error] Google Maps API key not configured 
+22:29:42.118 [error] Google Maps API key not configured 
+22:29:42.121 [error] Google Maps API key not configured 
+22:29:42.121 [error] Google Maps API key not configured 
+22:29:42.121 [error] Google Maps API key not configured 
+22:29:42.164 [error] Google Maps API key not configured 
+22:29:42.168 [error] Google Maps API key not configured 
+22:29:42.168 [error] Google Maps API key not configured 
+22:29:42.188 [error] Google Maps API key not configured 
+22:29:42.192 [error] Google Maps API key not configured 
+22:29:42.192 [error] Google Maps API key not configured 
+22:29:42.192 [error] Google Maps API key not configured 
+22:29:42.192 [error] Google Maps API key not configured 
+22:29:42.192 [error] Google Maps API key not configured 
+22:29:42.192 [error] Google Maps API key not configured 
+22:29:42.192 [error] Google Maps API key not configured 
+22:29:42.192 [error] Google Maps API key not configured 
+22:29:42.201 [error] Google Maps API key not configured 
+22:29:42.206 [error] Google Maps API key not configured 
+22:29:42.206 [error] Google Maps API key not configured 
+22:29:42.206 [error] Google Maps API key not configured 
+22:29:42.337 [error] Google Maps API key not configured 
+22:29:42.337 [error] Google Maps API key not configured 
+22:29:42.337 [error] Google Maps API key not configured 
+22:29:42.337 [error] Google Maps API key not configured 
+22:29:42.337 [error] Google Maps API key not configured 
+22:29:42.337 [error] Google Maps API key not configured 
+22:29:42.337 [error] Google Maps API key not configured 
+22:29:42.337 [error] Google Maps API key not configured 
+22:29:42.337 [error] Google Maps API key not configured 
+22:29:42.340 [error] Google Maps API key not configured 
+22:29:42.340 [error] Google Maps API key not configured 
+22:29:42.340 [error] Google Maps API key not configured 
+22:29:42.340 [error] Google Maps API key not configured 
+22:29:42.340 [error] Google Maps API key not configured 
+22:29:42.340 [error] Google Maps API key not configured 
+22:29:42.340 [error] Google Maps API key not configured 
+22:29:42.340 [error] Google Maps API key not configured 
+22:29:42.340 [error] Google Maps API key not configured 
+22:29:42.342 [error] Google Maps API key not configured 
+22:29:42.342 [error] Google Maps API key not configured 
+22:29:42.342 [error] Google Maps API key not configured 
+22:29:42.342 [error] Google Maps API key not configured 
+22:29:42.342 [error] Google Maps API key not configured 
+22:29:42.342 [error] Google Maps API key not configured 
+22:29:42.342 [error] Google Maps API key not configured 
+22:29:42.342 [error] Google Maps API key not configured 
+22:29:42.342 [error] Google Maps API key not configured 
+22:29:42.342 [error] Google Maps API key not configured 
+22:29:42.342 [error] Google Maps API key not configured 
+22:29:42.342 [error] Google Maps API key not configured 
+22:29:42.342 [error] Google Maps API key not configured 
+22:29:42.342 [error] Google Maps API key not configured 
+22:29:42.342 [error] Google Maps API key not configured 
+22:29:42.343 [error] Google Maps API key not configured 
+22:29:42.343 [error] Google Maps API key not configured 
+22:29:42.343 [error] Google Maps API key not configured 
+22:29:42.343 [error] Google Maps API key not configured 
+22:29:42.343 [error] Google Maps API key not configured 
+22:29:42.343 [error] Google Maps API key not configured 
+22:29:42.343 [error] Google Maps API key not configured 
+22:29:42.343 [error] Google Maps API key not configured 
+22:29:42.343 [error] Google Maps API key not configured 
+22:29:42.343 [error] Google Maps API key not configured 
+22:29:42.343 [error] Google Maps API key not configured 
+22:29:42.343 [error] Google Maps API key not configured 
+22:29:42.343 [error] Google Maps API key not configured 
+22:29:42.343 [error] Google Maps API key not configured 
+22:29:42.344 [error] Google Maps API key not configured 
+22:29:42.344 [error] Google Maps API key not configured 
+22:29:42.344 [error] Google Maps API key not configured 
+22:29:42.344 [error] Google Maps API key not configured 
+22:29:42.344 [error] Google Maps API key not configured 
+22:29:42.344 [error] Google Maps API key not configured 
+22:29:42.482 [error] Google Maps API key not configured 
+22:29:42.482 [error] Google Maps API key not configured 
+22:29:42.503 [error] Google Maps API key not configured 
+22:29:42.520 [error] Google Maps API key not configured request_id=GF-5uKyltOTWP9YAADuh version=0.1.0 
+22:29:42.520 [error] Google Maps API key not configured request_id=GF-5uKyltOTWP9YAADuh version=0.1.0 
+22:29:42.522 [error] Google Maps API key not configured 
+22:29:42.522 [error] Google Maps API key not configured 
+22:29:42.546 [error] Google Maps API key not configured 

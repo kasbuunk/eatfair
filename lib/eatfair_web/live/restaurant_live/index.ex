@@ -55,14 +55,13 @@ defmodule EatfairWeb.RestaurantLive.Index do
   end
 
   @impl true
-  def handle_event("discover_restaurants", %{"location" => address}, socket)
-      when is_binary(address) do
-    # Use the current discover_location from the form or fall back to inferred location
+  def handle_event("discover_restaurants", %{"location" => location}, socket) do
+    # Handle form submission with location parameter
     final_location =
       cond do
-        String.trim(address) != "" ->
-          String.trim(address)
-
+        is_binary(location) && String.trim(location) != "" ->
+          String.trim(location)
+          
         socket.assigns.discover_location && String.trim(socket.assigns.discover_location) != "" ->
           String.trim(socket.assigns.discover_location)
 
@@ -79,11 +78,35 @@ defmodule EatfairWeb.RestaurantLive.Index do
     # Navigate to discovery page - let ~p handle URL encoding to avoid double encoding
     {:noreply, push_navigate(socket, to: ~p"/restaurants?#{[location: final_location]}")}
   end
-
+  
   @impl true
-  def handle_event("discover_restaurants", %{"location" => %{"address" => address}}, socket) do
-    handle_event("discover_restaurants", %{"location" => address}, socket)
+  def handle_event("update_location_from_form", %{"location" => location}, socket) do
+    # Handle real-time form changes to sync the location state
+    require Logger
+    Logger.debug("🔍 Form change! location: #{inspect(location)}")
+    {:noreply, assign(socket, :discover_location, location || "")}
   end
+  
+  @impl true
+  def handle_event("handle_keydown", %{"key" => "Enter"}, socket) do
+    # Handle Enter key in the input field
+    final_location = 
+      if socket.assigns.discover_location && String.trim(socket.assigns.discover_location) != "" do
+        String.trim(socket.assigns.discover_location)
+      else
+        socket.assigns.inferred_location || "Amsterdam"
+      end
+      
+    socket = LocationInference.store_session_location(socket, final_location)
+    {:noreply, push_navigate(socket, to: ~p"/restaurants?#{[location: final_location]}")}
+  end
+  
+  @impl true
+  def handle_event("handle_keydown", _params, socket) do
+    # Ignore other keydown events
+    {:noreply, socket}
+  end
+
 
   @impl true
   def handle_event("geolocation_success", %{"latitude" => _lat, "longitude" => _lng}, socket) do
@@ -121,6 +144,8 @@ defmodule EatfairWeb.RestaurantLive.Index do
   @impl true
   def handle_info({"input_change", query}, socket) do
     # Handle typing in the address autocomplete to keep parent state in sync
+    require Logger
+    Logger.debug("🔍 Received input_change: #{inspect(query)}")
     {:noreply, assign(socket, :discover_location, query)}
   end
 

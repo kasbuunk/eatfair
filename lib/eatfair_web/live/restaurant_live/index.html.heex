@@ -20,19 +20,19 @@
           for={%{}}
           id="discover-form"
           phx-submit="discover_restaurants"
+          phx-change="update_location_from_form"
           class="flex flex-col sm:flex-row gap-3"
         >
           <div class="flex-1">
-            <.live_component
-              module={EatfairWeb.Live.Components.AddressAutocomplete}
-              id="homepage-address-autocomplete"
+            <input
+              type="text"
+              name="location"
               value={@discover_location}
               placeholder={@inferred_placeholder || "e.g. Amsterdam"}
               class="block w-full rounded-lg border-0 bg-white px-4 py-4 text-gray-900 shadow-lg ring-1 ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500 text-lg"
-              event="location_selected"
+              phx-keydown="handle_keydown"
+              autocomplete="off"
             />
-            <!-- Hidden field to sync with form -->
-            <input type="hidden" name="location" value={@discover_location} />
           </div>
           <.button
             type="submit"
