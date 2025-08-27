@@ -70,11 +70,6 @@ config :logger, :default_formatter,
   format: "$time $metadata[$level] $message\n",
   metadata: [:request_id, :version]
 
-
-# Configure Google Maps API
-config :eatfair, :google_maps,
-  api_key: System.get_env("GOOGLE_MAPS_API_KEY")
-
 # Configure Google Maps API
 config :eatfair, :google_maps,
   api_key: System.get_env("GOOGLE_MAPS_API_KEY")
