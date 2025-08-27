@@ -121,6 +121,11 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
         {:noreply,
          socket
          |> put_flash(:error, "Could not find location: #{address}")}
+         
+      {:error, :invalid_input} ->
+        {:noreply,
+         socket
+         |> put_flash(:error, "Invalid address format: #{address}")}
     end
   end
 
@@ -229,6 +234,10 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
       {:error, :not_found} ->
         socket
         |> put_flash(:error, "Could not find location: #{address}")
+        
+      {:error, :invalid_input} ->
+        socket
+        |> put_flash(:error, "Invalid address format: #{address}")
     end
   end
 
@@ -251,6 +260,9 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
               filter_by_location(all_restaurants, lat, lon)
 
             {:error, :not_found} ->
+              all_restaurants
+              
+            {:error, :invalid_input} ->
               all_restaurants
           end
       end
@@ -347,6 +359,12 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
               |> filter_by_location(lat, lon)
 
             {:error, :not_found} ->
+              case get_current_user_id(socket) do
+                nil -> Restaurants.list_restaurants_with_location_data()
+                user_id -> Restaurants.list_restaurants_for_user(user_id)
+              end
+              
+            {:error, :invalid_input} ->
               case get_current_user_id(socket) do
                 nil -> Restaurants.list_restaurants_with_location_data()
                 user_id -> Restaurants.list_restaurants_for_user(user_id)

@@ -270,5 +270,44 @@ defmodule EatfairWeb.RestaurantLive.DiscoveryRedesignTest do
       assert html =~ "Could not find location: Invalid Address XYZ" or
                html =~ "Showing restaurants near Invalid Address XYZ"
     end
+
+    test "location search handles :invalid_input geocoding error without crashing", %{conn: conn} do
+      {:ok, lv, _html} = live(conn, "/restaurants?location=centraal station amsterdam")
+
+      # The LiveView should not crash despite the geocoding error
+      # It should handle the {:error, :invalid_input} case gracefully
+      html = render(lv)
+
+      # Should show an appropriate error message instead of crashing
+      assert html =~ "Could not find location" or html =~ "centraal station amsterdam"
+      
+      # Verify the LiveView is still responsive by checking basic elements
+      assert html =~ "🗺️ Discover Restaurants"
+      assert html =~ "Find restaurants"
+    end
+
+    test "location search handles various geocoding errors gracefully", %{conn: conn} do
+      # Test different error cases that might cause geocoding to return {:error, :invalid_input}
+      test_addresses = [
+        "centraal station amsterdam",  # The specific case from the logs
+        "    ",                        # Whitespace only
+        "!!!",                         # Special characters only
+        "123 abc def ghi",            # Pattern that might confuse postal code regex
+        "empty after normalization"    # Address that becomes empty after processing
+      ]
+      
+      for address <- test_addresses do
+        {:ok, lv, _html} = live(conn, "/restaurants?location=#{URI.encode(address)}")
+        
+        # LiveView should not crash for any of these addresses
+        html = render(lv)
+        
+        # Should show either error message or the address itself
+        assert html =~ "Could not find location" or html =~ address
+        
+        # Basic page elements should still be present
+        assert html =~ "🗺️ Discover Restaurants"
+      end
+    end
   end
 end

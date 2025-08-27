@@ -169,7 +169,7 @@ This document defines the global principles and operational rules that govern ou
 
 **Understand the Project:**
 - **What is EatFair?** → [product_specification.md](documentation/product_specification.md) (Vision, features, requirements)
-- **What's implemented?** → [legacy_implementation_log.md](documentation/legacy_implementation_log.md) (Progress, test coverage, status)
+- **What's the current status?** → [backlog_dashboard.md](backlog_dashboard.md) (Current work priorities and backlog items)
 - **Technical architecture** → [architectural_decision_records.md](documentation/architectural_decision_records.md) (Design decisions)
 
 **Develop Features:**
@@ -182,8 +182,8 @@ This document defines the global principles and operational rules that govern ou
 **"I'm starting a new development session"**
 ```
 1. First time on project? → Read product_specification.md
-2. Need current status? → Run: "Sync legacy_implementation_log.md to actual implementation status"
-3. Ready to work? → Use: "Analyze EatFair's current state and recommend next work"
+2. Need current priorities? → Check backlog_dashboard.md
+3. Ready to work? → Use: "Use prioritize_work.md to analyze current state and recommend next work"
 ```
 
 **"I want to implement something"**
@@ -195,15 +195,15 @@ This document defines the global principles and operational rules that govern ou
 
 **"Something isn't working"**
 ```
-1. Tests failing? → Use sync_documentation.md comprehensive sync
+1. Tests failing? → Use validate_and_fix_tests.md
 2. Code issues? → Use development_prompts.md debugging section
 3. Architecture questions? → Check architectural_decision_records.md
 ```
 
 **"I need to understand progress"**
 ```
-1. What's done? → Check legacy_implementation_log.md status
-2. Documentation outdated? → Use sync_documentation.md one-liner
+1. What's the priority? → Check backlog_dashboard.md priority order
+2. Need to process feedback? → Use process_feedback.md
 3. Plan next work? → Use prioritize_work.md master prompt
 ```
 
@@ -211,12 +211,13 @@ This document defines the global principles and operational rules that govern ou
 
 **Core Planning & Strategy:**
 - [product_specification.md](documentation/product_specification.md) - Vision & Requirements (what we're building and why)
-- [legacy_implementation_log.md](documentation/legacy_implementation_log.md) - Progress Tracking (what's done, tested, and working)
+- [backlog_dashboard.md](backlog_dashboard.md) - Priority Order (single source of truth for work prioritization)
 - [prioritize_work.md](prompts/prioritize_work.md) - Work Prioritization (intelligent task selection system)
 
 **Development Process:**
 - [start_feature_development.md](prompts/start_feature_development.md) - Feature Development (auto-determine and implement next feature)
-- [sync_documentation.md](prompts/sync_documentation.md) - Documentation Sync (keep docs aligned with reality)
+- [process_feedback.md](prompts/process_feedback.md) - Feedback Processing (systematic issue resolution)
+- [validate_and_fix_tests.md](prompts/validate_and_fix_tests.md) - Test Validation & Fixing
 - [software_development_lifecycle.md](prompts/software_development_lifecycle.md) - TDD Workflow (development process and quality standards)
 - [development_prompts.md](prompts/development_prompts.md) - Prompt Library (templates for common development tasks)
 
@@ -237,23 +238,22 @@ This document defines the global principles and operational rules that govern ou
 **CRITICAL**: Always follow this checklist for any development work:
 
 #### 🚀 **Start Phase**
-- [ ] Read current status from PROJECT_IMPLEMENTATION.md
+- [ ] Check backlog_dashboard.md for current priority
 - [ ] Create todo list for work (if 3+ steps required)
-- [ ] **Add final todo**: "Update PROJECT_IMPLEMENTATION.md with progress"
+- [ ] **Add final todo**: "Update backlog item status with progress"
 
 #### 🔄 **During Development**
 - [ ] Write failing tests first
 - [ ] Implement minimum code to make tests pass
-- [ ] **Update PROJECT_IMPLEMENTATION.md** when significant progress made
+- [ ] Update backlog item status when significant progress made
 - [ ] Refactor while keeping tests green
 
 #### ✅ **Completion Phase** 
 - [ ] All tests pass
-- [ ] **Update PROJECT_IMPLEMENTATION.md**:
-  - [ ] Mark completed features as ✅
-  - [ ] Update progress percentages
-  - [ ] Update "Current Recommended Work" to next priority
-  - [ ] Document any architectural decisions
+- [ ] **Update backlog item status**:
+  - [ ] Mark item as #status/done if complete
+  - [ ] Update backlog_dashboard.md if priorities changed
+  - [ ] Document any architectural decisions in ADRs
 - [ ] Mark todos as complete
 
 ### 🚀 Quick Start Commands (Most Common)
@@ -267,16 +267,17 @@ mix setup
 
 **Daily development session:**
 ```
-# Use this prompt to get started
-"Sync PROJECT_IMPLEMENTATION.md to actual implementation status"
-# Then this to determine next work
-"Determine and implement the next MVP-critical feature using TDD approach"
+# Check current priorities
+"Check backlog_dashboard.md and use prioritize_work.md to determine next work"
+# Then implement using TDD
+"Use start_feature_development.md to implement the next priority feature"
 ```
 
 **Need specific guidance?**
-- 🎯 **What to work on**: Use PRIORITIZE_WORK.md master prompt  
-- 📋 **Feature development**: Use START_FEATURE_DEVELOPMENT.md prompt
-- 🔄 **Documentation sync**: Use SYNC_DOCUMENTATION.md one-liner
+- 🎯 **What to work on**: Use prioritize_work.md master prompt  
+- 📋 **Feature development**: Use start_feature_development.md prompt
+- 🔧 **Fix issues**: Use process_feedback.md for systematic issue resolution
+- 🧪 **Test problems**: Use validate_and_fix_tests.md
 
 ## Important Notes
 
@@ -286,30 +287,29 @@ mix setup
 - Prefer LiveView streams over assigns for collections to avoid memory issues
 - Use the built-in `<.input>` and `<.icon>` components instead of external alternatives
 - **TDD is non-negotiable** - write tests first for every feature
-- **Documentation updates are non-negotiable** - PROJECT_IMPLEMENTATION.md must be kept current
+- **Backlog management is non-negotiable** - backlog_dashboard.md and individual backlog items must be kept current
 - Use the Agent Navigation Guide (above) when you need to find specific project information
 
-## Documentation Workflow
+## Backlog Management Workflow
 
-**PROJECT_IMPLEMENTATION.md is the single source of truth** for implementation status and must be updated:
+**backlog_dashboard.md is the single source of truth** for work prioritization and must be updated:
 
-### When to Update
-- **During development**: When completing significant milestones or test suites
-- **At completion**: When features are fully implemented and tested
-- **When blocked**: Document what's preventing progress
-- **When pivoting**: Update priorities and current recommended work
+### When to Update Backlog Items
+- **During development**: Update status tags as work progresses
+- **At completion**: Mark items as #status/done when meeting Definition of Done
+- **When blocked**: Update status to #status/blocked with blocker details
+- **When pivoting**: Update backlog_dashboard.md priority order
 
-### What to Update
-- **Test Coverage**: Add new test files and describe what they cover
-- **Implementation Status**: Mark features as ✅ Complete, 🟡 In Progress, or 🔴 Missing
-- **Progress Tracking**: Update percentages based on actual test coverage
-- **Current Recommended Work**: Always point to the next highest priority
-- **Technical Notes**: Document architectural decisions and trade-offs
+### Status Management
+- **Status Tags**: Use #status/todo, #status/in_progress, #status/blocked, #status/done
+- **Priority Order**: Update backlog_dashboard.md when priorities change
+- **New Items**: Add detailed specifications in backlog/ directory
+- **Technical Notes**: Document architectural decisions in ADRs
 
 ### Update Pattern
 ```
 1. Complete development work
 2. Ensure all tests pass
-3. Update PROJECT_IMPLEMENTATION.md
-4. Commit both code and documentation together
+3. Update backlog item status and priority order if needed
+4. Commit both code and backlog updates together
 ```
