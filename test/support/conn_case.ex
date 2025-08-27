@@ -76,4 +76,21 @@ defmodule EatfairWeb.ConnCase do
   defp maybe_set_token_authenticated_at(token, authenticated_at) do
     Eatfair.AccountsFixtures.override_token_authenticated_at(token, authenticated_at)
   end
+
+  @doc """
+  Assert that the view was patched to a URL matching the given pattern.
+  """
+  def assert_patched(view, path_pattern, timeout \\ 100) when is_struct(view) do
+    assert_receive {:patch, %{to: to}}, timeout
+
+    case path_pattern do
+      %Regex{} = regex ->
+        assert to =~ regex, "Expected #{inspect(to)} to match #{inspect(regex)}"
+
+      path when is_binary(path) ->
+        assert to == path, "Expected #{inspect(to)} to equal #{inspect(path)}"
+    end
+
+    to
+  end
 end

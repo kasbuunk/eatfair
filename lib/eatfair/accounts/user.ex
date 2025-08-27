@@ -67,13 +67,16 @@ defmodule Eatfair.Accounts.User do
   """
   def registration_changeset(user, attrs, opts \\ []) do
     user
-    |> cast(attrs, [:email, :password, :name, :phone_number, :default_address])
+    |> cast(attrs, [:email, :password, :name, :phone_number, :default_address, :role])
     |> validate_required([:email, :password, :name])
     |> validate_email(opts)
     |> validate_password(opts)
     |> validate_length(:name, min: 2, max: 100)
     |> validate_format(:phone_number, ~r/^[\d\s\+\-\(\)]+$/,
       message: "must be a valid phone number"
+    )
+    |> validate_inclusion(:role, ["customer", "restaurant_owner", "courier", "admin"],
+      message: "must be a valid role"
     )
   end
 

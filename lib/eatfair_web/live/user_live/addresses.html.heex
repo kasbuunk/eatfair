@@ -29,22 +29,21 @@
             <div class="bg-gray-50 rounded-lg p-4 mb-4">
               <h4 class="text-sm font-medium text-gray-900 mb-3">Quick Address Detection</h4>
               <div class="flex flex-col sm:flex-row gap-2">
-                <button 
+                <button
                   type="button"
                   onclick="getCurrentLocation()"
                   class="flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
                 >
-                  <.icon name="hero-map-pin" class="w-4 h-4 mr-2" />
-                  Use My Location
+                  <.icon name="hero-map-pin" class="w-4 h-4 mr-2" /> Use My Location
                 </button>
-                <input 
+                <input
                   type="text"
                   id="postal-code-lookup"
                   placeholder="Enter postal code for quick lookup"
                   class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
                   onkeypress="if(event.key === 'Enter') { lookupPostalCode(this.value); event.preventDefault(); }"
                 />
-                <button 
+                <button
                   type="button"
                   onclick="lookupPostalCode(document.getElementById('postal-code-lookup').value)"
                   class="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
@@ -52,7 +51,9 @@
                   Lookup
                 </button>
               </div>
-              <p class="text-xs text-gray-500 mt-2">We'll automatically fill in your address details to save you time</p>
+              <p class="text-xs text-gray-500 mt-2">
+                We'll automatically fill in your address details to save you time
+              </p>
             </div>
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <.input

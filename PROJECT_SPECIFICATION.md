@@ -225,6 +225,36 @@ Independent delivery partners who want to:
   - Consumer experience improvement suggestions
   - Courier workflow optimization based on field experience
 
+### User Feedback & Observability System
+**Priority**: Core Application Goal (Development Tooling)  
+**Purpose**: Enable rapid troubleshooting of user-reported issues in development environment
+
+#### Core Requirements
+- **Software Version Tracking**: Application version included in all telemetry events and logs for debugging version-specific issues
+- **Enhanced Built-in Observability**: Leverage BEAM/Phoenix defaults with structured logging to file, request_id correlation, and minimal OpenTelemetry configuration
+- **Simple User Feedback System**: 
+  - UserFeedback schema with feedback_type, message, request_id, user_id, page_url, version, status, admin_notes, timestamps
+  - Floating feedback widget (LiveView component) that captures Phoenix request_id automatically
+  - Real-time feedback submission with context capture
+- **Development-First Admin Interface**: 
+  - Simple admin page listing feedback with request_id lookup capability
+  - Email notifications using existing Swoosh setup
+  - Real-time updates via Phoenix.PubSub (already configured)
+- **Request Correlation**: Use existing Phoenix request_id as correlation mechanism for linking user feedback to application logs
+
+#### Implementation Philosophy
+- **Leverage Existing Phoenix Features**: Use built-in Phoenix.Logger, request_id, telemetry, and LiveView real-time features
+- **Minimal Configuration Changes**: Basic file logging output, version metadata, and simple OpenTelemetry setup
+- **Development-Focused**: Optimized for localhost:4000 troubleshooting workflow
+- **Standard Phoenix Patterns**: Use established LiveView, context, and PubSub patterns throughout
+
+#### Post-MVP Goals
+- **Production Log Querying**: Remote log access and aggregation (requires different AI agent capabilities)
+- **Advanced OpenTelemetry Integrations**: Complex tracing and metrics collection
+- **Log Aggregation Services**: Integration with external logging platforms
+
+*This system serves as essential development tooling for troubleshooting user-reported issues by correlating feedback with application logs via request_id.*
+
 ### Platform Sustainability & Support
 - **Donation System Architecture**: 
   - Multi-user donation prompts (customers, restaurant owners, couriers)

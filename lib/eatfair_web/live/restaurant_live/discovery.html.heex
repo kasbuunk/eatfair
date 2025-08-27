@@ -2,7 +2,7 @@
   <!-- Discovery Page with Proper Margins -->
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     
-    <!-- Header Section -->
+<!-- Header Section -->
     <div class="mb-8">
       <h1 class="text-3xl font-bold text-gray-900 dark:text-gray-100">
         🗺️ Discover Restaurants
@@ -11,29 +11,31 @@
         Find restaurants near you with location-based search and smart filters
       </p>
     </div>
-
-    <!-- Address Management Prompt -->
+    
+<!-- Address Management Prompt -->
     <%= if @current_scope && @current_scope.user && !@user_has_address do %>
       <div class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-6 mb-6">
         <div class="flex items-center">
-          <.icon name="hero-exclamation-triangle" class="w-8 h-8 text-yellow-600 dark:text-yellow-400 mr-4 flex-shrink-0" />
+          <.icon
+            name="hero-exclamation-triangle"
+            class="w-8 h-8 text-yellow-600 dark:text-yellow-400 mr-4 flex-shrink-0"
+          />
           <div class="flex-1">
             <h3 class="text-lg font-semibold text-yellow-800 dark:text-yellow-200 mb-2">
               📍 Add Your Address to See Nearby Restaurants
             </h3>
             <p class="text-yellow-700 dark:text-yellow-300 mb-4">
-              We can't show you restaurants within delivery range without knowing your location. 
+              We can't show you restaurants within delivery range without knowing your location.
               Add your delivery address to see restaurants that can deliver to you!
             </p>
             <div class="flex flex-col sm:flex-row gap-3">
-              <.link 
+              <.link
                 navigate={~p"/users/addresses"}
                 class="inline-flex items-center px-4 py-2 bg-yellow-600 hover:bg-yellow-700 text-white font-medium rounded-lg transition-colors"
               >
-                <.icon name="hero-plus" class="w-4 h-4 mr-2" />
-                Add Your Address
+                <.icon name="hero-plus" class="w-4 h-4 mr-2" /> Add Your Address
               </.link>
-              <button 
+              <button
                 onclick="this.parentElement.parentElement.parentElement.style.display='none'"
                 class="inline-flex items-center px-4 py-2 border border-yellow-300 dark:border-yellow-600 text-yellow-700 dark:text-yellow-300 hover:bg-yellow-100 dark:hover:bg-yellow-800 font-medium rounded-lg transition-colors"
               >
@@ -45,292 +47,310 @@
       </div>
     <% end %>
 
-<div class="space-y-6">
-  <!-- Search and Filter Section -->
-  <div class="bg-white rounded-lg shadow p-6">
-    <!-- Location Search -->
-    <div class="mb-6">
-      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-        📍 Location
-      </label>
-      <.form
-        for={%{}}
-        id="location-search"
-        phx-submit="search_location"
-        class="flex gap-3"
-      >
-        <div class="flex-1">
-          <.live_component
-            module={EatfairWeb.Live.Components.AddressAutocomplete}
-            id="discovery-address-autocomplete"
-            value={@location || ""}
-            placeholder="Enter your address or city..."
-            class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
-            event="location_autocomplete_selected"
-          />
-        </div>
-        <.button type="submit" class="px-6 py-2">
-          <.icon name="hero-magnifying-glass" class="w-4 h-4 mr-2" />
-          Search
-        </.button>
-      </.form>
-    </div>
-    
-    <!-- Search by Restaurant Name -->
-    <div class="mb-6">
-      <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
-        🔍 Search Restaurants
-      </label>
-      <.input
-        id="restaurant-search"
-        name="search"
-        type="text"
-        placeholder="Search restaurants by name..."
-        value={@search_query}
-        phx-hook="Search"
-        class="w-full"
-      />
-    </div>
-    
-    <!-- New Filter System -->
     <div class="space-y-6">
-      
-      <!-- Toggle Filters -->
-      <div class="flex flex-wrap gap-4">
-        <!-- Delivery Available Toggle -->
-        <label class="flex items-center cursor-pointer">
-          <input 
-            type="checkbox" 
-            checked={@filters.delivery_available}
-            phx-click="toggle_delivery_filter"
-            class="sr-only"
-          />
-          <div class="relative">
-            <div class={[
-              "w-11 h-6 rounded-full transition-colors duration-200",
-              if(@filters.delivery_available, do: "bg-green-600", else: "bg-gray-300")
-            ]}></div>
-            <div class={[
-              "absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform duration-200",
-              if(@filters.delivery_available, do: "transform translate-x-5", else: "")
-            ]}></div>
-          </div>
-          <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">
-            🚚 Only show restaurants that deliver here
-            <%= if @filters.delivery_available do %>
-              <span class="text-green-600 font-semibold">(ON)</span>
-            <% else %>
-              <span class="text-gray-400">(OFF)</span>
-            <% end %>
-          </span>
-        </label>
-        
-        <!-- Currently Open Toggle -->
-        <label class="flex items-center cursor-pointer">
-          <input 
-            type="checkbox" 
-            checked={@filters.currently_open}
-            phx-click="toggle_open_filter"
-            class="sr-only"
-          />
-          <div class="relative">
-            <div class={[
-              "w-11 h-6 rounded-full transition-colors duration-200",
-              if(@filters.currently_open, do: "bg-blue-600", else: "bg-gray-300")
-            ]}></div>
-            <div class={[
-              "absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform duration-200",
-              if(@filters.currently_open, do: "transform translate-x-5", else: "")
-            ]}></div>
-          </div>
-          <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">
-            🕐 Only show restaurants open for orders
-            <%= if @filters.currently_open do %>
-              <span class="text-blue-600 font-semibold">(ON)</span>
-            <% else %>
-              <span class="text-gray-400">(OFF)</span>
-            <% end %>
-          </span>
-        </label>
-      </div>
-      
-      <!-- Cuisine Dropdown Filter -->
-      <div class="relative">
-        <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
-          🍽️ Cuisines
-        </h3>
-        
-        <div class="relative">
-          <button
-            type="button"
-            phx-click="toggle_cuisine_dropdown"
-            class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md px-4 py-3 text-left shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 hover:border-gray-400 transition-colors"
+      <!-- Search and Filter Section -->
+      <div class="bg-white rounded-lg shadow p-6">
+        <!-- Location Search -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            📍 Location
+          </label>
+          <.form
+            for={%{}}
+            id="location-search"
+            phx-submit="search_location"
+            class="flex gap-3"
           >
-            <div class="flex items-center justify-between">
-              <div class="flex items-center space-x-2">
-                <%= if @filters.cuisines == [] do %>
-                  <span class="text-gray-700 dark:text-gray-300 font-medium">All Cuisines</span>
-                  <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-full">
-                    {length(@restaurants)}
-                  </span>
-                <% else %>
-                  <span class="text-gray-700 dark:text-gray-300 font-medium">
-                    {length(@filters.cuisines)} cuisine<%= if length(@filters.cuisines) != 1, do: "s" %> selected
-                  </span>
-                  <span class="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-300 px-2 py-1 rounded-full">
-                    {length(@restaurants)}
-                  </span>
-                <% end %>
-              </div>
-              <.icon 
-                name={if @show_cuisine_dropdown, do: "hero-chevron-up", else: "hero-chevron-down"} 
-                class="w-5 h-5 text-gray-400"
+            <div class="flex-1">
+              <.live_component
+                module={EatfairWeb.Live.Components.AddressAutocomplete}
+                id="discovery-address-autocomplete"
+                value={@location || ""}
+                placeholder="Enter your address or city..."
+                class="w-full rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500"
+                event="location_autocomplete_selected"
               />
             </div>
-          </button>
+            <.button type="submit" class="px-6 py-2">
+              <.icon name="hero-magnifying-glass" class="w-4 h-4 mr-2" /> Search
+            </.button>
+          </.form>
+        </div>
+        
+<!-- Search by Restaurant Name -->
+        <div class="mb-6">
+          <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+            🔍 Search Restaurants
+          </label>
+          <.input
+            id="restaurant-search"
+            name="search"
+            type="text"
+            placeholder="Search restaurants by name..."
+            value={@search_query}
+            phx-keyup="search"
+            phx-debounce="300"
+            class="w-full"
+          />
+        </div>
+        
+<!-- New Filter System -->
+        <div class="space-y-6">
           
-          <%= if @show_cuisine_dropdown do %>
-            <div class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto">
-              
-              <!-- All Cuisines Option -->
-              <label class="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-600">
-                <input 
-                  type="checkbox" 
-                  checked={@filters.cuisines == []}
-                  phx-click="select_all_cuisines"
-                  class="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
-                />
-                <div class="flex-1 ml-3">
-                  <div class="flex items-center justify-between">
-                    <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">
-                      All Cuisines
-                    </span>
-                    <span class="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
-                      {Enum.sum(Map.values(@cuisine_counts))}
-                    </span>
-                  </div>
+<!-- Toggle Filters -->
+          <div class="flex flex-wrap gap-4">
+            <!-- Delivery Available Toggle -->
+            <label class="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={@filters.delivery_available}
+                phx-click="toggle_delivery_filter"
+                class="sr-only"
+              />
+              <div class="relative">
+                <div class={[
+                  "w-11 h-6 rounded-full transition-colors duration-200",
+                  if(@filters.delivery_available, do: "bg-green-600", else: "bg-gray-300")
+                ]}>
                 </div>
-              </label>
-              
-              <!-- Individual Cuisine Options (sorted by count, descending) -->
-              <%= for {cuisine, count} <- Enum.sort_by(@cuisines_with_counts, fn {_cuisine, count} -> count end, :desc) do %>
-                <% is_selected = cuisine.id in @filters.cuisines %>
-                <label class="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
-                  <input 
-                    type="checkbox" 
-                    checked={is_selected}
-                    phx-click="toggle_cuisine"
-                    phx-value-cuisine_id={cuisine.id}
-                    disabled={count == 0}
-                    class="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500 disabled:opacity-50"
-                  />
-                  <div class="flex-1 ml-3">
-                    <div class="flex items-center justify-between">
-                      <span class={[
-                        "text-sm font-medium",
-                        if(count == 0, do: "text-gray-400", else: "text-gray-900 dark:text-gray-100")
-                      ]}>
-                        {cuisine.name}
+                <div class={[
+                  "absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform duration-200",
+                  if(@filters.delivery_available, do: "transform translate-x-5", else: "")
+                ]}>
+                </div>
+              </div>
+              <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                🚚 Only show restaurants that deliver here
+                <%= if @filters.delivery_available do %>
+                  <span class="text-green-600 font-semibold">(ON)</span>
+                <% else %>
+                  <span class="text-gray-400">(OFF)</span>
+                <% end %>
+              </span>
+            </label>
+            
+<!-- Currently Open Toggle -->
+            <label class="flex items-center cursor-pointer">
+              <input
+                type="checkbox"
+                checked={@filters.currently_open}
+                phx-click="toggle_open_filter"
+                class="sr-only"
+              />
+              <div class="relative">
+                <div class={[
+                  "w-11 h-6 rounded-full transition-colors duration-200",
+                  if(@filters.currently_open, do: "bg-blue-600", else: "bg-gray-300")
+                ]}>
+                </div>
+                <div class={[
+                  "absolute left-1 top-1 w-4 h-4 bg-white rounded-full transition-transform duration-200",
+                  if(@filters.currently_open, do: "transform translate-x-5", else: "")
+                ]}>
+                </div>
+              </div>
+              <span class="ml-3 text-sm font-medium text-gray-700 dark:text-gray-300">
+                🕐 Only show restaurants open for orders
+                <%= if @filters.currently_open do %>
+                  <span class="text-blue-600 font-semibold">(ON)</span>
+                <% else %>
+                  <span class="text-gray-400">(OFF)</span>
+                <% end %>
+              </span>
+            </label>
+          </div>
+          
+<!-- Cuisine Dropdown Filter -->
+          <div class="relative">
+            <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300 mb-3">
+              🍽️ Cuisines
+            </h3>
+
+            <div class="relative">
+              <button
+                type="button"
+                phx-click="toggle_cuisine_dropdown"
+                class="w-full bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md px-4 py-3 text-left shadow-sm focus:border-orange-500 focus:ring-1 focus:ring-orange-500 hover:border-gray-400 transition-colors"
+              >
+                <div class="flex items-center justify-between">
+                  <div class="flex items-center space-x-2">
+                    <%= if @filters.cuisines == [] do %>
+                      <span class="text-gray-700 dark:text-gray-300 font-medium">
+                        All Cuisines
                       </span>
-                      <span class={[
-                        "text-xs px-2 py-1 rounded-full",
-                        if(count == 0, 
-                          do: "bg-gray-50 dark:bg-gray-800 text-gray-400",
-                          else: "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
-                        )
-                      ]}>
-                        {count}
+                      <span class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400 px-2 py-1 rounded-full">
+                        {length(@restaurants)}
                       </span>
-                    </div>
+                    <% else %>
+                      <span class="text-gray-700 dark:text-gray-300 font-medium">
+                        {length(@filters.cuisines)} cuisine{if length(@filters.cuisines) != 1,
+                          do: "s"} selected
+                      </span>
+                      <span class="text-xs bg-orange-100 dark:bg-orange-900/30 text-orange-600 dark:text-orange-300 px-2 py-1 rounded-full">
+                        {length(@restaurants)}
+                      </span>
+                    <% end %>
                   </div>
-                </label>
+                  <.icon
+                    name={
+                      if @show_cuisine_dropdown, do: "hero-chevron-up", else: "hero-chevron-down"
+                    }
+                    class="w-5 h-5 text-gray-400"
+                  />
+                </div>
+              </button>
+
+              <%= if @show_cuisine_dropdown do %>
+                <div class="absolute z-50 w-full mt-1 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto">
+                  
+<!-- All Cuisines Option -->
+                  <label class="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer border-b border-gray-100 dark:border-gray-600">
+                    <input
+                      type="checkbox"
+                      checked={@filters.cuisines == []}
+                      phx-click="select_all_cuisines"
+                      class="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500"
+                    />
+                    <div class="flex-1 ml-3">
+                      <div class="flex items-center justify-between">
+                        <span class="text-sm font-semibold text-gray-900 dark:text-gray-100">
+                          All Cuisines
+                        </span>
+                        <span class="text-xs px-2 py-1 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+                          {Enum.sum(Map.values(@cuisine_counts))}
+                        </span>
+                      </div>
+                    </div>
+                  </label>
+                  
+<!-- Individual Cuisine Options (sorted by count, descending) -->
+                  <%= for {cuisine, count} <- Enum.sort_by(@cuisines_with_counts, fn {_cuisine, count} -> count end, :desc) do %>
+                    <% is_selected = cuisine.id in @filters.cuisines %>
+                    <label class="flex items-center p-3 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer">
+                      <input
+                        type="checkbox"
+                        checked={is_selected}
+                        phx-click="toggle_cuisine"
+                        phx-value-cuisine_id={cuisine.id}
+                        disabled={count == 0}
+                        class="w-4 h-4 text-orange-600 border-gray-300 rounded focus:ring-orange-500 disabled:opacity-50"
+                      />
+                      <div class="flex-1 ml-3">
+                        <div class="flex items-center justify-between">
+                          <span class={[
+                            "text-sm font-medium",
+                            if(count == 0,
+                              do: "text-gray-400",
+                              else: "text-gray-900 dark:text-gray-100"
+                            )
+                          ]}>
+                            {cuisine.name}
+                          </span>
+                          <span class={[
+                            "text-xs px-2 py-1 rounded-full",
+                            if(count == 0,
+                              do: "bg-gray-50 dark:bg-gray-800 text-gray-400",
+                              else:
+                                "bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400"
+                            )
+                          ]}>
+                            {count}
+                          </span>
+                        </div>
+                      </div>
+                    </label>
+                  <% end %>
+                </div>
               <% end %>
             </div>
-          <% end %>
+          </div>
         </div>
       </div>
-    </div>
-  </div>
-  
+      
 <!-- Results Section -->
-  <div class="space-y-4">
-    <%= if Enum.empty?(@restaurants) do %>
-      <div data-testid="no-results-message" class="text-center py-12">
-        <div class="text-gray-500 text-lg">
-          <.icon name="hero-magnifying-glass" class="w-12 h-12 mx-auto mb-4 text-gray-400" />
-          No restaurants found matching your criteria
-        </div>
-        <p class="text-gray-400 mt-2">Try adjusting your filters or search terms</p>
-      </div>
-    <% else %>
-      <div
-        class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-        data-testid={
-          if @location && String.contains?(@location, "Utrecht"),
-            do: "search-results-utrecht",
-            else: nil
-        }
-      >
-        <%= for restaurant <- @restaurants do %>
+      <div class="space-y-4">
+        <%= if Enum.empty?(@restaurants) do %>
+          <div data-testid="no-results-message" class="text-center py-12">
+            <div class="text-gray-500 text-lg">
+              <.icon name="hero-magnifying-glass" class="w-12 h-12 mx-auto mb-4 text-gray-400" />
+              No restaurants found matching your criteria
+            </div>
+            <p class="text-gray-400 mt-2">Try adjusting your filters or search terms</p>
+          </div>
+        <% else %>
           <div
-            id={"restaurant-#{restaurant.id}"}
-            class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+            class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            data-testid={
+              if @location && String.contains?(@location, "Utrecht"),
+                do: "search-results-utrecht",
+                else: nil
+            }
           >
-            <%= if restaurant.image_url do %>
-              <img
-                src={restaurant.image_url}
-                alt={restaurant.name}
-                class="w-full h-48 object-cover"
-              />
-            <% end %>
-
-            <div class="p-4">
-              <h3 class="text-lg font-semibold text-gray-900 mb-2">
-                <.link navigate={~p"/restaurants/#{restaurant.id}"} class="hover:text-indigo-600">
-                  {restaurant.name}
-                </.link>
-              </h3>
-
-              <div class="space-y-2 text-sm text-gray-600">
-                <div class="flex items-center">
-                  <.icon name="hero-map-pin" class="w-4 h-4 mr-1" />
-                  {restaurant.city}
-                </div>
-
-                <%= if restaurant.average_rating do %>
-                  <div class="flex items-center">
-                    <.icon name="hero-star" class="w-4 h-4 mr-1 text-yellow-400" />
-                    {EatfairWeb.CoreComponents.format_average_rating(restaurant.average_rating)} ({restaurant.review_count} reviews)
-                  </div>
+            <%= for restaurant <- @restaurants do %>
+              <div
+                id={"restaurant-#{restaurant.id}"}
+                class="bg-white rounded-lg shadow-md overflow-hidden hover:shadow-lg transition-shadow"
+              >
+                <%= if restaurant.image_url do %>
+                  <img
+                    src={restaurant.image_url}
+                    alt={restaurant.name}
+                    class="w-full h-48 object-cover"
+                  />
                 <% end %>
 
-                <div class="flex items-center">
-                  <.icon name="hero-clock" class="w-4 h-4 mr-1" />
-                  ~{restaurant.avg_preparation_time} min
-                </div>
+                <div class="p-4">
+                  <h3 class="text-lg font-semibold text-gray-900 mb-2">
+                    <.link
+                      navigate={~p"/restaurants/#{restaurant.id}"}
+                      class="hover:text-indigo-600"
+                    >
+                      {restaurant.name}
+                    </.link>
+                  </h3>
 
-                <div class="flex items-center">
-                  <.icon name="hero-currency-euro" class="w-4 h-4 mr-1" />
-                  Min order: €{restaurant.min_order_value}
+                  <div class="space-y-2 text-sm text-gray-600">
+                    <div class="flex items-center">
+                      <.icon name="hero-map-pin" class="w-4 h-4 mr-1" />
+                      {restaurant.city}
+                    </div>
+
+                    <%= if restaurant.average_rating do %>
+                      <div class="flex items-center">
+                        <.icon name="hero-star" class="w-4 h-4 mr-1 text-yellow-400" />
+                        {EatfairWeb.CoreComponents.format_average_rating(
+                          restaurant.average_rating
+                        )} ({restaurant.review_count} reviews)
+                      </div>
+                    <% end %>
+
+                    <div class="flex items-center">
+                      <.icon name="hero-clock" class="w-4 h-4 mr-1" />
+                      ~{restaurant.avg_preparation_time} min
+                    </div>
+
+                    <div class="flex items-center">
+                      <.icon name="hero-currency-euro" class="w-4 h-4 mr-1" />
+                      Min order: €{restaurant.min_order_value}
+                    </div>
+                  </div>
+
+                  <div class="mt-4">
+                    <.button
+                      phx-click="view_restaurant"
+                      phx-value-id={restaurant.id}
+                      class="w-full"
+                    >
+                      View Menu
+                    </.button>
+                  </div>
                 </div>
               </div>
-
-              <div class="mt-4">
-                <.button
-                  phx-click="view_restaurant"
-                  phx-value-id={restaurant.id}
-                  class="w-full"
-                >
-                  View Menu
-                </.button>
-              </div>
-            </div>
+            <% end %>
           </div>
         <% end %>
       </div>
-      <% end %>
     </div>
   </div>
-  
-  </div> <!-- Close main content div -->
+  <!-- Close main content div -->
 </Layouts.app>

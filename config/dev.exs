@@ -63,8 +63,15 @@ config :eatfair, EatfairWeb.Endpoint,
 # Enable dev routes for dashboard and mailbox
 config :eatfair, dev_routes: true
 
-# Do not include metadata nor timestamps in development logs
+# Include minimal metadata in development console logs, full metadata in file logs
 config :logger, :default_formatter, format: "[$level] $message\n"
+
+# Override file logger for development with enhanced metadata
+config :logger, :file_log,
+  path: "log/eatfair_dev.log",
+  level: :debug,
+  format: "$time [$level] $message $metadata\n",
+  metadata: [:request_id, :version, :user_id, :page_url]
 
 # Set a higher stacktrace during development. Avoid configuring such
 # in production as building large stacktraces may be expensive.

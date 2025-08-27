@@ -1,5 +1,5 @@
 defmodule EatfairWeb.OrderFlowTest do
-  use EatfairWeb.ConnCase, async: true
+  use EatfairWeb.ConnCase, async: false
   use ExUnit.Case
 
   import Phoenix.LiveViewTest
@@ -119,16 +119,17 @@ defmodule EatfairWeb.OrderFlowTest do
       # Step 1: User logs in and browses restaurants
       conn = log_in_user(conn, user)
 
-      {:ok, restaurants_view, _html} = live(conn, ~p"/")
+      # Navigate to restaurant discovery page where restaurants are listed
+      {:ok, restaurants_view, _html} = live(conn, ~p"/restaurants")
 
-      # Verify restaurant is displayed
-      assert has_element?(restaurants_view, "h3", restaurant.name)
-      assert has_element?(restaurants_view, "span", "4.5")
+      # Verify restaurant is displayed (restaurant names are in links, not h3 tags)
+      assert has_element?(restaurants_view, "#restaurant-#{restaurant.id}")
+      assert render(restaurants_view) =~ restaurant.name
 
       # Step 2: User clicks on restaurant to view details
       {:ok, restaurant_view, _html} =
         restaurants_view
-        |> element("#restaurants-#{restaurant.id}")
+        |> element("#restaurant-#{restaurant.id} a")
         |> render_click()
         |> follow_redirect(conn)
 

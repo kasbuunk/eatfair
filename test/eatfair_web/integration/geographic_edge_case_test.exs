@@ -52,7 +52,7 @@ defmodule EatfairWeb.GeographicEdgeCaseTest do
       assert distance <= 5.1 and distance >= 4.9
 
       # Test restaurant discovery with boundary address
-      {:ok, lv, _html} = live(conn, "/restaurants/discover")
+      {:ok, lv, _html} = live(conn, "/restaurants")
 
       # Set user location to boundary address - use a known Amsterdam address instead
       lv
@@ -105,7 +105,7 @@ defmodule EatfairWeb.GeographicEdgeCaseTest do
       assert distance > 3.0
 
       # Test restaurant discovery should exclude this restaurant
-      {:ok, lv, _html} = live(conn, "/restaurants/discover")
+      {:ok, lv, _html} = live(conn, "/restaurants")
 
       lv
       |> element("#location-search")
@@ -467,7 +467,7 @@ defmodule EatfairWeb.GeographicEdgeCaseTest do
       user = user_fixture()
       conn = log_in_user(conn, user)
 
-      {:ok, lv, _html} = live(conn, "/restaurants/discover")
+      {:ok, lv, _html} = live(conn, "/restaurants")
 
       # Test valid location search
       lv
@@ -486,7 +486,7 @@ defmodule EatfairWeb.GeographicEdgeCaseTest do
       user = user_fixture()
       conn = log_in_user(conn, user)
 
-      {:ok, lv, _html} = live(conn, "/restaurants/discover")
+      {:ok, lv, _html} = live(conn, "/restaurants")
 
       # Test with invalid address
       lv
@@ -646,7 +646,7 @@ defmodule EatfairWeb.GeographicEdgeCaseTest do
       Accounts.set_default_address(user, test_address.id)
 
       # Test 1: Restaurant discovery should include this restaurant
-      {:ok, discovery_lv, _html} = live(conn, "/restaurants/discover")
+      {:ok, discovery_lv, _html} = live(conn, "/restaurants")
       assert has_element?(discovery_lv, "#restaurant-#{restaurant.id}")
 
       # Test 2: Restaurant detail page should show delivery available

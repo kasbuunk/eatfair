@@ -11,6 +11,7 @@ defmodule EatfairWeb.Router do
     plug :protect_from_forgery
     plug :put_secure_browser_headers
     plug :fetch_current_scope_for_user
+    plug EatfairWeb.Plugs.Observability
   end
 
   pipeline :api do
@@ -23,7 +24,7 @@ defmodule EatfairWeb.Router do
     live_session :current_user,
       on_mount: [{EatfairWeb.UserAuth, :mount_current_scope}] do
       live "/", RestaurantLive.Index, :index
-      live "/restaurants/discover", RestaurantLive.Discovery, :index
+      live "/restaurants", RestaurantLive.Discovery, :index
       live "/restaurants/:id", RestaurantLive.Show, :show
       live "/users/register", UserLive.Registration, :new
       live "/users/log-in", UserLive.Login, :new
@@ -38,11 +39,6 @@ defmodule EatfairWeb.Router do
 
   # Enable LiveDashboard and Swoosh mailbox preview in development
   if Application.compile_env(:eatfair, :dev_routes) do
-    # If you want to use the LiveDashboard in production, you should put
-    # it behind authentication and allow only admins to access it.
-    # If your application does not have an admins-only section yet,
-    # you can use Plug.BasicAuth to set up some basic authentication
-    # as long as you are also using SSL (which you should anyway).
     import Phoenix.LiveDashboard.Router
 
     scope "/dev" do
@@ -50,6 +46,23 @@ defmodule EatfairWeb.Router do
 
       live_dashboard "/dashboard", metrics: EatfairWeb.Telemetry
       forward "/mailbox", Plug.Swoosh.MailboxPreview
+    end
+
+    # Admin routes - secured with basic auth for development
+    scope "/admin" do
+      pipe_through [:browser, :admin_auth]
+
+      live "/feedback", EatfairWeb.Admin.FeedbackDashboardLive, :index
+    end
+  end
+
+  # Basic auth for admin routes in development
+  if Application.compile_env(:eatfair, :dev_routes) do
+    defp admin_auth(conn, _opts) do
+      username = System.get_env("ADMIN_USERNAME") || "admin"
+      password = System.get_env("ADMIN_PASSWORD") || "admin123"
+
+      Plug.BasicAuth.basic_auth(conn, username: username, password: password)
     end
   end
 
@@ -71,6 +84,12 @@ defmodule EatfairWeb.Router do
 
       # Restaurant onboarding - available to all authenticated users
       live "/restaurant/onboard", RestaurantLive.Onboarding, :new
+    end
+    
+    # Admin routes - requires admin role
+    live_session :require_admin,
+      on_mount: [{EatfairWeb.UserAuth, :require_admin}] do
+      live "/admin/feedback", AdminFeedbackLive, :index
     end
 
     # Restaurant management - requires restaurant ownership

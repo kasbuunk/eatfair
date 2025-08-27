@@ -1,0 +1,21 @@
+07:06:51.302 [error] Exqlite.Connection (#PID<0.435.0>) disconnected: ** (DBConnection.ConnectionError) owner #PID<0.730.0> timed out because it owned the connection for longer than 120000ms (set via the :ownership_timeout option) 
+07:10:14.154 [error] GenServer #PID<0.803.0> terminating
+** (stop) killed
+Last message: {:EXIT, #PID<0.653.0>, :killed} 
+07:15:46.254 [error] GenServer #PID<0.472.0> terminating
+** (FunctionClauseError) no function clause matching in EatfairWeb.RestaurantLive.Discovery.handle_info/2
+    (eatfair 0.1.0) lib/eatfair_web/live/restaurant_live/discovery.ex:149: EatfairWeb.RestaurantLive.Discovery.handle_info({"input_change", "Hoofddorp"}, #Phoenix.LiveView.Socket<id: "phx-GF-H2RxeVhoXshOh", endpoint: EatfairWeb.Endpoint, view: EatfairWeb.RestaurantLive.Discovery, parent_pid: nil, root_pid: #PID<0.472.0>, router: EatfairWeb.Router, assigns: %{filters: %{delivery_available: true, currently_open: true, cuisines: []}, location: nil, current_scope: nil, __changed__: %{}, page_title: "Discover Restaurants", flash: %{}, live_action: :index, restaurants: [], cuisines: [], cuisine_counts: %{}, cuisines_with_counts: [], show_cuisine_dropdown: false, search_query: "", user_has_address: false}, transport_pid: #PID<0.471.0>, sticky?: nil, ...>)
+    (phoenix_live_view 1.1.8) lib/phoenix_live_view/channel.ex:360: Phoenix.LiveView.Channel.handle_info/2
+    (stdlib 6.2.2.2) gen_server.erl:2345: :gen_server.try_handle_info/3
+    (stdlib 6.2.2.2) gen_server.erl:2433: :gen_server.handle_msg/6
+    (stdlib 6.2.2.2) proc_lib.erl:329: :proc_lib.init_p_do_apply/3
+Process Label: {Phoenix.LiveView, EatfairWeb.RestaurantLive.Discovery, "lv:phx-GF-H2RxeVhoXshOh"}
+Last message: {"input_change", "Hoofddorp"} 
+07:15:46.270 [error] GenServer #PID<0.470.0> terminating
+** (FunctionClauseError) no function clause matching in EatfairWeb.RestaurantLive.Discovery.handle_info/2
+    (eatfair 0.1.0) lib/eatfair_web/live/restaurant_live/discovery.ex:149: EatfairWeb.RestaurantLive.Discovery.handle_info({"input_change", "Hoofddorp"}, #Phoenix.LiveView.Socket<id: "phx-GF-H2RxeVhoXshOh", endpoint: EatfairWeb.Endpoint, view: EatfairWeb.RestaurantLive.Discovery, parent_pid: nil, root_pid: #PID<0.472.0>, router: EatfairWeb.Router, assigns: %{filters: %{delivery_available: true, currently_open: true, cuisines: []}, location: nil, current_scope: nil, __changed__: %{}, page_title: "Discover Restaurants", flash: %{}, live_action: :index, restaurants: [], cuisines: [], cuisine_counts: %{}, cuisines_with_counts: [], show_cuisine_dropdown: false, search_query: "", user_has_address: false}, transport_pid: #PID<0.471.0>, sticky?: nil, ...>)
+    (phoenix_live_view 1.1.8) lib/phoenix_live_view/channel.ex:360: Phoenix.LiveView.Channel.handle_info/2
+    (stdlib 6.2.2.2) gen_server.erl:2345: :gen_server.try_handle_info/3
+    (stdlib 6.2.2.2) gen_server.erl:2433: :gen_server.handle_msg/6
+    (stdlib 6.2.2.2) proc_lib.erl:329: :proc_lib.init_p_do_apply/3
+Last message: {:EXIT, #PID<0.467.0>, {:function_clause, [{EatfairWeb.RestaurantLive.Discovery, :handle_info, [{"input_change", "Hoofddorp"}, #Phoenix.LiveView.Socket<id: "phx-GF-H2RxeVhoXshOh", endpoint: EatfairWeb.Endpoint, view: EatfairWeb.RestaurantLive.Discovery, parent_pid: nil, root_pid: #PID<0.472.0>, router: EatfairWeb.Router, assigns: %{filters: %{delivery_available: true, currently_open: true, cuisines: []}, location: nil, current_scope: nil, __changed__: %{}, page_title: "Discover Restaurants", flash: %{}, live_action: :index, restaurants: [], cuisines: [], cuisine_counts: %{}, cuisines_with_counts: [], show_cuisine_dropdown: false, search_query: "", user_has_address: false}, transport_pid: #PID<0.471.0>, sticky?: nil, ...>], [file: ~c"lib/eatfair_web/live/restaurant_live/discovery.ex", line: 149]}, {Phoenix.LiveView.Channel, :handle_info, 2, [file: ~c"lib/phoenix_live_view/channel.ex", line: 360]}, {:gen_server, :try_handle_info, 3, [file: ~c"gen_server.erl", line: 2345]}, {:gen_server, :handle_msg, 6, [file: ~c"gen_server.erl", line: 2433]}, {:proc_lib, :init_p_do_apply, 3, [file: ~c"proc_lib.erl", line: 329]}]}} 

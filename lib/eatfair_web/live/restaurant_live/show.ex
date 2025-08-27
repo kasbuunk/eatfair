@@ -4,9 +4,27 @@ defmodule EatfairWeb.RestaurantLive.Show do
   alias Eatfair.Restaurants
   alias Eatfair.Reviews
   alias Eatfair.Reviews.Review
+  alias Phoenix.LiveView
 
   @impl true
-  def mount(%{"id" => id}, _session, socket) do
+  # Guard against special or invalid IDs like "discover" by redirecting
+  def mount(%{"id" => id}, _session, socket) when is_binary(id) do
+    case Integer.parse(id) do
+      {_, ""} ->
+        # Valid integer ID (as string) – proceed with normal mount flow
+        do_mount_show(id, socket)
+
+      _ ->
+        {:ok, LiveView.redirect(socket, to: ~p"/restaurants")}
+    end
+  end
+
+  # Fallback for unexpected params
+  def mount(_params, _session, socket) do
+    {:ok, LiveView.redirect(socket, to: ~p"/restaurants")}
+  end
+
+  defp do_mount_show(id, socket) do
     restaurant = Restaurants.get_restaurant!(id)
     reviews = Reviews.list_reviews_for_restaurant(id)
     average_rating = Reviews.get_average_rating(id)
@@ -225,7 +243,6 @@ defmodule EatfairWeb.RestaurantLive.Show do
   defp format_rating(rating) do
     "#{Decimal.to_float(rating)}/5"
   end
-
 
   defp user_has_any_orders?(user_id, restaurant_id) do
     import Ecto.Query

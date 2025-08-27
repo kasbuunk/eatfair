@@ -1,12 +1,12 @@
 defmodule Eatfair.AddressAutocomplete do
   @moduledoc """
   Dutch address autocomplete system using postal code + street number approach.
-  
+
   The Netherlands has a very structured address system:
   - Postal code (6 characters: 4 digits + 2 letters, e.g. "1012AB")
   - Street number (with optional suffix, e.g. "123", "123A", "123-1")
   - This combination uniquely identifies most addresses
-  
+
   For MVP, we implement a simple lookup system. In production, this would
   integrate with services like:
   - PostNL Adresservice
@@ -17,7 +17,7 @@ defmodule Eatfair.AddressAutocomplete do
 
   @doc """
   Suggests Dutch addresses based on partial input.
-  
+
   Supports various input formats:
   - Postal code: "1012" -> suggests addresses in that area
   - Postal code + letters: "1012AB" -> suggests street addresses 
@@ -26,20 +26,20 @@ defmodule Eatfair.AddressAutocomplete do
   """
   def suggest_addresses(query) when is_binary(query) do
     normalized_query = String.downcase(String.trim(query))
-    
+
     cond do
       # Full postal code pattern (1234AB)
       Regex.match?(~r/^\d{4}[a-z]{2}$/, normalized_query) ->
         suggest_by_postal_code(normalized_query)
-      
+
       # Partial postal code (1234)
       Regex.match?(~r/^\d{4}$/, normalized_query) ->
         suggest_by_partial_postal_code(normalized_query)
-      
+
       # Street name or address
       String.length(normalized_query) >= 2 ->
         suggest_by_street_name(normalized_query)
-      
+
       true ->
         []
     end
@@ -52,7 +52,8 @@ defmodule Eatfair.AddressAutocomplete do
   def validate_address(postal_code, street_number, street_name \\ nil) do
     with {:ok, formatted_postal_code} <- validate_postal_code(postal_code),
          {:ok, formatted_number} <- validate_street_number(street_number),
-         {:ok, address_info} <- lookup_address(formatted_postal_code, formatted_number, street_name) do
+         {:ok, address_info} <-
+           lookup_address(formatted_postal_code, formatted_number, street_name) do
       {:ok, format_address_result(address_info)}
     else
       {:error, reason} -> {:error, reason}
@@ -65,39 +66,42 @@ defmodule Eatfair.AddressAutocomplete do
   """
   def parse_address_string(address_string) do
     normalized = String.trim(address_string)
-    
+
     # Try different parsing patterns
     cond do
       # Pattern: "Street Name 123, 1234AB City"
       match = Regex.run(~r/^(.+?)\s+(\d+[a-z]?(?:-\d+)?),\s*(\d{4}[a-z]{2})\s+(.+)$/i, normalized) ->
         [_, street_name, number, postal_code, city] = match
+
         %{
           street_name: String.trim(street_name),
           street_number: String.trim(number),
           postal_code: String.upcase(String.trim(postal_code)),
           city: String.trim(city)
         }
-      
+
       # Pattern: "1234AB 123" (postal code + number)
       match = Regex.run(~r/^(\d{4}[a-z]{2})\s+(\d+[a-z]?(?:-\d+)?)$/i, normalized) ->
         [_, postal_code, number] = match
+
         %{
           postal_code: String.upcase(String.trim(postal_code)),
           street_number: String.trim(number),
           street_name: nil,
           city: nil
         }
-      
+
       # Pattern: "Street Name 123" 
       match = Regex.run(~r/^(.+?)\s+(\d+[a-z]?(?:-\d+)?)$/i, normalized) ->
         [_, street_name, number] = match
+
         %{
           street_name: String.trim(street_name),
           street_number: String.trim(number),
           postal_code: nil,
           city: nil
         }
-      
+
       # Just postal code
       Regex.match?(~r/^\d{4}[a-z]{2}$/i, normalized) ->
         %{
@@ -106,7 +110,7 @@ defmodule Eatfair.AddressAutocomplete do
           street_name: nil,
           city: nil
         }
-      
+
       true ->
         # Free text - treat as street name or city
         %{
@@ -137,7 +141,7 @@ defmodule Eatfair.AddressAutocomplete do
       ],
       "1015dz" => [
         %{
-          display: "Prinsengracht 100, 1015DZ Amsterdam", 
+          display: "Prinsengracht 100, 1015DZ Amsterdam",
           postal_code: "1015DZ",
           street_name: "Prinsengracht",
           street_number: "100",
@@ -149,7 +153,7 @@ defmodule Eatfair.AddressAutocomplete do
       "1016bs" => [
         %{
           display: "Herengracht 200, 1016BS Amsterdam",
-          postal_code: "1016BS", 
+          postal_code: "1016BS",
           street_name: "Herengracht",
           street_number: "200",
           city: "Amsterdam",
@@ -158,7 +162,7 @@ defmodule Eatfair.AddressAutocomplete do
         }
       ]
     }
-    
+
     Map.get(mock_addresses, postal_code, [])
   end
 
@@ -179,31 +183,105 @@ defmodule Eatfair.AddressAutocomplete do
         %{display: "3521CV Utrecht Centrum", postal_code: "3521CV", city: "Utrecht"}
       ]
     }
-    
+
     Map.get(area_suggestions, partial, [])
   end
 
   defp suggest_by_street_name(query) do
-    # Mock street name suggestions for MVP
+    # Enhanced street name suggestions for MVP - more comprehensive and Google Maps-like
     street_suggestions = [
+      # Amsterdam streets
       %{display: "Dam, Amsterdam", street_name: "Dam", city: "Amsterdam"},
       %{display: "Damrak, Amsterdam", street_name: "Damrak", city: "Amsterdam"},
       %{display: "Prinsengracht, Amsterdam", street_name: "Prinsengracht", city: "Amsterdam"},
       %{display: "Herengracht, Amsterdam", street_name: "Herengracht", city: "Amsterdam"},
       %{display: "Nieuwmarkt, Amsterdam", street_name: "Nieuwmarkt", city: "Amsterdam"},
-      %{display: "Amsterdamsestraatweg, Utrecht", street_name: "Amsterdamsestraatweg", city: "Utrecht"}
+      %{display: "Kalverstraat, Amsterdam", street_name: "Kalverstraat", city: "Amsterdam"},
+      %{display: "Leidsestraat, Amsterdam", street_name: "Leidsestraat", city: "Amsterdam"},
+      %{display: "Vondelpark, Amsterdam", street_name: "Vondelpark", city: "Amsterdam"},
+
+      # Utrecht streets
+      %{
+        display: "Amsterdamsestraatweg, Utrecht",
+        street_name: "Amsterdamsestraatweg",
+        city: "Utrecht"
+      },
+      %{display: "Utrecht Centraal, Utrecht", street_name: "Utrecht Centraal", city: "Utrecht"},
+      %{display: "Oudegracht, Utrecht", street_name: "Oudegracht", city: "Utrecht"},
+
+      # Rotterdam streets
+      %{
+        display: "Rotterdam Centraal, Rotterdam",
+        street_name: "Rotterdam Centraal",
+        city: "Rotterdam"
+      },
+      %{display: "Coolsingel, Rotterdam", street_name: "Coolsingel", city: "Rotterdam"},
+      %{
+        display: "Witte de Withstraat, Rotterdam",
+        street_name: "Witte de Withstraat",
+        city: "Rotterdam"
+      },
+
+      # The Hague streets
+      %{display: "Binnenhof, Den Haag", street_name: "Binnenhof", city: "Den Haag"},
+      %{display: "Lange Voorhout, Den Haag", street_name: "Lange Voorhout", city: "Den Haag"},
+
+      # City-level suggestions
+      %{display: "Amsterdam", street_name: nil, city: "Amsterdam"},
+      %{display: "Utrecht", street_name: nil, city: "Utrecht"},
+      %{display: "Rotterdam", street_name: nil, city: "Rotterdam"},
+      %{display: "Den Haag", street_name: nil, city: "Den Haag"},
+      %{display: "Eindhoven", street_name: nil, city: "Eindhoven"},
+      %{display: "Groningen", street_name: nil, city: "Groningen"}
     ]
-    
+
+    # Enhanced fuzzy matching - more Google Maps-like
+    query_normalized = String.downcase(query)
+
     street_suggestions
     |> Enum.filter(fn suggestion ->
-      String.contains?(String.downcase(suggestion.display), query)
+      display_normalized = String.downcase(suggestion.display)
+      city_normalized = String.downcase(suggestion.city || "")
+      street_normalized = String.downcase(suggestion.street_name || "")
+
+      # Multiple matching strategies like Google Maps:
+      # 1. Starts with query (highest priority)
+      # 2. Contains query anywhere
+      # 3. Fuzzy matching for common typos (basic implementation)
+      String.starts_with?(display_normalized, query_normalized) or
+        String.starts_with?(city_normalized, query_normalized) or
+        String.starts_with?(street_normalized, query_normalized) or
+        String.contains?(display_normalized, query_normalized) or
+        String.contains?(city_normalized, query_normalized) or
+        String.contains?(street_normalized, query_normalized) or
+        fuzzy_match?(display_normalized, query_normalized) or
+        fuzzy_match?(city_normalized, query_normalized)
     end)
-    |> Enum.take(5)
+    |> Enum.sort_by(fn suggestion ->
+      display_normalized = String.downcase(suggestion.display)
+      city_normalized = String.downcase(suggestion.city || "")
+
+      # Prioritize results like Google Maps:
+      cond do
+        # Exact start match (highest)
+        String.starts_with?(display_normalized, query_normalized) -> 0
+        # City start match
+        String.starts_with?(city_normalized, query_normalized) -> 1
+        # Display contains
+        String.contains?(display_normalized, query_normalized) -> 2
+        # City contains
+        String.contains?(city_normalized, query_normalized) -> 3
+        # Fuzzy match (lowest)
+        true -> 4
+      end
+    end)
+    # Limit results like Google Maps
+    |> Enum.take(6)
   end
 
   defp validate_postal_code(postal_code) when is_binary(postal_code) do
     normalized = postal_code |> String.trim() |> String.upcase()
-    
+
     if Regex.match?(~r/^\d{4}[A-Z]{2}$/, normalized) do
       {:ok, normalized}
     else
@@ -213,7 +291,7 @@ defmodule Eatfair.AddressAutocomplete do
 
   defp validate_street_number(number) when is_binary(number) do
     normalized = String.trim(number)
-    
+
     if Regex.match?(~r/^\d+[A-Za-z]?(?:-\d+)?$/, normalized) do
       {:ok, normalized}
     else
@@ -231,28 +309,32 @@ defmodule Eatfair.AddressAutocomplete do
         longitude: 4.8910
       },
       {"1015DZ", "100"} => %{
-        street_name: "Prinsengracht", 
+        street_name: "Prinsengracht",
         city: "Amsterdam",
         latitude: 52.3738,
         longitude: 4.8840
       },
       {"1016BS", "200"} => %{
         street_name: "Herengracht",
-        city: "Amsterdam", 
+        city: "Amsterdam",
         latitude: 52.3707,
         longitude: 4.8897
       }
     }
-    
+
     case Map.get(mock_data, {postal_code, street_number}) do
-      nil -> {:error, "Address not found"}
-      address_info -> {:ok, Map.merge(address_info, %{postal_code: postal_code, street_number: street_number})}
+      nil ->
+        {:error, "Address not found"}
+
+      address_info ->
+        {:ok, Map.merge(address_info, %{postal_code: postal_code, street_number: street_number})}
     end
   end
 
   defp format_address_result(address_info) do
     %{
-      formatted_address: "#{address_info.street_name} #{address_info.street_number}, #{address_info.postal_code} #{address_info.city}",
+      formatted_address:
+        "#{address_info.street_name} #{address_info.street_number}, #{address_info.postal_code} #{address_info.city}",
       street_name: address_info.street_name,
       street_number: address_info.street_number,
       postal_code: address_info.postal_code,
@@ -261,4 +343,29 @@ defmodule Eatfair.AddressAutocomplete do
       longitude: address_info.longitude
     }
   end
+
+  # Basic fuzzy matching for common typos (simplified version of what Google Maps does)
+  defp fuzzy_match?(text, query) when byte_size(query) >= 3 do
+    # Limit string length to prevent performance issues
+    max_length = 20
+    text_limited = String.slice(text, 0, max_length)
+    query_limited = String.slice(query, 0, max_length)
+    
+    # Use simple character-based matching instead of expensive levenshtein
+    # Check if query shares significant characters with text
+    text_chars = text_limited |> String.downcase() |> String.graphemes() |> MapSet.new()
+    query_chars = query_limited |> String.downcase() |> String.graphemes() |> MapSet.new()
+    
+    intersection = MapSet.intersection(text_chars, query_chars)
+    query_size = MapSet.size(query_chars)
+    
+    # At least 70% of query characters should be present in text
+    if query_size > 0 do
+      MapSet.size(intersection) / query_size >= 0.7
+    else
+      false
+    end
+  end
+
+  defp fuzzy_match?(_text, _query), do: false
 end

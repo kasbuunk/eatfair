@@ -244,6 +244,28 @@ defmodule EatfairWeb.UserAuth do
       {:halt, socket}
     end
   end
+  
+  def on_mount(:require_admin, _params, session, socket) do
+    socket = mount_current_scope(socket, session)
+
+    case socket.assigns.current_scope do
+      %{user: %{role: "admin"}} -> {:cont, socket}
+      %{user: _} -> 
+        socket =
+          socket
+          |> Phoenix.LiveView.put_flash(:error, "Access denied. Admin privileges required.")
+          |> Phoenix.LiveView.redirect(to: ~p"/")
+
+        {:halt, socket}
+      _ ->
+        socket =
+          socket
+          |> Phoenix.LiveView.put_flash(:error, "You must log in to access this page.")
+          |> Phoenix.LiveView.redirect(to: ~p"/users/log-in")
+
+        {:halt, socket}
+    end
+  end
 
   defp mount_current_scope(socket, session) do
     Phoenix.Component.assign_new(socket, :current_scope, fn ->

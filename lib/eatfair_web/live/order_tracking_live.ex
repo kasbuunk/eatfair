@@ -108,7 +108,7 @@ defmodule EatfairWeb.OrderTrackingLive do
             <h3 class="text-lg font-medium text-gray-900 mb-2">No Active Orders</h3>
             <p class="text-gray-500 mb-6">You don't have any orders in progress right now.</p>
             <.link
-              navigate={~p"/restaurants/discover"}
+              navigate={~p"/restaurants"}
               class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
             >
               Discover Restaurants

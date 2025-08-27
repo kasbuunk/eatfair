@@ -9,14 +9,15 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
   def mount(_params, _session, socket) do
     user_has_address = user_has_address?(socket)
     cuisines = Restaurants.list_cuisines()
-    
+
     # Default filter state - empty cuisines list means "All" is selected
     default_filters = %{
       delivery_available: true,
       currently_open: true,
-      cuisines: []  # Empty list means "All cuisines" is selected
+      # Empty list means "All cuisines" is selected
+      cuisines: []
     }
-    
+
     {:ok,
      socket
      |> assign(:page_title, "Discover Restaurants")
@@ -35,22 +36,24 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
 
   @impl true
   def handle_params(params, _url, socket) do
-    socket = 
+    socket =
       case params["location"] do
-        nil -> socket
-        location -> 
+        nil ->
+          socket
+
+        location ->
           # Store location from homepage navigation
           socket
           |> LocationInference.store_session_location(location)
           |> assign(:location, location)
           |> apply_location_filter(location)
       end
-      
+
     {:noreply, socket}
   end
 
   @impl true
-  def handle_event("search", %{"query" => query}, socket) do
+  def handle_event("search", %{"value" => query}, socket) do
     {:noreply,
      socket
      |> assign(:search_query, query)
@@ -75,14 +78,14 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
   def handle_event("toggle_cuisine", %{"cuisine_id" => cuisine_id_str}, socket) do
     cuisine_id = String.to_integer(cuisine_id_str)
     current_cuisines = socket.assigns.filters.cuisines
-    
-    updated_cuisines = 
+
+    updated_cuisines =
       if cuisine_id in current_cuisines do
         List.delete(current_cuisines, cuisine_id)
       else
         [cuisine_id | current_cuisines]
       end
-    
+
     filters = Map.put(socket.assigns.filters, :cuisines, updated_cuisines)
     {:noreply, apply_filters_with_counts(socket, filters)}
   end
@@ -135,7 +138,8 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
   def handle_event("select_all_cuisines", _params, socket) do
     # When "All" is selected, unselect all individual cuisines (empty list)
     filters = Map.put(socket.assigns.filters, :cuisines, [])
-    {:noreply, 
+
+    {:noreply,
      socket
      |> assign(:show_cuisine_dropdown, false)
      |> apply_filters_with_counts(filters)}
@@ -145,10 +149,10 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
   def handle_info({"location_autocomplete_selected", selected_address}, socket) do
     # Apply the selected address as a location filter
     socket = assign(socket, :location, selected_address)
-    
+
     # Apply location filter to restaurants
     socket = apply_location_filter(socket, selected_address)
-    
+
     {:noreply,
      socket
      |> put_flash(:info, "Showing restaurants near #{selected_address}")}
@@ -157,6 +161,12 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
   @impl true
   def handle_info({:hide_suggestions, _component_id}, socket) do
     # Handle hide suggestions message from AddressAutocomplete component
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({"input_change", _value}, socket) do
+    # Handle input change message from AddressAutocomplete component
     {:noreply, socket}
   end
 
@@ -184,23 +194,6 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
     assign(socket, :restaurants, restaurants)
   end
 
-  defp apply_filters(socket, filters) when is_map(filters) do
-    restaurants =
-      case get_current_user_id(socket) do
-        nil -> Restaurants.filter_restaurants(filters)
-        user_id -> Restaurants.filter_restaurants_with_location(filters, user_id)
-      end
-
-    socket
-    |> assign(:filters, filters)
-    |> assign(:restaurants, restaurants)
-  end
-
-  defp apply_filters(socket, params) when is_map(params) do
-    filters = build_filters_from_params(params)
-    apply_filters(socket, filters)
-  end
-
   defp get_current_user_id(socket) do
     case socket.assigns.current_scope do
       %{user: %{id: user_id}} -> user_id
@@ -208,29 +201,14 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
     end
   end
 
-  defp build_filters_from_params(params) do
-    params
-    |> Enum.reduce(%{}, fn
-      {"cuisine", value}, acc when value != "" ->
-        Map.put(acc, :cuisine, value)
-
-      {"max_price", value}, acc when value != "" ->
-        Map.put(acc, :max_price, value)
-
-      {"max_delivery_time", value}, acc when value != "" ->
-        Map.put(acc, :max_delivery_time, value)
-
-      _other, acc ->
-        acc
-    end)
-  end
-
   defp user_has_address?(socket) do
     case socket.assigns.current_scope do
-      %{user: user} -> 
+      %{user: user} ->
         addresses = Accounts.list_user_addresses(user.id)
         length(addresses) > 0
-      _ -> false
+
+      _ ->
+        false
     end
   end
 
@@ -243,11 +221,11 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
           |> filter_by_location(lat, lon)
           |> filter_by_current_filters(socket.assigns.filters)
           |> sort_by_distance(lat, lon)
-        
+
         socket
         |> assign(:restaurants, filtered_restaurants)
         |> calculate_cuisine_counts()
-      
+
       {:error, :not_found} ->
         socket
         |> put_flash(:error, "Could not find location: #{address}")
@@ -255,28 +233,31 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
   end
 
   defp apply_filters_with_counts(socket, filters) do
-    all_restaurants = 
+    all_restaurants =
       case get_current_user_id(socket) do
         nil -> Restaurants.list_restaurants_with_location_data()
         user_id -> Restaurants.list_restaurants_for_user(user_id)
       end
-      
+
     # Apply location filter first if location is set
-    base_restaurants = 
+    base_restaurants =
       case socket.assigns.location do
-        nil -> all_restaurants
-        address -> 
+        nil ->
+          all_restaurants
+
+        address ->
           case Eatfair.GeoUtils.geocode_address(address) do
             {:ok, %{latitude: lat, longitude: lon}} ->
               filter_by_location(all_restaurants, lat, lon)
+
             {:error, :not_found} ->
               all_restaurants
           end
       end
-    
+
     # Apply current filters
     filtered_restaurants = filter_by_current_filters(base_restaurants, filters)
-    
+
     socket
     |> assign(:filters, filters)
     |> assign(:restaurants, filtered_restaurants)
@@ -304,6 +285,7 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
   end
 
   defp filter_by_delivery_available(restaurants, true), do: restaurants
+
   defp filter_by_delivery_available(restaurants, false) do
     # When delivery filter is OFF, show all restaurants (pickup + delivery)
     restaurants
@@ -312,10 +294,14 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
   defp filter_by_currently_open(restaurants, true) do
     restaurants |> Enum.filter(& &1.is_open)
   end
+
   defp filter_by_currently_open(restaurants, false), do: restaurants
 
-  defp filter_by_selected_cuisines(restaurants, []), do: restaurants  # Empty list means "All" cuisines
-  defp filter_by_selected_cuisines(restaurants, selected_cuisine_ids) when is_list(selected_cuisine_ids) do
+  # Empty list means "All" cuisines
+  defp filter_by_selected_cuisines(restaurants, []), do: restaurants
+
+  defp filter_by_selected_cuisines(restaurants, selected_cuisine_ids)
+       when is_list(selected_cuisine_ids) do
     restaurants
     |> Enum.filter(fn restaurant ->
       restaurant.cuisines
@@ -326,12 +312,14 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
   defp sort_by_distance(restaurants, lat, lon) do
     restaurants
     |> Enum.map(fn restaurant ->
-      distance = Eatfair.GeoUtils.haversine_distance(
-        Decimal.to_float(restaurant.latitude),
-        Decimal.to_float(restaurant.longitude), 
-        lat, 
-        lon
-      )
+      distance =
+        Eatfair.GeoUtils.haversine_distance(
+          Decimal.to_float(restaurant.latitude),
+          Decimal.to_float(restaurant.longitude),
+          lat,
+          lon
+        )
+
       {restaurant, distance}
     end)
     |> Enum.sort_by(fn {_, distance} -> distance end)
@@ -341,14 +329,15 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
   defp calculate_cuisine_counts(socket) do
     # Calculate how many restaurants are available for each cuisine
     # based on current location and other filters (excluding cuisine filter)
-    base_restaurants = 
+    base_restaurants =
       case socket.assigns.location do
-        nil -> 
+        nil ->
           case get_current_user_id(socket) do
             nil -> Restaurants.list_restaurants_with_location_data()
             user_id -> Restaurants.list_restaurants_for_user(user_id)
           end
-        address -> 
+
+        address ->
           case Eatfair.GeoUtils.geocode_address(address) do
             {:ok, %{latitude: lat, longitude: lon}} ->
               case get_current_user_id(socket) do
@@ -356,6 +345,7 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
                 user_id -> Restaurants.list_restaurants_for_user(user_id)
               end
               |> filter_by_location(lat, lon)
+
             {:error, :not_found} ->
               case get_current_user_id(socket) do
                 nil -> Restaurants.list_restaurants_with_location_data()
@@ -363,32 +353,34 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
               end
           end
       end
-    
+
     filters_without_cuisine = %{
       delivery_available: socket.assigns.filters.delivery_available,
       currently_open: socket.assigns.filters.currently_open,
-      cuisines: Enum.map(socket.assigns.cuisines, & &1.id)  # All cuisines
+      # All cuisines
+      cuisines: Enum.map(socket.assigns.cuisines, & &1.id)
     }
-    
+
     available_restaurants = filter_by_current_filters(base_restaurants, filters_without_cuisine)
-    
-    cuisine_counts = 
+
+    cuisine_counts =
       socket.assigns.cuisines
       |> Map.new(fn cuisine ->
-        count = available_restaurants
-                |> Enum.count(fn restaurant ->
-                  Enum.any?(restaurant.cuisines, &(&1.id == cuisine.id))
-                end)
+        count =
+          available_restaurants
+          |> Enum.count(fn restaurant ->
+            Enum.any?(restaurant.cuisines, &(&1.id == cuisine.id))
+          end)
+
         {cuisine.id, count}
       end)
-    
-    cuisines_with_counts = 
+
+    cuisines_with_counts =
       socket.assigns.cuisines
       |> Enum.map(fn cuisine -> {cuisine, Map.get(cuisine_counts, cuisine.id, 0)} end)
-    
+
     socket
     |> assign(:cuisine_counts, cuisine_counts)
     |> assign(:cuisines_with_counts, cuisines_with_counts)
   end
-
 end

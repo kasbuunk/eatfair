@@ -2,7 +2,7 @@ defmodule Eatfair.LocationInference do
   @moduledoc """
   Intelligent location inference system that combines multiple data sources
   to provide the best possible location prefill for users.
-  
+
   Data sources in priority order:
   1. Authenticated user's saved address
   2. Previous session data from location searches
@@ -15,7 +15,7 @@ defmodule Eatfair.LocationInference do
 
   @doc """
   Infers the best location for a user based on available data sources.
-  
+
   Returns a map with:
   - address: String address for prefill
   - confidence: :high | :medium | :low
@@ -29,28 +29,28 @@ defmodule Eatfair.LocationInference do
           confidence: :high,
           source: :user_profile
         }
-      
+
       session_address = get_session_address(socket) ->
         %{
           address: session_address,
           confidence: :medium,
           source: :session_data
         }
-      
+
       browser_location = get_browser_location(socket) ->
         %{
           address: browser_location,
           confidence: :medium,
           source: :browser_geolocation
         }
-      
+
       ip_location = get_ip_location(socket) ->
         %{
           address: ip_location,
           confidence: :low,
           source: :ip_geolocation
         }
-      
+
       true ->
         %{
           address: "",
@@ -67,6 +67,7 @@ defmodule Eatfair.LocationInference do
     case socket do
       %{assigns: assigns} ->
         %{socket | assigns: Map.put(assigns, :session_location, address)}
+
       _ ->
         socket
     end
@@ -83,13 +84,14 @@ defmodule Eatfair.LocationInference do
   Formats a user address for display in the location input field.
   """
   def format_address(address) do
-    parts = [
-      address.street_address,
-      address.city,
-      address.postal_code
-    ]
-    |> Enum.filter(&(&1 && String.trim(&1) != ""))
-    
+    parts =
+      [
+        address.street_address,
+        address.city,
+        address.postal_code
+      ]
+      |> Enum.filter(&(&1 && String.trim(&1) != ""))
+
     case parts do
       [] -> ""
       [city] -> city
@@ -112,6 +114,7 @@ defmodule Eatfair.LocationInference do
     case socket do
       %{assigns: assigns} ->
         %{socket | assigns: Map.put(assigns, :geolocation_requested, true)}
+
       _ ->
         socket
     end
@@ -124,7 +127,7 @@ defmodule Eatfair.LocationInference do
       %{user: %{id: user_id}} ->
         addresses = Accounts.list_user_addresses(user_id)
         Enum.find(addresses, & &1.is_default) || List.first(addresses)
-      
+
       _ ->
         nil
     end
@@ -150,7 +153,8 @@ defmodule Eatfair.LocationInference do
           nil -> get_default_location_by_language(socket)
           location -> location
         end
-      _ -> 
+
+      _ ->
         get_default_location_by_language(socket)
     end
   end

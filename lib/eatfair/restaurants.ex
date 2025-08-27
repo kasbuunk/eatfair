@@ -456,13 +456,13 @@ defmodule Eatfair.Restaurants do
     prep_time + delivery_time + buffer_time
   end
 
-# Populates rating data (average_rating and review_count) for a list of restaurants.
+  # Populates rating data (average_rating and review_count) for a list of restaurants.
   # Only includes ratings for restaurants that have at least one review.
   defp populate_rating_data(restaurants) when is_list(restaurants) do
     restaurant_ids = Enum.map(restaurants, & &1.id)
 
     # Get rating data for all restaurants in one query
-    rating_data = 
+    rating_data =
       from(r in Eatfair.Reviews.Review,
         where: r.restaurant_id in ^restaurant_ids,
         group_by: r.restaurant_id,
@@ -479,6 +479,7 @@ defmodule Eatfair.Restaurants do
         nil ->
           # No reviews, set nil values
           Map.merge(restaurant, %{average_rating: nil, review_count: 0})
+
         {avg_rating, review_count} ->
           # Has reviews, include the calculated average
           Map.merge(restaurant, %{

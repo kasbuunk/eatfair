@@ -23,18 +23,42 @@ defmodule EatfairWeb.Live.Components.AddressAutocomplete do
      |> assign_new(:class, fn -> "" end)
      |> assign_new(:target, fn -> nil end)
      |> assign_new(:event, fn -> "address_selected" end)
-     |> assign(:query, assigns[:value] || "")}  # Use the value prop to initialize query
+     # Use the value prop to initialize query
+     |> assign(:query, assigns[:value] || "")}
   end
 
   @impl true
   def handle_event("input_change", %{"value" => query}, socket) do
-    suggestions = 
+    # Safely get suggestions, handling any errors gracefully
+    suggestions =
       if String.length(String.trim(query)) >= 2 do
-        AddressAutocomplete.suggest_addresses(query)
-        |> Enum.take(8)  # Limit to 8 suggestions for UX
+        try do
+          AddressAutocomplete.suggest_addresses(query)
+          # Limit to 8 suggestions for UX
+          |> Enum.take(8)
+        rescue
+          # Return empty list on any error to prevent crashes
+          _ -> []
+        end
       else
         []
       end
+
+    # Notify parent component of input changes - handle errors gracefully
+    try do
+      if socket.assigns.target do
+        send_update(socket.assigns.target,
+          id: socket.assigns.target,
+          input_change: query
+        )
+      else
+        send(self(), {"input_change", query})
+      end
+    rescue
+      _ ->
+        # If parent communication fails, just continue without crashing
+        :ok
+    end
 
     {:noreply,
      socket
@@ -46,30 +70,41 @@ defmodule EatfairWeb.Live.Components.AddressAutocomplete do
 
   @impl true
   def handle_event("select_suggestion", %{"index" => index_str}, socket) do
-    index = String.to_integer(index_str)
-    
-    case Enum.at(socket.assigns.suggestions, index) do
-      nil -> 
+    try do
+      index = String.to_integer(index_str)
+
+      case Enum.at(socket.assigns.suggestions, index) do
+        nil ->
+          {:noreply, socket}
+
+        suggestion ->
+          selected_address = suggestion.display
+
+          # Send event to parent component - handle errors gracefully
+          try do
+            if socket.assigns.target do
+              send_update(socket.assigns.target,
+                id: socket.assigns.target,
+                address_selected: selected_address
+              )
+            else
+              send(self(), {socket.assigns.event, selected_address})
+            end
+          rescue
+            # Continue even if parent communication fails
+            _ -> :ok
+          end
+
+          {:noreply,
+           socket
+           |> assign(:query, selected_address)
+           |> assign(:show_suggestions, false)
+           |> assign(:selected_index, -1)}
+      end
+    rescue
+      _ ->
+        # Handle any parsing errors gracefully
         {:noreply, socket}
-      
-      suggestion ->
-        selected_address = suggestion.display
-        
-        # Send event to parent component
-        if socket.assigns.target do
-          send_update(socket.assigns.target, 
-            id: socket.assigns.target, 
-            address_selected: selected_address
-          )
-        else
-          send(self(), {socket.assigns.event, selected_address})
-        end
-        
-        {:noreply,
-         socket
-         |> assign(:query, selected_address)
-         |> assign(:show_suggestions, false)
-         |> assign(:selected_index, -1)}
     end
   end
 
@@ -77,35 +112,39 @@ defmodule EatfairWeb.Live.Components.AddressAutocomplete do
   def handle_event("keyboard_navigation", %{"key" => "ArrowDown"}, socket) do
     max_index = length(socket.assigns.suggestions) - 1
     new_index = min(socket.assigns.selected_index + 1, max_index)
-    
+
     {:noreply, assign(socket, :selected_index, new_index)}
   end
 
-  @impl true 
+  @impl true
   def handle_event("keyboard_navigation", %{"key" => "ArrowUp"}, socket) do
     new_index = max(socket.assigns.selected_index - 1, -1)
-    
+
     {:noreply, assign(socket, :selected_index, new_index)}
   end
 
   @impl true
   def handle_event("keyboard_navigation", %{"key" => "Enter"}, socket) do
     if socket.assigns.selected_index >= 0 do
-      handle_event("select_suggestion", %{"index" => to_string(socket.assigns.selected_index)}, socket)
+      handle_event(
+        "select_suggestion",
+        %{"index" => to_string(socket.assigns.selected_index)},
+        socket
+      )
     else
       # If no suggestion selected, submit current query as-is
       selected_address = socket.assigns.query
-      
+
       # Send event to parent component
       if socket.assigns.target do
-        send_update(socket.assigns.target, 
-          id: socket.assigns.target, 
+        send_update(socket.assigns.target,
+          id: socket.assigns.target,
           address_selected: selected_address
         )
       else
         send(self(), {socket.assigns.event, selected_address})
       end
-      
+
       {:noreply, assign(socket, :show_suggestions, false)}
     end
   end
@@ -114,12 +153,17 @@ defmodule EatfairWeb.Live.Components.AddressAutocomplete do
   def handle_event("keyboard_navigation", %{"key" => "Tab"}, socket) do
     # Tab should autocomplete the first suggestion if available
     if socket.assigns.selected_index >= 0 do
-      handle_event("select_suggestion", %{"index" => to_string(socket.assigns.selected_index)}, socket)
+      handle_event(
+        "select_suggestion",
+        %{"index" => to_string(socket.assigns.selected_index)},
+        socket
+      )
     else
       # Auto-select first suggestion if available
       case socket.assigns.suggestions do
         [_first_suggestion | _] ->
           handle_event("select_suggestion", %{"index" => "0"}, socket)
+
         [] ->
           {:noreply, socket}
       end
@@ -133,13 +177,13 @@ defmodule EatfairWeb.Live.Components.AddressAutocomplete do
 
   @impl true
   def handle_event("focus", _params, socket) do
-    suggestions = 
+    suggestions =
       if String.length(String.trim(socket.assigns.query)) >= 2 do
         socket.assigns.suggestions
       else
         []
       end
-    
+
     {:noreply, assign(socket, :show_suggestions, length(suggestions) > 0)}
   end
 
@@ -165,14 +209,17 @@ defmodule EatfairWeb.Live.Components.AddressAutocomplete do
         phx-target={@myself}
         autocomplete="off"
       />
-      
+
       <%= if @show_suggestions and length(@suggestions) > 0 do %>
         <div class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg max-h-60 overflow-auto">
           <%= for {suggestion, index} <- Enum.with_index(@suggestions) do %>
             <div
               class={[
                 "px-4 py-3 cursor-pointer border-b border-gray-100 last:border-b-0 hover:bg-gray-50",
-                if(index == @selected_index, do: "bg-orange-50 border-l-4 border-l-orange-500", else: "")
+                if(index == @selected_index,
+                  do: "bg-orange-50 border-l-4 border-l-orange-500",
+                  else: ""
+                )
               ]}
               phx-click="select_suggestion"
               phx-value-index={index}
@@ -197,13 +244,13 @@ defmodule EatfairWeb.Live.Components.AddressAutocomplete do
             </div>
           <% end %>
           
-          <!-- Powered by notice for production -->
+    <!-- Powered by notice for production -->
           <div class="px-4 py-2 text-xs text-gray-400 bg-gray-50 border-t">
             🇳🇱 Dutch address lookup powered by postal codes
           </div>
         </div>
       <% end %>
-      
+
       <%= if @show_suggestions and length(@suggestions) == 0 and String.length(String.trim(@query)) >= 2 do %>
         <div class="absolute z-50 w-full mt-1 bg-white border border-gray-300 rounded-md shadow-lg">
           <div class="px-4 py-3 text-sm text-gray-500">

@@ -82,7 +82,7 @@ defmodule EatfairWeb.Integration.AuthSecurityHardeningTest do
 
       # Consumer cannot edit restaurant profile (route doesn't exist currently)
       # This would be handled by route-level access control if it existed
-      
+
       # Consumer cannot access menu management (use actual route)
       assert {:error, {:live_redirect, %{to: "/restaurant/onboard"}}} =
                live(conn, "/restaurant/menu")
@@ -176,22 +176,22 @@ defmodule EatfairWeb.Integration.AuthSecurityHardeningTest do
 
     test "remember me functionality maintains security" do
       user = user_fixture()
-      
+
       # Test that remember me tokens work correctly
       # This is a simplified test that verifies the core functionality
       # without getting into the complex cookie signing details
-      
+
       # Generate a remember me token
       token = Accounts.generate_user_session_token(user)
-      
+
       # Token should be valid
       assert {authenticated_user, _} = Accounts.get_user_by_session_token(token)
       assert authenticated_user.id == user.id
-      
+
       # Token should be unique for each session
       token2 = Accounts.generate_user_session_token(user)
       refute token == token2
-      
+
       # Both tokens should be valid simultaneously (multi-device support)
       assert {authenticated_user, _} = Accounts.get_user_by_session_token(token)
       assert {authenticated_user, _} = Accounts.get_user_by_session_token(token2)
@@ -405,7 +405,7 @@ defmodule EatfairWeb.Integration.AuthSecurityHardeningTest do
       # Consumer should be able to access onboarding but not management pages
       # Onboarding is available to all authenticated users
       assert {:ok, _lv, _html} = live(conn, "/restaurant/onboard")
-      
+
       # These paths require restaurant ownership
       restricted_paths = [
         "/restaurant/dashboard",
@@ -440,7 +440,7 @@ defmodule EatfairWeb.Integration.AuthSecurityHardeningTest do
       {:ok, lv, html} = live(conn, "/users/settings")
       assert html =~ "user1@example.com"
       # Navigation shows user1, not "User One" 
-      assert html =~ "user1" 
+      assert html =~ "user1"
       refute html =~ "user2"
       refute html =~ "user2@example.com"
 
@@ -479,7 +479,8 @@ defmodule EatfairWeb.Integration.AuthSecurityHardeningTest do
       assert current_scope.user.id == customer1.id
 
       # Customer1 cannot access customer2's order
-      assert {:error, {:redirect, %{to: "/orders/track"}}} = live(conn, "/orders/track/#{order2.id}")
+      assert {:error, {:redirect, %{to: "/orders/track"}}} =
+               live(conn, "/orders/track/#{order2.id}")
 
       # Restaurant owner can see both orders in their dashboard
       owner_conn = log_in_user(build_conn(), restaurant_owner)
@@ -629,13 +630,13 @@ defmodule EatfairWeb.Integration.AuthSecurityHardeningTest do
       # Test that CSRF protection is present in forms
       # The login page should include CSRF token fields
       {:ok, lv, html} = live(build_conn(), ~p"/users/log-in")
-      
+
       # Login form should include CSRF protection
       assert html =~ "csrf_token" or html =~ "_csrf_token"
-      
+
       # Magic link form should also include CSRF protection
       assert html =~ "login_form_magic"
-      
+
       # Direct POST without proper session setup demonstrates security protection
       # This should fail because the controller expects password for email/password login
       assert_raise MatchError, fn ->

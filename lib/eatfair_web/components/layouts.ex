@@ -37,7 +37,7 @@ defmodule EatfairWeb.Layouts do
     ~H"""
     <div class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
       <EatfairWeb.UserNavigation.user_nav current_scope={@current_scope} />
-      
+
       <main>
         {render_slot(@inner_block)}
       </main>
@@ -89,5 +89,4 @@ defmodule EatfairWeb.Layouts do
     </div>
     """
   end
-
 end

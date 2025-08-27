@@ -366,6 +366,26 @@ defmodule EatfairWeb.CoreComponents do
   end
 
   @doc """
+  Renders a floating feedback widget for user feedback collection.
+
+  ## Examples
+
+      <.feedback_widget id="main-feedback" current_scope={@current_scope} />
+  """
+  attr :id, :string, required: true
+  attr :current_scope, :any, required: true
+
+  def feedback_widget(assigns) do
+    ~H"""
+    <.live_component
+      module={EatfairWeb.FeedbackWidgetLive}
+      id={@id}
+      current_scope={@current_scope}
+    />
+    """
+  end
+
+  @doc """
   Renders a data list.
 
   ## Examples
