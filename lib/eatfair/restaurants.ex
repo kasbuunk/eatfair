@@ -12,6 +12,59 @@ defmodule Eatfair.Restaurants do
   alias Eatfair.Restaurants.Meal
 
   @doc """
+  Counts restaurants based on optional filters for admin dashboard metrics.
+
+  ## Options
+
+    * `:active` - Count only open restaurants when true
+    * `:since` - Count restaurants created since given date
+    * `:city` - Count restaurants in specific city
+
+  ## Examples
+
+      iex> count_restaurants()
+      25
+
+      iex> count_restaurants(active: true)
+      20
+
+  """
+  def count_restaurants(opts \\ []) do
+    query =
+      Restaurant
+      |> select([r], count(r.id))
+      |> maybe_filter_restaurant_active(opts[:active])
+      |> maybe_filter_restaurant_since(opts[:since])
+      |> maybe_filter_restaurant_city(opts[:city])
+
+    Repo.one(query)
+  end
+
+  @doc """
+  Counts restaurants by city for geographic distribution analysis.
+  """
+  def count_restaurants_by_city do
+    Restaurant
+    |> where([r], not is_nil(r.city))
+    |> group_by([r], r.city)
+    |> select([r], {r.city, count(r.id)})
+    |> Repo.all()
+    |> Enum.into(%{})
+  end
+
+  defp maybe_filter_restaurant_active(query, true), do: where(query, [r], r.is_open == true)
+  defp maybe_filter_restaurant_active(query, _), do: query
+
+  defp maybe_filter_restaurant_since(query, nil), do: query
+  defp maybe_filter_restaurant_since(query, date) do
+    {:ok, datetime} = DateTime.new(date, ~T[00:00:00], "Etc/UTC")
+    where(query, [r], r.inserted_at >= ^datetime)
+  end
+
+  defp maybe_filter_restaurant_city(query, nil), do: query
+  defp maybe_filter_restaurant_city(query, city), do: where(query, [r], r.city == ^city)
+
+  @doc """
   Returns the list of restaurants.
 
   ## Examples

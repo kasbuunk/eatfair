@@ -11,6 +11,143 @@ defmodule Eatfair.Orders do
   alias Eatfair.Orders.Payment
 
   @doc """
+  Counts orders based on optional filters for admin dashboard metrics.
+
+  ## Options
+
+    * `:status` - Count orders with specific status (can be atom or list of atoms)
+    * `:date` - Count orders for specific date
+    * `:since` - Count orders created since given date
+    * `:customer` - Count orders for specific customer
+    * `:restaurant` - Count orders for specific restaurant
+
+  ## Examples
+
+      iex> count_orders()
+      150
+
+      iex> count_orders(status: [:pending, :confirmed])
+      25
+
+      iex> count_orders(date: Date.utc_today())
+      12
+
+  """
+  def count_orders(opts \\ []) do
+    query =
+      Order
+      |> select([o], count(o.id))
+      |> maybe_filter_order_status(opts[:status])
+      |> maybe_filter_order_date(opts[:date])
+      |> maybe_filter_order_since(opts[:since])
+      |> maybe_filter_order_customer(opts[:customer])
+      |> maybe_filter_order_restaurant(opts[:restaurant])
+
+    Repo.one(query)
+  end
+
+  @doc """
+  Counts payments based on optional filters for admin dashboard metrics.
+
+  ## Options
+
+    * `:status` - Count payments with specific status (can be atom or list of atoms)
+    * `:since` - Count payments created since given date
+
+  ## Examples
+
+      iex> count_payments(status: [:pending, :processing])
+      8
+
+  """
+  def count_payments(opts \\ []) do
+    query =
+      Payment
+      |> select([p], count(p.id))
+      |> maybe_filter_payment_status(opts[:status])
+      |> maybe_filter_payment_since(opts[:since])
+
+    Repo.one(query)
+  end
+
+  @doc """
+  Calculates total revenue based on optional filters.
+
+  ## Options
+
+    * `:date` - Revenue for specific date
+    * `:since` - Revenue since given date
+    * `:all_time` - Total revenue (ignores other filters)
+    * `:status` - Only count orders with specific status (defaults to delivered)
+
+  ## Examples
+
+      iex> total_revenue(date: Date.utc_today())
+      #Decimal<450.75>
+
+      iex> total_revenue(all_time: true)
+      #Decimal<125000.00>
+
+  """
+  def total_revenue(opts \\ []) do
+    query =
+      Order
+      |> select([o], coalesce(sum(o.total_price), 0))
+      |> maybe_filter_order_date(opts[:date])
+      |> maybe_filter_order_since(unless(opts[:all_time], do: opts[:since]))
+      |> maybe_filter_order_status(opts[:status] || :delivered)
+
+    Repo.one(query) || Decimal.new(0)
+  end
+
+  # Private filter functions
+  
+  defp maybe_filter_order_status(query, nil), do: query
+  defp maybe_filter_order_status(query, status) when is_atom(status) do
+    status_str = to_string(status)
+    where(query, [o], o.status == ^status_str)
+  end
+  defp maybe_filter_order_status(query, statuses) when is_list(statuses) do
+    status_strs = Enum.map(statuses, &to_string/1)
+    where(query, [o], o.status in ^status_strs)
+  end
+
+  defp maybe_filter_order_date(query, nil), do: query
+  defp maybe_filter_order_date(query, date) do
+    {:ok, start_datetime} = DateTime.new(date, ~T[00:00:00], "Etc/UTC")
+    {:ok, end_datetime} = DateTime.new(date, ~T[23:59:59], "Etc/UTC")
+    where(query, [o], o.inserted_at >= ^start_datetime and o.inserted_at <= ^end_datetime)
+  end
+
+  defp maybe_filter_order_since(query, nil), do: query
+  defp maybe_filter_order_since(query, date) do
+    {:ok, datetime} = DateTime.new(date, ~T[00:00:00], "Etc/UTC")
+    where(query, [o], o.inserted_at >= ^datetime)
+  end
+
+  defp maybe_filter_order_customer(query, nil), do: query
+  defp maybe_filter_order_customer(query, customer_id), do: where(query, [o], o.customer_id == ^customer_id)
+
+  defp maybe_filter_order_restaurant(query, nil), do: query
+  defp maybe_filter_order_restaurant(query, restaurant_id), do: where(query, [o], o.restaurant_id == ^restaurant_id)
+
+  defp maybe_filter_payment_status(query, nil), do: query
+  defp maybe_filter_payment_status(query, status) when is_atom(status) do
+    status_str = to_string(status)
+    where(query, [p], p.status == ^status_str)
+  end
+  defp maybe_filter_payment_status(query, statuses) when is_list(statuses) do
+    status_strs = Enum.map(statuses, &to_string/1)
+    where(query, [p], p.status in ^status_strs)
+  end
+
+  defp maybe_filter_payment_since(query, nil), do: query
+  defp maybe_filter_payment_since(query, date) do
+    {:ok, datetime} = DateTime.new(date, ~T[00:00:00], "Etc/UTC")
+    where(query, [p], p.inserted_at >= ^datetime)
+  end
+
+  @doc """
   Returns the list of orders for a customer.
   """
   def list_customer_orders(customer_id) do

@@ -55,6 +55,33 @@ defmodule Eatfair.Feedback do
   end
 
   @doc """
+  Counts user feedback based on optional filters.
+
+  ## Options
+
+    * `:status` - Count feedback with specific status
+    * `:feedback_type` - Count feedback of specific type
+    * `:since` - Count feedback created since given date
+
+  ## Examples
+
+      iex> count_feedback()
+      42
+
+      iex> count_feedback(status: "new")
+      12
+
+  """
+  def count_feedback(opts \\ []) do
+    UserFeedback
+    |> select([f], count(f.id))
+    |> filter_by_status(opts[:status])
+    |> filter_by_feedback_type(opts[:feedback_type])
+    |> maybe_filter_feedback_since(opts[:since])
+    |> Repo.one()
+  end
+
+  @doc """
   Lists all user feedback with optional filtering and pagination.
 
   ## Examples
@@ -228,5 +255,11 @@ defmodule Eatfair.Feedback do
 
   defp maybe_limit(query, limit) when is_integer(limit) do
     limit(query, ^limit)
+  end
+
+  defp maybe_filter_feedback_since(query, nil), do: query
+  defp maybe_filter_feedback_since(query, date) do
+    {:ok, datetime} = DateTime.new(date, ~T[00:00:00], "Etc/UTC")
+    where(query, [f], f.inserted_at >= ^datetime)
   end
 end

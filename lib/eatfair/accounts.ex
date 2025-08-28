@@ -11,6 +11,50 @@ defmodule Eatfair.Accounts do
   ## Database getters
 
   @doc """
+  Counts users based on optional filters for admin dashboard metrics.
+
+  ## Options
+
+    * `:active` - Count only confirmed users when true
+    * `:since` - Count users created since given date
+    * `:role` - Count users with specific role
+
+  ## Examples
+
+      iex> count_users()
+      42
+
+      iex> count_users(active: true)
+      38
+
+      iex> count_users(since: Date.utc_today())
+      5
+
+  """
+  def count_users(opts \\ []) do
+    query =
+      User
+      |> select([u], count(u.id))
+      |> maybe_filter_active(opts[:active])
+      |> maybe_filter_since(opts[:since])
+      |> maybe_filter_role(opts[:role])
+
+    Repo.one(query)
+  end
+
+  defp maybe_filter_active(query, true), do: where(query, [u], not is_nil(u.confirmed_at))
+  defp maybe_filter_active(query, _), do: query
+
+  defp maybe_filter_since(query, nil), do: query
+  defp maybe_filter_since(query, date) do
+    {:ok, datetime} = DateTime.new(date, ~T[00:00:00], "Etc/UTC")
+    where(query, [u], u.inserted_at >= ^datetime)
+  end
+
+  defp maybe_filter_role(query, nil), do: query
+  defp maybe_filter_role(query, role), do: where(query, [u], u.role == ^role)
+
+  @doc """
   Gets a user by email.
 
   ## Examples

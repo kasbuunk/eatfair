@@ -89,6 +89,9 @@ defmodule EatfairWeb.Router do
     # Admin routes - requires admin role
     live_session :require_admin,
       on_mount: [{EatfairWeb.UserAuth, :require_admin}] do
+      live "/admin", Admin.DashboardLive, :index
+      live "/admin/dashboard", Admin.DashboardLive, :index
+      live "/admin/users", Admin.UsersLive, :index
       live "/admin/feedback", AdminFeedbackLive, :index
     end
 
