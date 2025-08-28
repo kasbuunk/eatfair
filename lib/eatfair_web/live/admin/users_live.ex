@@ -12,7 +12,7 @@ defmodule EatfairWeb.Admin.UsersLive do
   """
 
   use EatfairWeb, :live_view
-  
+
   import Ecto.Query
   alias Eatfair.Accounts
   alias Eatfair.Accounts.User
@@ -52,16 +52,15 @@ defmodule EatfairWeb.Admin.UsersLive do
               <li>User Management</li>
             </ul>
           </div>
-          
+
           <div class="flex gap-2">
             <.link navigate={~p"/admin"} class="btn btn-ghost btn-sm">
-              <.icon name="hero-arrow-left" class="size-4" />
-              Back to Dashboard
+              <.icon name="hero-arrow-left" class="size-4" /> Back to Dashboard
             </.link>
           </div>
         </div>
-
-        <!-- User Statistics -->
+        
+    <!-- User Statistics -->
         <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <div class="stat bg-base-100 rounded-lg shadow">
             <div class="stat-figure text-primary">
@@ -107,12 +106,12 @@ defmodule EatfairWeb.Admin.UsersLive do
             </div>
           </div>
         </div>
-
-        <!-- Search and Filter Controls -->
+        
+    <!-- Search and Filter Controls -->
         <div class="card bg-base-100 shadow-lg mb-6">
           <div class="card-body">
             <h3 class="card-title mb-4">Search & Filter Users</h3>
-            
+
             <form phx-change="filter_users" phx-submit="filter_users">
               <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <!-- Search Input -->
@@ -128,8 +127,8 @@ defmodule EatfairWeb.Admin.UsersLive do
                     value={@search_params.search}
                   />
                 </div>
-
-                <!-- Role Filter -->
+                
+    <!-- Role Filter -->
                 <div class="form-control">
                   <label class="label">
                     <span class="label-text">Role</span>
@@ -137,25 +136,31 @@ defmodule EatfairWeb.Admin.UsersLive do
                   <select name="role" class="select select-bordered">
                     <option value="">All Roles</option>
                     <option value="customer" selected={@filters.role == "customer"}>Customer</option>
-                    <option value="restaurant_owner" selected={@filters.role == "restaurant_owner"}>Restaurant Owner</option>
+                    <option value="restaurant_owner" selected={@filters.role == "restaurant_owner"}>
+                      Restaurant Owner
+                    </option>
                     <option value="courier" selected={@filters.role == "courier"}>Courier</option>
                     <option value="admin" selected={@filters.role == "admin"}>Admin</option>
                   </select>
                 </div>
-
-                <!-- Verification Status -->
+                
+    <!-- Verification Status -->
                 <div class="form-control">
                   <label class="label">
                     <span class="label-text">Status</span>
                   </label>
                   <select name="verification_status" class="select select-bordered">
                     <option value="">All Status</option>
-                    <option value="verified" selected={@filters.verification_status == "verified"}>Verified</option>
-                    <option value="unverified" selected={@filters.verification_status == "unverified"}>Unverified</option>
+                    <option value="verified" selected={@filters.verification_status == "verified"}>
+                      Verified
+                    </option>
+                    <option value="unverified" selected={@filters.verification_status == "unverified"}>
+                      Unverified
+                    </option>
                   </select>
                 </div>
-
-                <!-- Registration Date -->
+                
+    <!-- Registration Date -->
                 <div class="form-control">
                   <label class="label">
                     <span class="label-text">Registered</span>
@@ -164,7 +169,9 @@ defmodule EatfairWeb.Admin.UsersLive do
                     <option value="">All Time</option>
                     <option value="today" selected={@filters.registered == "today"}>Today</option>
                     <option value="week" selected={@filters.registered == "week"}>This Week</option>
-                    <option value="month" selected={@filters.registered == "month"}>This Month</option>
+                    <option value="month" selected={@filters.registered == "month"}>
+                      This Month
+                    </option>
                   </select>
                 </div>
               </div>
@@ -173,7 +180,7 @@ defmodule EatfairWeb.Admin.UsersLive do
                 <div class="text-sm text-base-content/70">
                   Showing {length(@users)} of {@user_stats.total_users} users
                 </div>
-                
+
                 <div class="flex gap-2">
                   <button type="button" phx-click="clear_filters" class="btn btn-ghost btn-sm">
                     Clear Filters
@@ -186,20 +193,22 @@ defmodule EatfairWeb.Admin.UsersLive do
             </form>
           </div>
         </div>
-
-        <!-- Users List -->
+        
+    <!-- Users List -->
         <div class="card bg-base-100 shadow-lg">
           <div class="card-body">
             <div class="flex items-center justify-between mb-4">
               <h3 class="card-title">User Accounts</h3>
-              
+
               <div class="flex gap-2">
                 <div class="dropdown dropdown-end">
                   <div tabindex="0" role="button" class="btn btn-sm btn-outline">
-                    <.icon name="hero-ellipsis-vertical" class="size-4" />
-                    Bulk Actions
+                    <.icon name="hero-ellipsis-vertical" class="size-4" /> Bulk Actions
                   </div>
-                  <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
+                  <ul
+                    tabindex="0"
+                    class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
+                  >
                     <li><a phx-click="bulk_verify">Verify Selected</a></li>
                     <li><a phx-click="bulk_export">Export Data</a></li>
                     <li><a phx-click="bulk_email">Send Email</a></li>
@@ -213,7 +222,11 @@ defmodule EatfairWeb.Admin.UsersLive do
                 <thead>
                   <tr>
                     <th>
-                      <input type="checkbox" class="checkbox checkbox-sm" phx-click="toggle_all_users" />
+                      <input
+                        type="checkbox"
+                        class="checkbox checkbox-sm"
+                        phx-click="toggle_all_users"
+                      />
                     </th>
                     <th>User</th>
                     <th>Role</th>
@@ -226,9 +239,9 @@ defmodule EatfairWeb.Admin.UsersLive do
                 <tbody>
                   <tr :for={user <- @users} class="hover">
                     <td>
-                      <input 
-                        type="checkbox" 
-                        class="checkbox checkbox-sm" 
+                      <input
+                        type="checkbox"
+                        class="checkbox checkbox-sm"
                         phx-click="toggle_user_selection"
                         phx-value-user-id={user.id}
                       />
@@ -243,7 +256,9 @@ defmodule EatfairWeb.Admin.UsersLive do
                         <div>
                           <div class="font-bold">{user.name}</div>
                           <div class="text-sm text-base-content/60">{user.email}</div>
-                          <div :if={user.phone_number} class="text-xs text-base-content/50">{user.phone_number}</div>
+                          <div :if={user.phone_number} class="text-xs text-base-content/50">
+                            {user.phone_number}
+                          </div>
                         </div>
                       </div>
                     </td>
@@ -251,7 +266,7 @@ defmodule EatfairWeb.Admin.UsersLive do
                       <span class={[
                         "badge badge-sm",
                         user.role == "admin" && "badge-error",
-                        user.role == "restaurant_owner" && "badge-secondary", 
+                        user.role == "restaurant_owner" && "badge-secondary",
                         user.role == "courier" && "badge-accent",
                         user.role == "customer" && "badge-primary"
                       ]}>
@@ -259,14 +274,20 @@ defmodule EatfairWeb.Admin.UsersLive do
                       </span>
                     </td>
                     <td>
-                      <span :if={user.confirmed_at} class="badge badge-success badge-sm">Verified</span>
-                      <span :if={!user.confirmed_at} class="badge badge-warning badge-sm">Unverified</span>
+                      <span :if={user.confirmed_at} class="badge badge-success badge-sm">
+                        Verified
+                      </span>
+                      <span :if={!user.confirmed_at} class="badge badge-warning badge-sm">
+                        Unverified
+                      </span>
                     </td>
                     <td class="text-sm">
                       {Calendar.strftime(user.inserted_at, "%Y-%m-%d")}
                     </td>
                     <td class="text-sm text-base-content/60">
-                      <span :if={user.confirmed_at}>{Calendar.strftime(user.confirmed_at, "%Y-%m-%d")}</span>
+                      <span :if={user.confirmed_at}>
+                        {Calendar.strftime(user.confirmed_at, "%Y-%m-%d")}
+                      </span>
                       <span :if={!user.confirmed_at}>Never</span>
                     </td>
                     <td>
@@ -274,7 +295,10 @@ defmodule EatfairWeb.Admin.UsersLive do
                         <div tabindex="0" role="button" class="btn btn-ghost btn-xs">
                           <.icon name="hero-ellipsis-horizontal" class="size-4" />
                         </div>
-                        <ul tabindex="0" class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow">
+                        <ul
+                          tabindex="0"
+                          class="dropdown-content menu bg-base-100 rounded-box z-[1] w-52 p-2 shadow"
+                        >
                           <li>
                             <button phx-click="view_user_details" phx-value-user-id={user.id}>
                               <.icon name="hero-eye" class="size-4" /> View Details
@@ -315,13 +339,13 @@ defmodule EatfairWeb.Admin.UsersLive do
                 </p>
               </div>
             </div>
-
-            <!-- Pagination -->
+            
+    <!-- Pagination -->
             <div class="flex justify-between items-center mt-6">
               <div class="text-sm text-base-content/60">
                 Page 1 of 1
               </div>
-              
+
               <div class="join">
                 <button class="join-item btn btn-sm btn-disabled">Previous</button>
                 <button class="join-item btn btn-sm btn-active">1</button>
@@ -336,7 +360,7 @@ defmodule EatfairWeb.Admin.UsersLive do
   end
 
   # Event handlers
-  
+
   @impl true
   def handle_event("filter_users", params, socket) do
     socket =
@@ -369,7 +393,7 @@ defmodule EatfairWeb.Admin.UsersLive do
     {:noreply, socket}
   end
 
-  def handle_event("verify_user", %{"user-id" => user_id}, socket) do
+  def handle_event("verify_user", %{"user-id" => _user_id}, socket) do
     # In full implementation, this would actually verify the user
     socket = put_flash(socket, :success, "User verified successfully")
     {:noreply, assign_users(socket)}
@@ -409,6 +433,7 @@ defmodule EatfairWeb.Admin.UsersLive do
       verification_status: nil,
       registered: nil
     }
+
     assign(socket, :filters, filters)
   end
 
@@ -416,6 +441,7 @@ defmodule EatfairWeb.Admin.UsersLive do
     search_params = %{
       search: ""
     }
+
     assign(socket, :search_params, search_params)
   end
 
@@ -425,7 +451,7 @@ defmodule EatfairWeb.Admin.UsersLive do
       verification_status: params["verification_status"],
       registered: params["registered"]
     }
-    
+
     search_params = %{
       search: params["search"] || ""
     }
@@ -442,7 +468,7 @@ defmodule EatfairWeb.Admin.UsersLive do
       verification_status: params["verification_status"],
       registered: params["registered"]
     }
-    
+
     search_params = %{
       search: params["search"] || ""
     }
@@ -465,22 +491,22 @@ defmodule EatfairWeb.Admin.UsersLive do
       customers: Accounts.count_users(role: "customer"),
       unverified_users: Accounts.count_users() - Accounts.count_users(active: true)
     }
-    
+
     assign(socket, :user_stats, stats)
   end
 
   defp list_users_with_filters(filters, search_params) do
     # Start with base query
     query = from(u in User, preload: [], order_by: [desc: u.inserted_at])
-    
+
     # Apply filters
-    query = 
+    query =
       query
       |> maybe_filter_by_role(filters.role)
       |> maybe_filter_by_verification(filters.verification_status)
       |> maybe_filter_by_registration(filters.registered)
       |> maybe_filter_by_search(search_params.search)
-    
+
     # Limit results for now
     query
     |> limit(50)
@@ -488,29 +514,37 @@ defmodule EatfairWeb.Admin.UsersLive do
   end
 
   defp maybe_filter_by_role(query, role) when role in [nil, ""], do: query
+
   defp maybe_filter_by_role(query, role) do
     from(u in query, where: u.role == ^role)
   end
 
-  defp maybe_filter_by_verification(query, verification_status) when verification_status in [nil, ""], do: query
+  defp maybe_filter_by_verification(query, verification_status)
+       when verification_status in [nil, ""],
+       do: query
+
   defp maybe_filter_by_verification(query, "verified") do
     from(u in query, where: not is_nil(u.confirmed_at))
   end
+
   defp maybe_filter_by_verification(query, "unverified") do
     from(u in query, where: is_nil(u.confirmed_at))
   end
 
   defp maybe_filter_by_registration(query, registered) when registered in [nil, ""], do: query
+
   defp maybe_filter_by_registration(query, "today") do
     today = Date.utc_today()
     {:ok, start_datetime} = DateTime.new(today, ~T[00:00:00], "Etc/UTC")
     from(u in query, where: u.inserted_at >= ^start_datetime)
   end
+
   defp maybe_filter_by_registration(query, "week") do
     week_ago = Date.utc_today() |> Date.add(-7)
     {:ok, start_datetime} = DateTime.new(week_ago, ~T[00:00:00], "Etc/UTC")
     from(u in query, where: u.inserted_at >= ^start_datetime)
   end
+
   defp maybe_filter_by_registration(query, "month") do
     month_ago = Date.utc_today() |> Date.add(-30)
     {:ok, start_datetime} = DateTime.new(month_ago, ~T[00:00:00], "Etc/UTC")
@@ -518,11 +552,14 @@ defmodule EatfairWeb.Admin.UsersLive do
   end
 
   defp maybe_filter_by_search(query, search_term) when search_term in [nil, ""], do: query
+
   defp maybe_filter_by_search(query, search_term) do
     search_pattern = "%#{String.downcase(search_term)}%"
-    from(u in query, 
-      where: like(fragment("lower(?)", u.email), ^search_pattern) or
-             like(fragment("lower(?)", u.name), ^search_pattern)
+
+    from(u in query,
+      where:
+        like(fragment("lower(?)", u.email), ^search_pattern) or
+          like(fragment("lower(?)", u.name), ^search_pattern)
     )
   end
 end

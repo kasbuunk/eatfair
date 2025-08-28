@@ -9,7 +9,7 @@ defmodule Eatfair.Application do
   def start(_type, _args) do
     # Load .env file at application startup for development and test environments
     load_dotenv()
-    
+
     children = [
       EatfairWeb.Telemetry,
       Eatfair.Repo,
@@ -41,14 +41,14 @@ defmodule Eatfair.Application do
     # By default, sqlite migrations are run when using a release
     System.get_env("RELEASE_NAME") == nil
   end
-  
+
   defp load_dotenv do
     # Load .env file for development and test environments
     # Skip in production to avoid overriding system environment variables
     case Mix.env() do
       env when env in [:dev, :test] ->
         env_file = Path.join(File.cwd!(), ".env")
-        
+
         if File.exists?(env_file) do
           case Dotenvy.source(env_file) do
             {:ok, env_vars} ->
@@ -56,14 +56,14 @@ defmodule Eatfair.Application do
               Enum.each(env_vars, fn {key, value} ->
                 System.put_env(key, value)
               end)
-              
+
               # Log successful loading (only in development)
               if Mix.env() == :dev do
                 require Logger
                 var_count = Enum.count(env_vars)
                 Logger.info("Loaded #{var_count} environment variables from .env file")
               end
-              
+
             {:error, reason} ->
               # Log error but don't crash the application
               require Logger
@@ -76,7 +76,7 @@ defmodule Eatfair.Application do
             Logger.debug("No .env file found, using system environment variables")
           end
         end
-        
+
       :prod ->
         # In production, rely on system environment variables
         # Don't load .env files to avoid security issues

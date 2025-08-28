@@ -11,9 +11,9 @@ defmodule EatfairWeb.Admin.DashboardLive do
   """
 
   use EatfairWeb, :live_view
-  
+
   alias Eatfair.Accounts
-  alias Eatfair.Restaurants  
+  alias Eatfair.Restaurants
   alias Eatfair.Orders
   alias Eatfair.Feedback
 
@@ -47,8 +47,8 @@ defmodule EatfairWeb.Admin.DashboardLive do
             Platform oversight and community support tools
           </:subtitle>
         </.header>
-
-        <!-- Platform Health Overview -->
+        
+    <!-- Platform Health Overview -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
           <div class="stat bg-base-100 rounded-lg shadow">
             <div class="stat-figure text-primary">
@@ -94,15 +94,14 @@ defmodule EatfairWeb.Admin.DashboardLive do
             </div>
           </div>
         </div>
-
-        <!-- Community Impact Metrics -->
+        
+    <!-- Community Impact Metrics -->
         <div class="card bg-base-100 shadow-lg mb-8">
           <div class="card-body">
             <h2 class="card-title mb-4">
-              <.icon name="hero-heart" class="size-6 text-red-500" />
-              Community Impact
+              <.icon name="hero-heart" class="size-6 text-red-500" /> Community Impact
             </h2>
-            
+
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
               <div class="text-center">
                 <div class="text-3xl font-bold text-primary mb-2">
@@ -112,7 +111,7 @@ defmodule EatfairWeb.Admin.DashboardLive do
                   Revenue kept by restaurants (100%)
                 </div>
               </div>
-              
+
               <div class="text-center">
                 <div class="text-3xl font-bold text-secondary mb-2">
                   {@community_metrics.successful_orders}
@@ -121,7 +120,7 @@ defmodule EatfairWeb.Admin.DashboardLive do
                   Meals delivered to community
                 </div>
               </div>
-              
+
               <div class="text-center">
                 <div class="text-3xl font-bold text-accent mb-2">
                   {@community_metrics.restaurant_success_rate}%
@@ -133,11 +132,14 @@ defmodule EatfairWeb.Admin.DashboardLive do
             </div>
           </div>
         </div>
-
-        <!-- Management Tools Grid -->
+        
+    <!-- Management Tools Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
           <!-- User Management -->
-          <.link navigate={~p"/admin/users"} class="card bg-base-100 shadow hover:shadow-lg transition-all">
+          <.link
+            navigate={~p"/admin/users"}
+            class="card bg-base-100 shadow hover:shadow-lg transition-all"
+          >
             <div class="card-body">
               <div class="flex items-center justify-between mb-4">
                 <h3 class="card-title">User Management</h3>
@@ -152,9 +154,9 @@ defmodule EatfairWeb.Admin.DashboardLive do
               </div>
             </div>
           </.link>
-
-          <!-- Restaurant Management -->
-          <.link navigate={~p"/admin/restaurants"} class="card bg-base-100 shadow hover:shadow-lg transition-all">
+          
+    <!-- Restaurant Management -->
+          <div class="card bg-base-100 shadow opacity-50">
             <div class="card-body">
               <div class="flex items-center justify-between mb-4">
                 <h3 class="card-title">Restaurant Oversight</h3>
@@ -165,13 +167,13 @@ defmodule EatfairWeb.Admin.DashboardLive do
               </p>
               <div class="flex justify-between text-sm">
                 <span>Restaurants: {@platform_metrics.total_restaurants}</span>
-                <span class="text-secondary">Manage →</span>
+                <span class="badge badge-ghost">Coming Soon</span>
               </div>
             </div>
-          </.link>
-
-          <!-- Order Management -->
-          <.link navigate={~p"/admin/orders"} class="card bg-base-100 shadow hover:shadow-lg transition-all">
+          </div>
+          
+    <!-- Order Management -->
+          <div class="card bg-base-100 shadow opacity-50">
             <div class="card-body">
               <div class="flex items-center justify-between mb-4">
                 <h3 class="card-title">Order Support</h3>
@@ -182,13 +184,13 @@ defmodule EatfairWeb.Admin.DashboardLive do
               </p>
               <div class="flex justify-between text-sm">
                 <span>Active Orders: {@platform_metrics.active_orders}</span>
-                <span class="text-accent">Manage →</span>
+                <span class="badge badge-ghost">Coming Soon</span>
               </div>
             </div>
-          </.link>
-
-          <!-- Payment Oversight -->
-          <.link navigate={~p"/admin/payments"} class="card bg-base-100 shadow hover:shadow-lg transition-all">
+          </div>
+          
+    <!-- Payment Oversight -->
+          <div class="card bg-base-100 shadow opacity-50">
             <div class="card-body">
               <div class="flex items-center justify-between mb-4">
                 <h3 class="card-title">Payment Oversight</h3>
@@ -199,13 +201,16 @@ defmodule EatfairWeb.Admin.DashboardLive do
               </p>
               <div class="flex justify-between text-sm">
                 <span>Processing: {@platform_metrics.processing_payments}</span>
-                <span class="text-warning">Monitor →</span>
+                <span class="badge badge-ghost">Coming Soon</span>
               </div>
             </div>
-          </.link>
-
-          <!-- Feedback Dashboard -->
-          <.link navigate={~p"/admin/feedback"} class="card bg-base-100 shadow hover:shadow-lg transition-all">
+          </div>
+          
+    <!-- Feedback Dashboard -->
+          <.link
+            navigate={~p"/admin/feedback"}
+            class="card bg-base-100 shadow hover:shadow-lg transition-all"
+          >
             <div class="card-body">
               <div class="flex items-center justify-between mb-4">
                 <h3 class="card-title">User Feedback</h3>
@@ -220,9 +225,9 @@ defmodule EatfairWeb.Admin.DashboardLive do
               </div>
             </div>
           </.link>
-
-          <!-- Analytics Dashboard -->
-          <.link navigate={~p"/admin/analytics"} class="card bg-base-100 shadow hover:shadow-lg transition-all">
+          
+    <!-- Analytics Dashboard -->
+          <div class="card bg-base-100 shadow opacity-50">
             <div class="card-body">
               <div class="flex items-center justify-between mb-4">
                 <h3 class="card-title">Business Intelligence</h3>
@@ -233,20 +238,19 @@ defmodule EatfairWeb.Admin.DashboardLive do
               </p>
               <div class="flex justify-between text-sm">
                 <span>Data Points: {length(@recent_activity)}</span>
-                <span class="text-success">Analyze →</span>
+                <span class="badge badge-ghost">Coming Soon</span>
               </div>
             </div>
-          </.link>
+          </div>
         </div>
-
-        <!-- Recent Activity -->
+        
+    <!-- Recent Activity -->
         <div class="card bg-base-100 shadow-lg">
           <div class="card-body">
             <h2 class="card-title mb-4">
-              <.icon name="hero-clock" class="size-6" />
-              Recent Platform Activity
+              <.icon name="hero-clock" class="size-6" /> Recent Platform Activity
             </h2>
-            
+
             <div class="overflow-x-auto">
               <table class="table table-zebra">
                 <thead>
@@ -341,7 +345,8 @@ defmodule EatfairWeb.Admin.DashboardLive do
       restaurants_by_city: Restaurants.count_restaurants_by_city(),
       orders_today: Orders.count_orders(date: Date.utc_today()),
       revenue_today: Orders.total_revenue(date: Date.utc_today()) |> format_currency(),
-      active_orders: Orders.count_orders(status: [:pending, :confirmed, :preparing, :ready, :out_for_delivery]),
+      active_orders:
+        Orders.count_orders(status: [:pending, :confirmed, :preparing, :ready, :out_for_delivery]),
       processing_payments: Orders.count_payments(status: [:pending, :processing]),
       pending_feedback: Feedback.count_feedback(status: "new")
     }

@@ -76,13 +76,14 @@ IO.puts("👑 Creating admin users...")
 admin_users_data = [
   %{
     name: "Admin User",
-    email: "admin@eatfair.nl", 
-    password: "admin123456789",  # Strong password
+    email: "admin@eatfair.nl",
+    # Strong password
+    password: "admin123456789",
     role: "admin",
     phone_number: "+31-20-555-0001"
   },
   %{
-    name: "Support Manager", 
+    name: "Support Manager",
     email: "support@eatfair.nl",
     password: "support123456789",
     role: "admin",
@@ -91,23 +92,24 @@ admin_users_data = [
   %{
     name: "System Administrator",
     email: "sysadmin@eatfair.nl",
-    password: "sysadmin123456789", 
+    password: "sysadmin123456789",
     role: "admin",
     phone_number: "+31-20-555-0003"
   }
 ]
 
-admin_users = 
+admin_users =
   Enum.map(admin_users_data, fn attrs ->
     %User{}
-    |> User.registration_changeset(attrs) 
+    |> User.registration_changeset(attrs)
     |> Repo.insert!()
     |> User.confirm_changeset()
     |> Repo.update!()
   end)
 
 IO.puts("✅ Created #{length(admin_users)} admin users:")
-Enum.each(admin_users, fn user -> 
+
+Enum.each(admin_users, fn user ->
   IO.puts("   - #{user.email} (#{user.role})")
 end)
 

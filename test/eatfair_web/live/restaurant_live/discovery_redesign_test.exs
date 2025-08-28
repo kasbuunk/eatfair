@@ -87,18 +87,18 @@ defmodule EatfairWeb.RestaurantLive.DiscoveryRedesignTest do
 
       # Should show cuisine section
       assert html =~ "🍽️ Cuisines"
-      
+
       # Should show "All Cuisines" by default with restaurant count
       assert html =~ "All Cuisines"
-      
+
       # Should have dropdown button to toggle cuisine selection
       assert has_element?(lv, "button[phx-click='toggle_cuisine_dropdown']")
-      
+
       # Open the dropdown to access individual cuisines
       lv |> element("button[phx-click='toggle_cuisine_dropdown']") |> render_click()
-      
+
       updated_html = render(lv)
-      
+
       # Now should have individual cuisine checkboxes in the dropdown
       assert has_element?(
                lv,
@@ -145,19 +145,19 @@ defmodule EatfairWeb.RestaurantLive.DiscoveryRedesignTest do
 
       # Initially shows "All Cuisines" count (total restaurants)
       assert html =~ "All Cuisines"
-      
+
       # Open cuisine dropdown
       lv |> element("button[phx-click='toggle_cuisine_dropdown']") |> render_click()
-      
+
       updated_html = render(lv)
-      
+
       # Since our test restaurants don't have cuisines associated, individual cuisine counts should be 0
       assert updated_html =~ cuisines.italian.name
-      
+
       # The dropdown should show cuisines with their individual counts
       # Count will be 0 since test restaurants aren't associated with cuisines
       assert updated_html =~ "0"
-      
+
       # The UI shows disabled state for cuisines with 0 restaurants
       assert updated_html =~ "disabled"
     end
@@ -280,7 +280,7 @@ defmodule EatfairWeb.RestaurantLive.DiscoveryRedesignTest do
 
       # Should show an appropriate error message instead of crashing
       assert html =~ "Could not find location" or html =~ "centraal station amsterdam"
-      
+
       # Verify the LiveView is still responsive by checking basic elements
       assert html =~ "🗺️ Discover Restaurants"
       assert html =~ "Find restaurants"
@@ -289,22 +289,27 @@ defmodule EatfairWeb.RestaurantLive.DiscoveryRedesignTest do
     test "location search handles various geocoding errors gracefully", %{conn: conn} do
       # Test different error cases that might cause geocoding to return {:error, :invalid_input}
       test_addresses = [
-        "centraal station amsterdam",  # The specific case from the logs
-        "    ",                        # Whitespace only
-        "!!!",                         # Special characters only
-        "123 abc def ghi",            # Pattern that might confuse postal code regex
-        "empty after normalization"    # Address that becomes empty after processing
+        # The specific case from the logs
+        "centraal station amsterdam",
+        # Whitespace only
+        "    ",
+        # Special characters only
+        "!!!",
+        # Pattern that might confuse postal code regex
+        "123 abc def ghi",
+        # Address that becomes empty after processing
+        "empty after normalization"
       ]
-      
+
       for address <- test_addresses do
         {:ok, lv, _html} = live(conn, "/restaurants?location=#{URI.encode(address)}")
-        
+
         # LiveView should not crash for any of these addresses
         html = render(lv)
-        
+
         # Should show either error message or the address itself
         assert html =~ "Could not find location" or html =~ address
-        
+
         # Basic page elements should still be present
         assert html =~ "🗺️ Discover Restaurants"
       end

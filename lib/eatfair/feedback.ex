@@ -258,6 +258,7 @@ defmodule Eatfair.Feedback do
   end
 
   defp maybe_filter_feedback_since(query, nil), do: query
+
   defp maybe_filter_feedback_since(query, date) do
     {:ok, datetime} = DateTime.new(date, ~T[00:00:00], "Etc/UTC")
     where(query, [f], f.inserted_at >= ^datetime)

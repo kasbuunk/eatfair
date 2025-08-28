@@ -121,7 +121,7 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
         {:noreply,
          socket
          |> put_flash(:error, "Could not find location: #{address}")}
-         
+
       {:error, :invalid_input} ->
         {:noreply,
          socket
@@ -131,10 +131,12 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
 
   @impl true
   def handle_event("view_restaurant", %{"id" => restaurant_id}, socket) do
-    url = case socket.assigns.location do
-      nil -> ~p"/restaurants/#{restaurant_id}"
-      location -> ~p"/restaurants/#{restaurant_id}?location=#{location}"
-    end
+    url =
+      case socket.assigns.location do
+        nil -> ~p"/restaurants/#{restaurant_id}"
+        location -> ~p"/restaurants/#{restaurant_id}?location=#{location}"
+      end
+
     {:noreply, push_navigate(socket, to: url)}
   end
 
@@ -215,7 +217,7 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
 
             {:error, :not_found} ->
               all_restaurants
-              
+
             {:error, :invalid_input} ->
               all_restaurants
           end
@@ -223,9 +225,10 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
 
     # Apply search filter to name-based filtering
     search_filtered_restaurants = filter_by_search_query(base_restaurants, query)
-    
+
     # Apply all current filters on top of search results
-    filtered_restaurants = filter_by_current_filters(search_filtered_restaurants, socket.assigns.filters)
+    filtered_restaurants =
+      filter_by_current_filters(search_filtered_restaurants, socket.assigns.filters)
 
     socket
     |> assign(:restaurants, filtered_restaurants)
@@ -269,11 +272,14 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
         case length(filtered_restaurants) do
           0 ->
             socket
-            |> put_flash(:info, "No restaurants found that deliver to #{address}. Showing all restaurants.")
+            |> put_flash(
+              :info,
+              "No restaurants found that deliver to #{address}. Showing all restaurants."
+            )
             # Keep the location for user reference but show all restaurants
             |> load_restaurants()
             |> calculate_cuisine_counts()
-            
+
           count ->
             socket
             |> put_flash(:info, "Found #{count} restaurants delivering to #{address}")
@@ -282,7 +288,7 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
       {:error, :not_found} ->
         socket
         |> put_flash(:error, "Could not find location: #{address}")
-        
+
       {:error, :invalid_input} ->
         socket
         |> put_flash(:error, "Invalid address format: #{address}")
@@ -309,7 +315,7 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
 
             {:error, :not_found} ->
               all_restaurants
-              
+
             {:error, :invalid_input} ->
               all_restaurants
           end
@@ -388,6 +394,7 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
 
   defp filter_by_search_query(restaurants, query) do
     search_query = String.downcase(query)
+
     restaurants
     |> Enum.filter(fn restaurant ->
       String.contains?(String.downcase(restaurant.name), search_query)
@@ -419,7 +426,7 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
                 nil -> Restaurants.list_restaurants_with_location_data()
                 user_id -> Restaurants.list_restaurants_for_user(user_id)
               end
-              
+
             {:error, :invalid_input} ->
               case get_current_user_id(socket) do
                 nil -> Restaurants.list_restaurants_with_location_data()

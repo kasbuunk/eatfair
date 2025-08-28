@@ -54,12 +54,12 @@ defmodule EatfairWeb.Integration.RestaurantOwnerOnboardingTest do
       # 📖 Chapter 3: The inspiring onboarding experience begins
       # Sarah sees the onboarding page with a form to create her restaurant
       # Test what's actually implemented rather than specific UI text
-      
+
       # The form exists and has the basic required fields
       assert has_element?(onboarding_live, "form")
       # Look for restaurant name input (the most essential field)
-      assert has_element?(onboarding_live, "input[name*='name']") or 
-             has_element?(onboarding_live, "input[name='restaurant[name]']")
+      assert has_element?(onboarding_live, "input[name*='name']") or
+               has_element?(onboarding_live, "input[name='restaurant[name]']")
 
       # 📖 Chapter 4: Sarah fills in her dream restaurant details
       # She's creating "Sarah's Dumplings" - authentic family recipes from her grandmother
@@ -85,7 +85,7 @@ defmodule EatfairWeb.Integration.RestaurantOwnerOnboardingTest do
       assert restaurant != nil
       assert restaurant.name == "Sarah's Authentic Dumplings"
       assert restaurant.owner_id == user.id
-      
+
       # 📖 Chapter 6: Sarah verifies her restaurant appears to consumers
       # Check the restaurant discovery page where customers find restaurants
       conn_consumer = build_conn()

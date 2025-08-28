@@ -55,7 +55,8 @@ defmodule EatfairWeb.RestaurantLive.Show do
       |> assign(:user_can_review, user_can_review)
       |> assign(:user_has_orders, user_has_orders)
       |> assign(:location, nil)
-      |> assign(:delivery_available, false)  # Will be updated in handle_params based on location
+      # Will be updated in handle_params based on location
+      |> assign(:delivery_available, false)
       |> assign(:review_form, to_form(Reviews.change_review(%Review{})))
       |> assign(:show_review_form, false)
 
@@ -77,18 +78,21 @@ defmodule EatfairWeb.RestaurantLive.Show do
     # No location parameter - fall back to user's address if logged in
     delivery_available =
       case socket.assigns.current_scope do
-        %{user: user} -> Restaurants.can_deliver_to_location?(socket.assigns.restaurant.id, user.id)
-        _ -> false
+        %{user: user} ->
+          Restaurants.can_deliver_to_location?(socket.assigns.restaurant.id, user.id)
+
+        _ ->
+          false
       end
-    
+
     socket
     |> assign(:location, nil)
     |> assign(:delivery_available, delivery_available)
   end
-  
+
   defp apply_location(socket, location) when is_binary(location) do
     # Check delivery availability for the searched location
-    delivery_available = 
+    delivery_available =
       case {socket.assigns.current_scope, Eatfair.GeoUtils.geocode_address(location)} do
         {%{user: _user}, {:ok, %{latitude: lat, longitude: lon}}} ->
           Eatfair.GeoUtils.within_delivery_range?(
@@ -98,9 +102,11 @@ defmodule EatfairWeb.RestaurantLive.Show do
             Decimal.new(Float.to_string(lon)),
             socket.assigns.restaurant.delivery_radius_km
           )
-        _ -> false
+
+        _ ->
+          false
       end
-    
+
     socket
     |> assign(:location, location)
     |> assign(:delivery_available, delivery_available)
@@ -264,7 +270,6 @@ defmodule EatfairWeb.RestaurantLive.Show do
   defp format_delivery_time(minutes) do
     "#{minutes} min"
   end
-
 
   defp user_has_any_orders?(user_id, restaurant_id) do
     import Ecto.Query

@@ -13,7 +13,7 @@ defmodule EatfairWeb.Live.CuisineDropdownTest do
 
       # Should show "All Cuisines" as selected by default
       assert html =~ "All Cuisines"
-      
+
       # Cuisine dropdown should be closed initially
       refute html =~ "individual cuisine checkboxes"
     end
@@ -32,7 +32,8 @@ defmodule EatfairWeb.Live.CuisineDropdownTest do
       # Should now show open dropdown (chevron-up icon and dropdown content)
       updated_html = render(view)
       assert updated_html =~ "chevron-up"
-      assert updated_html =~ "All Cuisines" # dropdown content visible
+      # dropdown content visible
+      assert updated_html =~ "All Cuisines"
 
       # Click again to close
       view
@@ -78,7 +79,7 @@ defmodule EatfairWeb.Live.CuisineDropdownTest do
 
       # Should show available cuisines with checkboxes
       html = render(view)
-      
+
       # Look for a cuisine checkbox that we can test with
       if has_element?(view, "input[phx-click='toggle_cuisine']") do
         # Click on the first available cuisine checkbox
@@ -135,17 +136,17 @@ defmodule EatfairWeb.Live.CuisineDropdownTest do
       |> render_click()
 
       html = render(view)
-      
+
       # Should show "All Cuisines" with a count
       assert html =~ "All Cuisines"
-      
+
       # Should show numeric counts in the dropdown
       # Look for patterns like "Italian (2)" or similar count displays
       counts = Regex.scan(~r/\d+/, html)
-      
+
       # Should have at least some numeric values (counts) in the dropdown
       assert length(counts) > 0
-      
+
       # Each count should be a valid integer
       for [count_str] <- counts do
         {count, _} = Integer.parse(count_str)

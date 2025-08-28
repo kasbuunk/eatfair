@@ -232,7 +232,7 @@ defmodule EatfairWeb.Live.AddressAutocompleteIntegrationTest do
       # Should show main elements
       assert html =~ "Discover Restaurants"
       assert has_element?(discovery, "button[phx-click='toggle_cuisine_dropdown']")
-      
+
       # Should be able to toggle filters
       discovery
       |> element("input[phx-click='toggle_delivery_filter']")

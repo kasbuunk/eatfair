@@ -34,7 +34,7 @@ defmodule EatfairWeb.AddressAutocompleteTest do
       # With the AddressAutocomplete component, we need to simulate the location being set
       # The component handles input and sends messages to the parent LiveView
       # For now, let's test the form submission with a pre-set location
-      
+
       # Simulate the discover_restaurants event which would be triggered by the form
       lv
       |> element("#discover-form")

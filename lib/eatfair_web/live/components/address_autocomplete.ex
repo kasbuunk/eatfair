@@ -32,7 +32,7 @@ defmodule EatfairWeb.Live.Components.AddressAutocomplete do
     handle_input_change(query, socket)
   end
 
-  @impl true 
+  @impl true
   def handle_event("input_change", %{"_target" => _target} = params, socket) do
     # Handle malformed input_change events that come with _target instead of value
     # This prevents FunctionClauseError crashes when forms send unexpected parameters
@@ -44,60 +44,13 @@ defmodule EatfairWeb.Live.Components.AddressAutocomplete do
   def handle_event("input_change", params, socket) when is_map(params) do
     # Defensive catch-all for any other input_change parameter patterns
     # Extract query from various possible parameter structures
-    query = 
+    query =
       cond do
         is_binary(params["value"]) -> params["value"]
         true -> ""
       end
+
     handle_input_change(query, socket)
-  end
-
-  # Extracted helper function for input change logic
-  defp handle_input_change(query, socket) when is_binary(query) do
-    # Safely get suggestions, handling any errors gracefully
-    suggestions =
-      if String.length(String.trim(query)) >= 2 do
-        try do
-          AddressAutocomplete.suggest_addresses(query)
-          # Limit to 8 suggestions for UX
-          |> Enum.take(8)
-        rescue
-          # Return empty list on any error to prevent crashes
-          _ -> []
-        end
-      else
-        []
-      end
-
-    # Notify parent component of input changes - handle errors gracefully
-    try do
-      if socket.assigns.target do
-        send_update(socket.assigns.target,
-          id: socket.assigns.target,
-          input_change: query
-        )
-      else
-        # Send message to parent LiveView process
-        send(socket.root_pid, {"input_change", query})
-      end
-    rescue
-      _ ->
-        # If parent communication fails, just continue without crashing
-        :ok
-    end
-
-    {:noreply,
-     socket
-     |> assign(:query, query)
-     |> assign(:suggestions, suggestions)
-     |> assign(:show_suggestions, length(suggestions) > 0)
-     |> assign(:selected_index, -1)}
-  end
-
-  # Handle non-string query values defensively  
-  defp handle_input_change(_query, socket) do
-    # If query is not a string, treat as empty input
-    handle_input_change("", socket)
   end
 
   @impl true
@@ -138,6 +91,24 @@ defmodule EatfairWeb.Live.Components.AddressAutocomplete do
         # Handle any parsing errors gracefully
         {:noreply, socket}
     end
+  end
+
+  @impl true
+  def handle_event("focus", _params, socket) do
+    suggestions =
+      if String.length(String.trim(socket.assigns.query)) >= 2 do
+        socket.assigns.suggestions
+      else
+        []
+      end
+
+    {:noreply, assign(socket, :show_suggestions, length(suggestions) > 0)}
+  end
+
+  @impl true
+  def handle_event("blur", _params, socket) do
+    # Hide suggestions immediately on blur - let click events handle their own logic
+    {:noreply, assign(socket, :show_suggestions, false)}
   end
 
   @impl true
@@ -215,28 +186,58 @@ defmodule EatfairWeb.Live.Components.AddressAutocomplete do
     {:noreply, socket}
   end
 
-  @impl true
-  def handle_event("focus", _params, socket) do
-    suggestions =
-      if String.length(String.trim(socket.assigns.query)) >= 2 do
-        socket.assigns.suggestions
-      else
-        []
-      end
-
-    {:noreply, assign(socket, :show_suggestions, length(suggestions) > 0)}
-  end
-
-  @impl true
-  def handle_event("blur", _params, socket) do
-    # Hide suggestions immediately on blur - let click events handle their own logic
-    {:noreply, assign(socket, :show_suggestions, false)}
-  end
-
   # Catch-all handler for any unhandled events (prevents crashes from form events or other unexpected events)
   @impl true
   def handle_event(_event, _params, socket) do
     {:noreply, socket}
+  end
+
+  # Extracted helper function for input change logic
+  defp handle_input_change(query, socket) when is_binary(query) do
+    # Safely get suggestions, handling any errors gracefully
+    suggestions =
+      if String.length(String.trim(query)) >= 2 do
+        try do
+          AddressAutocomplete.suggest_addresses(query)
+          # Limit to 8 suggestions for UX
+          |> Enum.take(8)
+        rescue
+          # Return empty list on any error to prevent crashes
+          _ -> []
+        end
+      else
+        []
+      end
+
+    # Notify parent component of input changes - handle errors gracefully
+    try do
+      if socket.assigns.target do
+        send_update(socket.assigns.target,
+          id: socket.assigns.target,
+          input_change: query
+        )
+      else
+        # Send message to parent LiveView process
+        send(socket.root_pid, {"input_change", query})
+      end
+    rescue
+      _ ->
+        # If parent communication fails, just continue without crashing
+        :ok
+    end
+
+    {:noreply,
+     socket
+     |> assign(:query, query)
+     |> assign(:suggestions, suggestions)
+     |> assign(:show_suggestions, length(suggestions) > 0)
+     |> assign(:selected_index, -1)}
+  end
+
+  # Handle non-string query values defensively  
+  defp handle_input_change(_query, socket) do
+    # If query is not a string, treat as empty input
+    handle_input_change("", socket)
   end
 
   @impl true

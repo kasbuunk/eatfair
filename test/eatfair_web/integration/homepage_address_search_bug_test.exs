@@ -168,108 +168,140 @@ defmodule EatfairWeb.Integration.HomepageAddressSearchBugTest do
       # Should redirect with the typed address (with proper encoding)
       assert_redirected(lv, "/restaurants?location=Nieuwmarkt+1")
     end
-    
+
     test "homepage simple form handles input correctly", %{conn: conn} do
       # The homepage uses a simple form, not the AddressAutocomplete component
       # This test verifies the simple form works correctly
-      
+
       # Test basic form submission with different addresses
       test_addresses = ["Utrecht", "Rotterdam", "Amsterdam"]
-      
+
       for address <- test_addresses do
         # Get a fresh view for each test
         {:ok, lv, _html} = live(conn, "/")
-        
+
         # Find the simple address input on homepage
         assert has_element?(lv, "input[name='location']")
-        
+
         # Submit the form with the address
         lv
         |> element("form[phx-submit='discover_restaurants']")
         |> render_submit(%{"location" => address})
-        
+
         # Should redirect to discovery page
         assert_redirected(lv, "/restaurants?location=#{address}")
       end
     end
-    
-    @tag :focus 
-    test "CRITICAL BUG: typing regular characters should NOT crash AddressAutocomplete component", %{conn: conn} do
+
+    @tag :focus
+    test "CRITICAL BUG: typing regular characters should NOT crash AddressAutocomplete component",
+         %{conn: conn} do
       # This test reproduces the exact FunctionClauseError crash described in logs:
       # ** (FunctionClauseError) no function clause matching in 
       # EatfairWeb.Live.Components.AddressAutocomplete.handle_event/3
       # When users type regular characters like "h", "a", etc.
-      
+
       {:ok, lv, _html} = live(conn, "/")
-      
+
       # Find the address input - it should have the AddressAutocomplete component
       assert has_element?(lv, "input[placeholder*='Amsterdam']")
-      
+
       # These keystrokes currently cause FunctionClauseError crashes:
       crash_causing_keys = [
-        %{"key" => "h", "value" => ""}, # Regular typing
-        %{"key" => "a", "value" => "h"},  # Continued typing
-        %{"key" => "Meta", "value" => "ha"}, # Modifier keys  
-        %{"key" => "m", "value" => "ham"}   # More typing
+        # Regular typing
+        %{"key" => "h", "value" => ""},
+        # Continued typing
+        %{"key" => "a", "value" => "h"},
+        # Modifier keys  
+        %{"key" => "Meta", "value" => "ha"},
+        # More typing
+        %{"key" => "m", "value" => "ham"}
       ]
-      
+
       # Each of these should work WITHOUT crashing the LiveView
       for key_event <- crash_causing_keys do
         # This previously crashed with FunctionClauseError because 
         # AddressAutocomplete.handle_event("keyboard_navigation", key_event, socket)
         # had no catch-all clause for regular typing keys
-        
+
         # After fix, this should NOT raise any FunctionClauseError
         # The main test is that render_keydown completes successfully
-        result = lv
-        |> element("input[placeholder*='Amsterdam']")
-        |> render_keydown(key_event)
-        
+        result =
+          lv
+          |> element("input[placeholder*='Amsterdam']")
+          |> render_keydown(key_event)
+
         # The key assertion: no crash occurred (render_keydown returned successfully)
         assert is_binary(result), "Keydown event should complete without crashing"
-        
+
         # Verify LiveView is still functional after the keypress
         html = render(lv)
         assert html =~ "Discover Great Food", "Homepage should still be rendered after keypress"
       end
-      
+
       # Navigation keys should continue to work properly
       navigation_keys = [
         %{"key" => "ArrowDown"},
-        %{"key" => "ArrowUp"}, 
+        %{"key" => "ArrowUp"},
         %{"key" => "Enter"},
         %{"key" => "Tab"},
         %{"key" => "Escape"}
       ]
-      
+
       for key_event <- navigation_keys do
         # These should work without crashing (they already do)
         lv
         |> element("input[placeholder*='Amsterdam']")
         |> render_keydown(key_event)
-        
+
         # Verify no crash
         html = render(lv)
         assert html =~ "Discover Great Food"
       end
     end
-    
-    test "comprehensive keyboard input validation - all keys should work without crashes", %{conn: conn} do
+
+    test "comprehensive keyboard input validation - all keys should work without crashes", %{
+      conn: conn
+    } do
       # This comprehensive test validates the fix by testing a wide range of keyboard inputs
       {:ok, lv, _html} = live(conn, "/")
-      
+
       # Test all regular typing characters that users might enter
       typing_keys = [
         # Letters
-        "a", "b", "c", "h", "m", "n", "z", "A", "B", "Z",
+        "a",
+        "b",
+        "c",
+        "h",
+        "m",
+        "n",
+        "z",
+        "A",
+        "B",
+        "Z",
         # Numbers 
-        "0", "1", "2", "9",
+        "0",
+        "1",
+        "2",
+        "9",
         # Special characters common in addresses
-        " ", "-", ".", ",", "/", "(", ")",
+        " ",
+        "-",
+        ".",
+        ",",
+        "/",
+        "(",
+        ")",
         # International characters
-        "ü", "ä", "ö", "ß", "ñ", "é", "ç"
+        "ü",
+        "ä",
+        "ö",
+        "ß",
+        "ñ",
+        "é",
+        "ç"
       ]
-      
+
       # Test modifier key combinations
       modifier_combinations = [
         %{"key" => "Meta", "value" => "a"},
@@ -279,28 +311,33 @@ defmodule EatfairWeb.Integration.HomepageAddressSearchBugTest do
         %{"key" => "CapsLock", "value" => "test"},
         %{"key" => "Meta", "value" => "Backspace"}
       ]
-      
+
       # Test all regular typing - should not crash
       for key <- typing_keys do
-        result = lv
-        |> element("input[placeholder*='Amsterdam']")
-        |> render_keydown(%{"key" => key, "value" => "current_#{key}"})
-        
+        result =
+          lv
+          |> element("input[placeholder*='Amsterdam']")
+          |> render_keydown(%{"key" => key, "value" => "current_#{key}"})
+
         assert is_binary(result), "Regular key '#{key}' should not crash component"
       end
-      
+
       # Test all modifier combinations - should not crash
       for key_combo <- modifier_combinations do
-        result = lv
-        |> element("input[placeholder*='Amsterdam']")
-        |> render_keydown(key_combo)
-        
-        assert is_binary(result), "Modifier combo #{inspect(key_combo)} should not crash component"
+        result =
+          lv
+          |> element("input[placeholder*='Amsterdam']")
+          |> render_keydown(key_combo)
+
+        assert is_binary(result),
+               "Modifier combo #{inspect(key_combo)} should not crash component"
       end
-      
+
       # Verify LiveView is still functional after all keystrokes
       html = render(lv)
-      assert html =~ "Discover Great Food", "Homepage should remain functional after comprehensive keyboard test"
+
+      assert html =~ "Discover Great Food",
+             "Homepage should remain functional after comprehensive keyboard test"
     end
   end
 end

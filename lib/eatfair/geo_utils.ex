@@ -99,9 +99,9 @@ defmodule Eatfair.GeoUtils do
     distance <= delivery_radius_km
   end
 
-@doc """
+  @doc """
   Geocodes an address using professional LocationServices with Google Maps API integration.
-  
+
   This function now delegates to Eatfair.LocationServices for intelligent address parsing,
   Google Maps API integration, and comprehensive fallback strategies.
 
@@ -121,11 +121,12 @@ defmodule Eatfair.GeoUtils do
     case Eatfair.LocationServices.geocode_address(address) do
       {:ok, result} ->
         # Convert to the expected format for backward compatibility
-        {:ok, %{
-          latitude: result.latitude,
-          longitude: result.longitude
-        }}
-        
+        {:ok,
+         %{
+           latitude: result.latitude,
+           longitude: result.longitude
+         }}
+
       {:error, reason} ->
         {:error, reason}
     end

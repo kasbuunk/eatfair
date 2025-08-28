@@ -350,15 +350,15 @@ defmodule Eatfair.AddressAutocomplete do
     max_length = 20
     text_limited = String.slice(text, 0, max_length)
     query_limited = String.slice(query, 0, max_length)
-    
+
     # Use simple character-based matching instead of expensive levenshtein
     # Check if query shares significant characters with text
     text_chars = text_limited |> String.downcase() |> String.graphemes() |> MapSet.new()
     query_chars = query_limited |> String.downcase() |> String.graphemes() |> MapSet.new()
-    
+
     intersection = MapSet.intersection(text_chars, query_chars)
     query_size = MapSet.size(query_chars)
-    
+
     # At least 70% of query characters should be present in text
     if query_size > 0 do
       MapSet.size(intersection) / query_size >= 0.7

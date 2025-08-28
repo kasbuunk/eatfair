@@ -29,7 +29,8 @@ config :swoosh, :api_client, false
 # Configure Google Maps API for test environment
 # Use fallback geocoding in tests to avoid API calls and improve test speed
 config :eatfair, :google_maps,
-  api_key: nil  # This will force fallback geocoding in tests
+  # This will force fallback geocoding in tests
+  api_key: nil
 
 # Print only warnings and errors during test
 config :logger, level: :warning

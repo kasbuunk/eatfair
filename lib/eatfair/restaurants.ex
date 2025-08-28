@@ -56,6 +56,7 @@ defmodule Eatfair.Restaurants do
   defp maybe_filter_restaurant_active(query, _), do: query
 
   defp maybe_filter_restaurant_since(query, nil), do: query
+
   defp maybe_filter_restaurant_since(query, date) do
     {:ok, datetime} = DateTime.new(date, ~T[00:00:00], "Etc/UTC")
     where(query, [r], r.inserted_at >= ^datetime)

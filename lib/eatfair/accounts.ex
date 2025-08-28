@@ -46,6 +46,7 @@ defmodule Eatfair.Accounts do
   defp maybe_filter_active(query, _), do: query
 
   defp maybe_filter_since(query, nil), do: query
+
   defp maybe_filter_since(query, date) do
     {:ok, datetime} = DateTime.new(date, ~T[00:00:00], "Etc/UTC")
     where(query, [u], u.inserted_at >= ^datetime)

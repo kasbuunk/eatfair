@@ -101,18 +101,21 @@ defmodule Eatfair.Orders do
   end
 
   # Private filter functions
-  
+
   defp maybe_filter_order_status(query, nil), do: query
+
   defp maybe_filter_order_status(query, status) when is_atom(status) do
     status_str = to_string(status)
     where(query, [o], o.status == ^status_str)
   end
+
   defp maybe_filter_order_status(query, statuses) when is_list(statuses) do
     status_strs = Enum.map(statuses, &to_string/1)
     where(query, [o], o.status in ^status_strs)
   end
 
   defp maybe_filter_order_date(query, nil), do: query
+
   defp maybe_filter_order_date(query, date) do
     {:ok, start_datetime} = DateTime.new(date, ~T[00:00:00], "Etc/UTC")
     {:ok, end_datetime} = DateTime.new(date, ~T[23:59:59], "Etc/UTC")
@@ -120,28 +123,36 @@ defmodule Eatfair.Orders do
   end
 
   defp maybe_filter_order_since(query, nil), do: query
+
   defp maybe_filter_order_since(query, date) do
     {:ok, datetime} = DateTime.new(date, ~T[00:00:00], "Etc/UTC")
     where(query, [o], o.inserted_at >= ^datetime)
   end
 
   defp maybe_filter_order_customer(query, nil), do: query
-  defp maybe_filter_order_customer(query, customer_id), do: where(query, [o], o.customer_id == ^customer_id)
+
+  defp maybe_filter_order_customer(query, customer_id),
+    do: where(query, [o], o.customer_id == ^customer_id)
 
   defp maybe_filter_order_restaurant(query, nil), do: query
-  defp maybe_filter_order_restaurant(query, restaurant_id), do: where(query, [o], o.restaurant_id == ^restaurant_id)
+
+  defp maybe_filter_order_restaurant(query, restaurant_id),
+    do: where(query, [o], o.restaurant_id == ^restaurant_id)
 
   defp maybe_filter_payment_status(query, nil), do: query
+
   defp maybe_filter_payment_status(query, status) when is_atom(status) do
     status_str = to_string(status)
     where(query, [p], p.status == ^status_str)
   end
+
   defp maybe_filter_payment_status(query, statuses) when is_list(statuses) do
     status_strs = Enum.map(statuses, &to_string/1)
     where(query, [p], p.status in ^status_strs)
   end
 
   defp maybe_filter_payment_since(query, nil), do: query
+
   defp maybe_filter_payment_since(query, date) do
     {:ok, datetime} = DateTime.new(date, ~T[00:00:00], "Etc/UTC")
     where(query, [p], p.inserted_at >= ^datetime)
