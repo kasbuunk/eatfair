@@ -8,11 +8,11 @@ defmodule EatfairWeb.RestaurantLive.Show do
 
   @impl true
   # Guard against special or invalid IDs like "discover" by redirecting
-  def mount(%{"id" => id}, _session, socket) when is_binary(id) do
+  def mount(%{"id" => id}, session, socket) when is_binary(id) do
     case Integer.parse(id) do
       {_, ""} ->
         # Valid integer ID (as string) – proceed with normal mount flow
-        do_mount_show(id, socket)
+        do_mount_show(id, session, socket)
 
       _ ->
         {:ok, LiveView.redirect(socket, to: ~p"/restaurants")}
@@ -24,7 +24,7 @@ defmodule EatfairWeb.RestaurantLive.Show do
     {:ok, LiveView.redirect(socket, to: ~p"/restaurants")}
   end
 
-  defp do_mount_show(id, socket) do
+  defp do_mount_show(id, _session, socket) do
     restaurant = Restaurants.get_restaurant!(id)
     reviews = Reviews.list_reviews_for_restaurant(id)
     average_rating = Reviews.get_average_rating(id)
@@ -44,11 +44,15 @@ defmodule EatfairWeb.RestaurantLive.Show do
         _ -> false
       end
 
+    # Start with empty cart - session persistence to be implemented later
+    initial_cart = %{}
+    initial_cart_total = Decimal.new(0)
+
     socket =
       socket
       |> assign(:restaurant, restaurant)
-      |> assign(:cart, %{})
-      |> assign(:cart_total, Decimal.new(0))
+      |> assign(:cart, initial_cart)
+      |> assign(:cart_total, initial_cart_total)
       |> assign(:reviews, reviews)
       |> assign(:average_rating, average_rating)
       |> assign(:review_count, review_count)
@@ -327,5 +331,6 @@ defmodule EatfairWeb.RestaurantLive.Show do
     )
     |> Eatfair.Repo.exists?()
   end
+
 
 end
