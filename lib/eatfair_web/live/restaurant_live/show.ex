@@ -44,14 +44,6 @@ defmodule EatfairWeb.RestaurantLive.Show do
         _ -> false
       end
 
-    # Check if delivery is available to user's location
-    delivery_available =
-      case socket.assigns.current_scope do
-        %{user: user} -> Restaurants.can_deliver_to_location?(String.to_integer(id), user.id)
-        # Not logged in users can't order
-        _ -> false
-      end
-
     socket =
       socket
       |> assign(:restaurant, restaurant)
@@ -62,7 +54,8 @@ defmodule EatfairWeb.RestaurantLive.Show do
       |> assign(:review_count, review_count)
       |> assign(:user_can_review, user_can_review)
       |> assign(:user_has_orders, user_has_orders)
-      |> assign(:delivery_available, delivery_available)
+      |> assign(:location, nil)
+      |> assign(:delivery_available, false)  # Will be updated in handle_params based on location
       |> assign(:review_form, to_form(Reviews.change_review(%Review{})))
       |> assign(:show_review_form, false)
 
@@ -71,12 +64,46 @@ defmodule EatfairWeb.RestaurantLive.Show do
 
   @impl true
   def handle_params(params, _url, socket) do
+    socket = apply_location(socket, params["location"])
     {:noreply, apply_action(socket, socket.assigns.live_action, params)}
   end
 
   defp apply_action(socket, :show, _params) do
     socket
     |> assign(:page_title, socket.assigns.restaurant.name)
+  end
+
+  defp apply_location(socket, nil) do
+    # No location parameter - fall back to user's address if logged in
+    delivery_available =
+      case socket.assigns.current_scope do
+        %{user: user} -> Restaurants.can_deliver_to_location?(socket.assigns.restaurant.id, user.id)
+        _ -> false
+      end
+    
+    socket
+    |> assign(:location, nil)
+    |> assign(:delivery_available, delivery_available)
+  end
+  
+  defp apply_location(socket, location) when is_binary(location) do
+    # Check delivery availability for the searched location
+    delivery_available = 
+      case {socket.assigns.current_scope, Eatfair.GeoUtils.geocode_address(location)} do
+        {%{user: _user}, {:ok, %{latitude: lat, longitude: lon}}} ->
+          Eatfair.GeoUtils.within_delivery_range?(
+            socket.assigns.restaurant.latitude,
+            socket.assigns.restaurant.longitude,
+            Decimal.new(Float.to_string(lat)),
+            Decimal.new(Float.to_string(lon)),
+            socket.assigns.restaurant.delivery_radius_km
+          )
+        _ -> false
+      end
+    
+    socket
+    |> assign(:location, location)
+    |> assign(:delivery_available, delivery_available)
   end
 
   @impl true
@@ -238,11 +265,6 @@ defmodule EatfairWeb.RestaurantLive.Show do
     "#{minutes} min"
   end
 
-  defp format_rating(rating) when is_nil(rating), do: "No rating"
-
-  defp format_rating(rating) do
-    "#{Decimal.to_float(rating)}/5"
-  end
 
   defp user_has_any_orders?(user_id, restaurant_id) do
     import Ecto.Query

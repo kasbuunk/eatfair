@@ -131,7 +131,11 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
 
   @impl true
   def handle_event("view_restaurant", %{"id" => restaurant_id}, socket) do
-    {:noreply, push_navigate(socket, to: ~p"/restaurants/#{restaurant_id}")}
+    url = case socket.assigns.location do
+      nil -> ~p"/restaurants/#{restaurant_id}"
+      location -> ~p"/restaurants/#{restaurant_id}?location=#{location}"
+    end
+    {:noreply, push_navigate(socket, to: url)}
   end
 
   @impl true
@@ -227,9 +231,24 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
           |> filter_by_current_filters(socket.assigns.filters)
           |> sort_by_distance(lat, lon)
 
-        socket
-        |> assign(:restaurants, filtered_restaurants)
-        |> calculate_cuisine_counts()
+        socket =
+          socket
+          |> assign(:restaurants, filtered_restaurants)
+          |> calculate_cuisine_counts()
+
+        # Check if any restaurants were found after filtering
+        case length(filtered_restaurants) do
+          0 ->
+            socket
+            |> put_flash(:info, "No restaurants found that deliver to #{address}. Showing all restaurants.")
+            # Keep the location for user reference but show all restaurants
+            |> load_restaurants()
+            |> calculate_cuisine_counts()
+            
+          count ->
+            socket
+            |> put_flash(:info, "Found #{count} restaurants delivering to #{address}")
+        end
 
       {:error, :not_found} ->
         socket

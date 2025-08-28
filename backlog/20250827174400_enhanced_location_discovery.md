@@ -27,3 +27,4 @@ Implement advanced location detection and relevance scoring system to enhance re
 
 ### History / Log
 * 2025-08-27 17:44:00: Item created from legacy work items migration.
+* 2025-08-28 04:55:00: Fixed critical geocoding bug for Dutch addresses (Bussum, Koekoeklaan 31, 1403 EB). Location resolution now works correctly with improved error handling. Added fallback geocoding for Bussum and postal code 14xx. Enhanced Discovery LiveView to show helpful messages when no restaurants deliver to location instead of misleading "Could not find location" errors.

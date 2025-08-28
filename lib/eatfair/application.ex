@@ -52,6 +52,11 @@ defmodule Eatfair.Application do
         if File.exists?(env_file) do
           case Dotenvy.source(env_file) do
             {:ok, env_vars} ->
+              # Actually set the environment variables in System
+              Enum.each(env_vars, fn {key, value} ->
+                System.put_env(key, value)
+              end)
+              
               # Log successful loading (only in development)
               if Mix.env() == :dev do
                 require Logger

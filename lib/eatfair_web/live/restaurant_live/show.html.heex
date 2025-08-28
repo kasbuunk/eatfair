@@ -44,11 +44,11 @@
             </div>
           </div>
 
-          <%= if @restaurant.rating do %>
+          <%= if @average_rating do %>
             <div class="text-right">
               <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
                 <.icon name="hero-star-solid" class="w-4 h-4 mr-1" />
-                {format_rating(@restaurant.rating)}
+                {EatfairWeb.CoreComponents.format_average_rating(@average_rating)}
               </div>
             </div>
           <% end %>

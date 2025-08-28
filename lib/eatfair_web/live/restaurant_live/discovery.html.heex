@@ -302,7 +302,7 @@
                 <div class="p-4">
                   <h3 class="text-lg font-semibold text-gray-900 mb-2">
                     <.link
-                      navigate={~p"/restaurants/#{restaurant.id}"}
+                      navigate={if @location, do: ~p"/restaurants/#{restaurant.id}?location=#{@location}", else: ~p"/restaurants/#{restaurant.id}"}
                       class="hover:text-indigo-600"
                     >
                       {restaurant.name}
