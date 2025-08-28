@@ -213,6 +213,32 @@ defmodule Eatfair.Orders do
   end
 
   @doc """
+  Returns a changeset for validating order details (email, phone, address, etc.).
+  This is used for the streamlined ordering flow without user accounts.
+  """
+  def change_order_details(attrs \\ %{}) do
+    import Ecto.Changeset
+    
+    data = %{}
+    types = %{
+      email: :string,
+      delivery_address: :string,
+      phone_number: :string,
+      delivery_time: :string,
+      special_instructions: :string
+    }
+    
+    {data, types}
+    |> cast(attrs, Map.keys(types))
+    |> validate_required([:email, :delivery_address, :phone_number, :delivery_time])
+    |> validate_format(:email, ~r/^[^\s]+@[^\s]+\.[^\s]+$/, message: "must be a valid email address")
+    |> validate_length(:phone_number, min: 8, max: 20, message: "must be a valid phone number")
+    |> validate_length(:delivery_address, min: 10, message: "must include complete address with street, city, and postal code")
+    |> validate_format(:phone_number, ~r/^[\+]?[0-9\s\-\(\)]+$/, message: "must be a valid phone number format")
+    |> validate_length(:special_instructions, max: 500, message: "cannot exceed 500 characters")
+  end
+
+  @doc """
   Creates an order with items in a transaction.
   """
   def create_order_with_items(order_attrs, items_attrs) do

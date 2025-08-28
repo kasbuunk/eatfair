@@ -171,20 +171,14 @@ defmodule EatfairWeb.RestaurantLive.Show do
     {:noreply, socket}
   end
 
-  def handle_event("checkout", _params, socket) do
-    case socket.assigns.current_scope do
-      %{user: nil} ->
-        # Redirect to login with return URL
-        {:noreply, push_navigate(socket, to: ~p"/users/log-in")}
+  def handle_event("place_order", _params, socket) do
+    # Navigate directly to order details collection - no authentication required
+    cart_encoded = encode_cart(socket.assigns.cart)
+    restaurant_id = socket.assigns.restaurant.id
+    location = socket.assigns.location || ""
 
-      %{user: _user} ->
-        # Navigate to checkout with cart data
-        cart_encoded = encode_cart(socket.assigns.cart)
-        restaurant_id = socket.assigns.restaurant.id
-
-        checkout_url = ~p"/checkout/#{restaurant_id}?cart=#{cart_encoded}"
-        {:noreply, push_navigate(socket, to: checkout_url)}
-    end
+    order_details_url = ~p"/order/#{restaurant_id}/details?cart=#{cart_encoded}&location=#{location}"
+    {:noreply, push_navigate(socket, to: order_details_url)}
   end
 
   def handle_event("toggle_review_form", _params, socket) do

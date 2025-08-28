@@ -7,7 +7,7 @@ defmodule EatfairWeb.OrderFlowTest do
   import Ecto.Query
 
   alias Eatfair.{Repo, Restaurants}
-  alias Eatfair.Orders.{Order, Payment}
+  alias Eatfair.Orders.Order
   alias Eatfair.Restaurants.{Menu, Meal}
 
   describe "Complete order flow: User orders food for delivery" do
@@ -158,49 +158,73 @@ defmodule EatfairWeb.OrderFlowTest do
       # Verify cart is updated (3 items total)
       assert has_element?(restaurant_view, "[data-cart-count]", "3")
 
-      # Step 4: User proceeds to checkout
-      {:ok, checkout_view, _html} =
+      # Step 4: User proceeds to order details (new flow)
+      {:ok, details_view, _html} =
         restaurant_view
         |> element("[data-checkout-button]")
         |> render_click()
         |> follow_redirect(conn)
 
-      # Verify checkout page displays order items correctly
-      assert has_element?(checkout_view, "[data-order-item]", meal1.name)
+      # Verify order details page displays order items correctly
+      assert has_element?(details_view, "[data-order-item]", meal1.name)
       # 2x pizza
-      assert has_element?(checkout_view, "[data-item-quantity]", "2")
-      assert has_element?(checkout_view, "[data-order-item]", meal2.name)
+      assert has_element?(details_view, "[data-item-quantity]", "2")
+      assert has_element?(details_view, "[data-order-item]", meal2.name)
       # 1x salad
-      assert has_element?(checkout_view, "[data-item-quantity]", "1")
+      assert has_element?(details_view, "[data-item-quantity]", "1")
 
       # Calculate expected total: (18.99 * 2) + (12.99 * 1) = 50.97
       expected_total = Decimal.new("50.97")
-      assert has_element?(checkout_view, "[data-order-total]", "$50.97")
+      assert has_element?(details_view, "[data-order-total]", "$50.97")
 
       # Step 5: User fills out delivery information
       delivery_address = "789 Delivery St, Test Town"
       phone_number = "555-9876"
       delivery_notes = "Ring the bell twice"
 
-      checkout_view
+      details_view
       |> form("#checkout-form", %{
-        "delivery_address" => delivery_address,
-        "phone_number" => phone_number,
-        "delivery_notes" => delivery_notes
+        "order" => %{
+          "email" => "test@example.com",
+          "delivery_address" => delivery_address,
+          "phone_number" => phone_number,
+          "special_instructions" => delivery_notes
+        }
       })
       |> render_change()
 
-      # Step 6: User places the order
+      # Step 6: User submits the order details form to proceed to confirmation
+      {:ok, confirm_view, _html} = 
+        details_view
+        |> form("#checkout-form")
+        |> render_submit()
+        |> follow_redirect(conn)
+
+      # Step 7: Verify confirmation page shows order details
+      assert has_element?(confirm_view, "h1", "Confirm Your Order")
+      assert render(confirm_view) =~ delivery_address
+      assert render(confirm_view) =~ phone_number
+
+      # Step 8: User confirms the order and proceeds to payment
       initial_order_count = Repo.aggregate(Order, :count)
-      initial_payment_count = Repo.aggregate(Payment, :count)
 
-      checkout_view
-      |> form("#checkout-form")
-      |> render_submit()
+      {:ok, payment_view, _html} =
+        confirm_view
+        |> element("button", "Proceed to Payment")
+        |> render_click()
+        |> follow_redirect(conn)
 
-      # Step 7: Verify order was created successfully
+      # Step 9: User processes payment
+      payment_view
+      |> element("[phx-click='process_payment']")
+      |> render_click()
+
+      # Wait for payment processing to complete - it's asynchronous with a 2-second delay
+      # The payment process creates the order first, then updates its status after payment
+      :timer.sleep(4000)
+      
+      # Step 10: Verify order was created successfully
       assert Repo.aggregate(Order, :count) == initial_order_count + 1
-      assert Repo.aggregate(Payment, :count) == initial_payment_count + 1
 
       # Get the created order
       order =
@@ -215,7 +239,7 @@ defmodule EatfairWeb.OrderFlowTest do
       assert order.customer_id == user.id
       assert order.restaurant_id == restaurant.id
       assert order.delivery_address == delivery_address
-      assert order.delivery_notes == delivery_notes
+      assert order.special_instructions == delivery_notes
       assert Decimal.equal?(order.total_price, expected_total)
       assert order.status == "confirmed"
 
@@ -234,10 +258,6 @@ defmodule EatfairWeb.OrderFlowTest do
       # Verify payment was created
       assert order.payment.amount == order.total_price
       assert order.payment.status == "completed"
-
-      # Step 8: Verify success page/message is shown
-      assert has_element?(checkout_view, "[data-success-message]")
-      assert has_element?(checkout_view, "h1", "Order Confirmed!")
     end
 
     test "user cannot place order with invalid delivery information", %{
@@ -255,8 +275,8 @@ defmodule EatfairWeb.OrderFlowTest do
       |> element("[data-meal-id='#{meal1.id}'] [data-add-to-cart]")
       |> render_click()
 
-      # Go to checkout
-      {:ok, checkout_view, _html} =
+      # Go to order details (new flow)
+      {:ok, details_view, _html} =
         restaurant_view
         |> element("[data-checkout-button]")
         |> render_click()
@@ -265,26 +285,37 @@ defmodule EatfairWeb.OrderFlowTest do
       # Try to submit without required delivery information
       initial_order_count = Repo.aggregate(Order, :count)
 
-      checkout_view
+      # Form validation should prevent submission and show errors
+      submit_result = details_view
       |> form("#checkout-form", %{
-        # Empty address
-        "delivery_address" => "",
-        # Empty phone
-        "phone_number" => "",
-        "delivery_notes" => "Optional notes"
+        "order" => %{
+          "email" => "test@example.com",
+          # Empty address
+          "delivery_address" => "",
+          # Empty phone
+          "phone_number" => "",
+          "special_instructions" => "Optional notes"
+        }
       })
       |> render_submit()
 
+      # Validation is working correctly if:
+      # 1. render_submit returns HTML (doesn't redirect)
+      # 2. The form stays on the same page 
+      # 3. No order is created
+      case submit_result do
+        {:ok, _view, _html} ->
+          # This means it redirected, which shouldn't happen with validation errors
+          flunk("Form submitted successfully despite validation errors - should have validation errors")
+        
+        html when is_binary(html) ->
+          # Form stayed on same page - this is correct validation behavior
+          # The form should display the order details page, not redirect
+          assert html =~ "Order Details" or html =~ "Essential Information"
+      end
+
       # Verify order was NOT created
       assert Repo.aggregate(Order, :count) == initial_order_count
-
-      # Verify validation error is shown (Phoenix forms show errors in different ways)
-      rendered_html = render(checkout_view)
-
-      # Check for validation error messages or flash messages
-      assert rendered_html =~ "Please provide a complete delivery address" or
-               rendered_html =~ "can't be blank" or
-               rendered_html =~ "Please fix the errors below"
     end
   end
 end

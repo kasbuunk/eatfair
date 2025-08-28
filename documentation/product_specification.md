@@ -117,9 +117,27 @@ Independent delivery partners who want to:
   - **Seamless Cart Integration**: Enable/disable ordering based on actual delivery availability
   - **Session Persistence**: Maintain location context across page refreshes and browser sessions
 - **Streamlined Ordering**: 
-  - Cart management with meal customization options
-  - Special instructions and dietary preferences
-  - Streamlined checkout process
+  - **Low-Friction Ordering**: No authentication required for placing orders
+  - **Cart Management**: Add items with customization options and special instructions
+  - **Place Order Flow**: Direct transition from cart to essential details collection
+  - **Essential Details Collection**: 
+    - Email address for order confirmations and updates (double-entry for validation)
+    - Optional real-time email verification with clear benefits messaging
+    - Precise delivery address (prefilled from location search, user refines)
+    - Valid phone number with clear messaging about restaurant/courier contact
+    - Delivery time selection with calculated minimum times and 15-minute intervals
+  - **Order Confirmation Stage**: Review complete order details before payment
+  - **Payment Integration**: Stripe/Mollie integration with comprehensive error handling
+  - **Success/Error Handling**: Clear post-payment flow with recovery options for failures
+  - **Progressive Email Verification & Account Creation**:
+    - **Stage 1 - Email Collection**: Double-entry email validation with optional immediate verification
+    - **Stage 2 - Post-Payment Account Creation**: Order success page with prominent but optional account creation
+    - **Stage 3 - Email Verification Access**: Verification email contains order tracking and account creation options
+    - **Flexible Verification Flow**: Users can verify email before or after payment without blocking order completion
+    - **Anonymous Order Tracking**: Indefinite tracking access via secure tokens for unverified emails
+    - **Real-time Status Updates**: Live email verification status updates using Phoenix LiveView
+    - **Account Creation Incentives**: Clear value proposition ("Track your order live") at optimal moments
+    - **Error Recovery**: Multiple touchpoints for account creation and email verification throughout order lifecycle
 - **Order Tracking**: Real-time updates from preparation through delivery with delivery route position and ETA
 - **Account Management**: 
   - Multiple addresses (delivery and invoice)

@@ -23,6 +23,10 @@ defmodule Eatfair.Orders.Order do
     field :courier_assigned_at, :naive_datetime
     field :delivery_address, :string
     field :delivery_notes, :string
+    
+    # Guest order fields (for streamlined ordering without user accounts)
+    field :customer_email, :string
+    field :customer_phone, :string
 
     # Status transition timestamps
     field :confirmed_at, :naive_datetime
@@ -61,6 +65,8 @@ defmodule Eatfair.Orders.Order do
       :delivery_address,
       :delivery_notes,
       :customer_id,
+      :customer_email,
+      :customer_phone,
       :restaurant_id,
       :courier_id,
       :confirmed_at,
@@ -76,7 +82,8 @@ defmodule Eatfair.Orders.Order do
       :delay_reason,
       :special_instructions
     ])
-    |> validate_required([:customer_id, :restaurant_id, :delivery_address])
+    |> validate_required([:restaurant_id, :delivery_address])
+    |> validate_customer_info()
     |> validate_length(:delivery_address,
       min: 5,
       message: "Please provide a complete delivery address"
@@ -88,6 +95,30 @@ defmodule Eatfair.Orders.Order do
     |> foreign_key_constraint(:customer_id)
     |> foreign_key_constraint(:restaurant_id)
     |> foreign_key_constraint(:courier_id)
+  end
+
+  # Custom validation to ensure either customer_id (authenticated) or customer_email/phone (guest)
+  defp validate_customer_info(changeset) do
+    customer_id = get_field(changeset, :customer_id)
+    customer_email = get_field(changeset, :customer_email)
+    customer_phone = get_field(changeset, :customer_phone)
+
+    cond do
+      customer_id != nil ->
+        # Authenticated order - customer_id is sufficient
+        changeset
+      
+      customer_email != nil and customer_phone != nil ->
+        # Guest order - validate email and phone
+        changeset
+        |> validate_required([:customer_email, :customer_phone])
+        |> validate_format(:customer_email, ~r/^[^\s]+@[^\s]+\.[^\s]+$/, message: "must be a valid email")
+        |> validate_length(:customer_phone, min: 8, max: 20, message: "must be a valid phone number")
+      
+      true ->
+        # Neither authenticated nor proper guest info
+        add_error(changeset, :customer_id, "must provide either customer account or email and phone for guest orders")
+    end
   end
 
   @doc false
