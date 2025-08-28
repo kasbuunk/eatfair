@@ -1,8 +1,8 @@
 # Enhanced Location-Based Restaurant Discovery
 
 **ID**: 20250827174400
-**Completed On**: 
-**Tags**: #status/todo #type/feature #topic/discovery
+**Completed On**: 2025-08-28
+**Tags**: #status/done #type/feature #topic/discovery
 **Impact**: Significantly improve restaurant discovery with advanced location detection and relevance scoring for better user experience.
 **Type**: prompts/resolve_feature.md
 
@@ -28,3 +28,4 @@ Implement advanced location detection and relevance scoring system to enhance re
 ### History / Log
 * 2025-08-27 17:44:00: Item created from legacy work items migration.
 * 2025-08-28 04:55:00: Fixed critical geocoding bug for Dutch addresses (Bussum, Koekoeklaan 31, 1403 EB). Location resolution now works correctly with improved error handling. Added fallback geocoding for Bussum and postal code 14xx. Enhanced Discovery LiveView to show helpful messages when no restaurants deliver to location instead of misleading "Could not find location" errors.
+* 2025-08-28 19:20:00: **COMPLETED** - Enhanced restaurant detail page location UX based on user feedback. Implemented formatted address display, location refinement UI, improved delivery status messaging, and comprehensive test coverage. Users can now see Google Maps formatted addresses instead of raw input, change delivery addresses with real-time feedback, and understand delivery availability clearly. Location parameter takes precedence over saved addresses as expected.

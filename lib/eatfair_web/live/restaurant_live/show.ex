@@ -55,8 +55,11 @@ defmodule EatfairWeb.RestaurantLive.Show do
       |> assign(:user_can_review, user_can_review)
       |> assign(:user_has_orders, user_has_orders)
       |> assign(:location, nil)
+      |> assign(:formatted_location, nil)
+      |> assign(:location_coordinates, nil)
       # Will be updated in handle_params based on location
       |> assign(:delivery_available, false)
+      |> assign(:show_location_refinement, false)
       |> assign(:review_form, to_form(Reviews.change_review(%Review{})))
       |> assign(:show_review_form, false)
 
@@ -91,25 +94,33 @@ defmodule EatfairWeb.RestaurantLive.Show do
   end
 
   defp apply_location(socket, location) when is_binary(location) do
-    # Check delivery availability for the searched location
-    delivery_available =
-      case {socket.assigns.current_scope, Eatfair.GeoUtils.geocode_address(location)} do
-        {%{user: _user}, {:ok, %{latitude: lat, longitude: lon}}} ->
-          Eatfair.GeoUtils.within_delivery_range?(
-            socket.assigns.restaurant.latitude,
-            socket.assigns.restaurant.longitude,
-            Decimal.new(Float.to_string(lat)),
-            Decimal.new(Float.to_string(lon)),
-            socket.assigns.restaurant.delivery_radius_km
-          )
+    # Use LocationServices directly to get formatted address for display
+    case Eatfair.LocationServices.geocode_address(location) do
+      {:ok, %{latitude: lat, longitude: lon, formatted_address: formatted_address}} ->
+        coordinates = %{latitude: lat, longitude: lon}
+        
+        delivery_available = Eatfair.GeoUtils.within_delivery_range?(
+          socket.assigns.restaurant.latitude,
+          socket.assigns.restaurant.longitude,
+          Decimal.new(Float.to_string(lat)),
+          Decimal.new(Float.to_string(lon)),
+          socket.assigns.restaurant.delivery_radius_km
+        )
 
-        _ ->
-          false
-      end
+        socket
+        |> assign(:location, location)
+        |> assign(:formatted_location, formatted_address || location)
+        |> assign(:location_coordinates, coordinates)
+        |> assign(:delivery_available, delivery_available)
 
-    socket
-    |> assign(:location, location)
-    |> assign(:delivery_available, delivery_available)
+      {:error, _reason} ->
+        # Geocoding failed - show location but no delivery available
+        socket
+        |> assign(:location, location)
+        |> assign(:formatted_location, location)
+        |> assign(:location_coordinates, nil)
+        |> assign(:delivery_available, false)
+    end
   end
 
   @impl true
@@ -234,6 +245,42 @@ defmodule EatfairWeb.RestaurantLive.Show do
     {:noreply, assign(socket, :review_form, to_form(changeset))}
   end
 
+  def handle_event("toggle_location_refinement", _params, socket) do
+    {:noreply, assign(socket, :show_location_refinement, !socket.assigns.show_location_refinement)}
+  end
+
+  def handle_event("update_delivery_address", %{"location" => new_location}, socket) do
+    # Re-apply location with the new address
+    socket = apply_location(socket, new_location)
+    
+    # Navigate to the same page with the new location parameter
+    restaurant_id = socket.assigns.restaurant.id
+    new_path = ~p"/restaurants/#{restaurant_id}?location=#{new_location}"
+    
+    socket =
+      socket
+      |> assign(:show_location_refinement, false)
+      |> push_patch(to: new_path)
+      
+    {:noreply, socket}
+  end
+
+  def handle_event("address_selected", %{"address" => selected_address}, socket) do
+    # Handle address selection from the autocomplete component
+    socket = apply_location(socket, selected_address)
+    
+    # Navigate to update the URL with the new location
+    restaurant_id = socket.assigns.restaurant.id
+    new_path = ~p"/restaurants/#{restaurant_id}?location=#{selected_address}"
+    
+    socket =
+      socket
+      |> assign(:show_location_refinement, false)
+      |> push_patch(to: new_path)
+      
+    {:noreply, socket}
+  end
+
   defp find_meal(restaurant, meal_id) do
     restaurant.menus
     |> Enum.flat_map(& &1.meals)
@@ -280,4 +327,5 @@ defmodule EatfairWeb.RestaurantLive.Show do
     )
     |> Eatfair.Repo.exists?()
   end
+
 end

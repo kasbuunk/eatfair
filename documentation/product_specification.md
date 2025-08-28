@@ -89,6 +89,9 @@ Independent delivery partners who want to:
   - Real-time search results that update when location changes
   - Complete exclusion of irrelevant far-away restaurants from results
   - Geographic map interface with restaurant pins showing cuisine type and direct links to detail pages
+  - **Location Persistence**: Searched locations persist across page refreshes and navigation
+  - **Formatted Address Display**: Show Google Maps formatted addresses instead of raw user input
+  - **Location Refinement System**: Clear user journey to change or refine delivery address with real-time delivery feedback
 - **Advanced Filter System**: 
   - Multi-select cuisine filters with modern categories (not archaic local/european vs asian/international)
   - Aligned cuisine types between restaurant registration and consumer filtering
@@ -105,6 +108,14 @@ Independent delivery partners who want to:
   - Include reviews from verified customers who have completed orders
   - Handle restaurants with no reviews gracefully with appropriate messaging
   - Display restaurant description prominently on detail pages
+- **Enhanced Restaurant Detail Page Experience**:
+  - **Clear Delivery Status Display**: Show prominent delivery status with user-friendly messaging
+  - **Formatted Location Display**: Display Google Maps formatted address instead of raw user input  
+  - **Location Precedence**: Searched location always takes precedence over user's saved addresses
+  - **Delivery Address Refinement**: Clear option to change or refine delivery address with real-time feedback
+  - **Contextual Messaging**: When delivery unavailable, show clear explanation and next steps
+  - **Seamless Cart Integration**: Enable/disable ordering based on actual delivery availability
+  - **Session Persistence**: Maintain location context across page refreshes and browser sessions
 - **Streamlined Ordering**: 
   - Cart management with meal customization options
   - Special instructions and dietary preferences

@@ -120,7 +120,7 @@ defmodule Eatfair.GeoUtils do
     # Delegate to the professional LocationServices module
     case Eatfair.LocationServices.geocode_address(address) do
       {:ok, result} ->
-        # Convert to the expected format for backward compatibility
+        # Convert to the expected format for backward compatibility (excluding new fields)
         {:ok,
          %{
            latitude: result.latitude,
