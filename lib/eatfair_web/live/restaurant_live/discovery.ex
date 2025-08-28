@@ -190,17 +190,46 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
   end
 
   defp search_restaurants(socket, query) when query == "" do
-    load_restaurants(socket)
+    # When search is cleared, reapply current filters to get proper restaurant list
+    apply_filters_with_counts(socket, socket.assigns.filters)
   end
 
   defp search_restaurants(socket, query) do
-    restaurants =
+    # Apply search filter while preserving location and other filters
+    all_restaurants =
       case get_current_user_id(socket) do
-        nil -> Restaurants.search_restaurants(query)
-        user_id -> Restaurants.search_restaurants_with_location(query, user_id)
+        nil -> Restaurants.list_restaurants_with_location_data()
+        user_id -> Restaurants.list_restaurants_for_user(user_id)
       end
 
-    assign(socket, :restaurants, restaurants)
+    # Apply location filter first if location is set
+    base_restaurants =
+      case socket.assigns.location do
+        nil ->
+          all_restaurants
+
+        address ->
+          case Eatfair.GeoUtils.geocode_address(address) do
+            {:ok, %{latitude: lat, longitude: lon}} ->
+              filter_by_location(all_restaurants, lat, lon)
+
+            {:error, :not_found} ->
+              all_restaurants
+              
+            {:error, :invalid_input} ->
+              all_restaurants
+          end
+      end
+
+    # Apply search filter to name-based filtering
+    search_filtered_restaurants = filter_by_search_query(base_restaurants, query)
+    
+    # Apply all current filters on top of search results
+    filtered_restaurants = filter_by_current_filters(search_filtered_restaurants, socket.assigns.filters)
+
+    socket
+    |> assign(:restaurants, filtered_restaurants)
+    |> calculate_cuisine_counts()
   end
 
   defp get_current_user_id(socket) do
@@ -355,6 +384,14 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
     end)
     |> Enum.sort_by(fn {_, distance} -> distance end)
     |> Enum.map(fn {restaurant, _} -> restaurant end)
+  end
+
+  defp filter_by_search_query(restaurants, query) do
+    search_query = String.downcase(query)
+    restaurants
+    |> Enum.filter(fn restaurant ->
+      String.contains?(String.downcase(restaurant.name), search_query)
+    end)
   end
 
   defp calculate_cuisine_counts(socket) do
