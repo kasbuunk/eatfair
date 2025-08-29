@@ -69,7 +69,8 @@ defmodule Eatfair.MixProject do
       {:jason, "~> 1.2"},
       {:dns_cluster, "~> 0.2.0"},
       {:bandit, "~> 1.5"},
-      {:logger_file_backend, "~> 0.0.13"}
+      {:logger_file_backend, "~> 0.0.13"},
+      {:tzdata, "~> 1.1"}
     ]
   end
 

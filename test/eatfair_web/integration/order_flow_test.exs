@@ -57,7 +57,14 @@ defmodule EatfairWeb.OrderFlowTest do
           is_open: true,
           rating: Decimal.new("4.5"),
           image_url: "https://example.com/pizza.jpg",
-          owner_id: owner.id
+          owner_id: owner.id,
+          # Restaurant operating hours - always open for testing
+          timezone: "Europe/Amsterdam",
+          operating_days: 127, # All days
+          order_open_time: 0,    # 00:00 (always open)
+          order_close_time: 1400, # 23:20 (allows 39 min buffer before kitchen closes)
+          kitchen_close_time: 1439, # 23:59 
+          order_cutoff_before_kitchen_close: 30
         })
 
       # Create cuisine and associate with restaurant
@@ -188,6 +195,7 @@ defmodule EatfairWeb.OrderFlowTest do
           "email" => "test@example.com",
           "delivery_address" => delivery_address,
           "phone_number" => phone_number,
+          "delivery_time" => "as_soon_as_possible",
           "special_instructions" => delivery_notes
         }
       })
@@ -294,6 +302,8 @@ defmodule EatfairWeb.OrderFlowTest do
           "delivery_address" => "",
           # Empty phone
           "phone_number" => "",
+          # Include required delivery_time
+          "delivery_time" => "as_soon_as_possible",
           "special_instructions" => "Optional notes"
         }
       })

@@ -82,16 +82,51 @@
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">
                 Preferred Delivery Time *
+                <%= if assigns[:delivery_timezone] do %>
+                  <span class="text-xs font-normal text-gray-500">({@delivery_timezone})</span>
+                <% end %>
               </label>
-              <.input
-                field={@order_form[:delivery_time]}
-                type="select"
-                options={@delivery_time_options}
-                class="w-full"
-              />
-              <p class="text-sm text-gray-500 mt-1">
-                Estimated preparation time: {@restaurant.avg_preparation_time} minutes
-              </p>
+              
+              <%= if assigns[:restaurant_closed_message] do %>
+                <div class="p-4 bg-amber-50 border border-amber-200 rounded-lg mb-4">
+                  <div class="flex items-start">
+                    <.icon name="hero-clock" class="w-5 h-5 text-amber-600 mt-0.5 mr-3 flex-shrink-0" />
+                    <div>
+                      <p class="text-sm font-medium text-amber-800">Restaurant Closed</p>
+                      <p class="text-sm text-amber-700 mt-1">{@restaurant_closed_message}</p>
+                    </div>
+                  </div>
+                </div>
+                
+                <.input
+                  field={@order_form[:delivery_time]}
+                  type="select"
+                  options={[]}
+                  disabled
+                  placeholder="Restaurant is currently closed"
+                  class="w-full opacity-50"
+                />
+              <% else %>
+                <.input
+                  field={@order_form[:delivery_time]}
+                  type="select"
+                  options={@delivery_time_options}
+                  class="w-full"
+                />
+                
+                <div class="mt-2 space-y-1">
+                  <p class="text-sm text-gray-500">
+                    <.icon name="hero-clock" class="w-4 h-4 inline mr-1" />
+                    Estimated preparation time: {@restaurant.avg_preparation_time} minutes
+                  </p>
+                  <%= if assigns[:delivery_timezone] do %>
+                    <p class="text-xs text-gray-400">
+                      <.icon name="hero-globe-alt" class="w-3 h-3 inline mr-1" />
+                      All times shown in {@delivery_timezone} timezone
+                    </p>
+                  <% end %>
+                </div>
+              <% end %>
             </div>
 
             <!-- Special Instructions (Optional) -->
@@ -140,17 +175,31 @@
           <div class="space-y-3 mb-6">
             <%= for {meal_id, quantity} <- @cart do %>
               <% meal = find_meal(@restaurant, meal_id) %>
-              <div class="flex items-start justify-between" data-order-item>
-                <div class="flex-1">
-                  <p class="font-medium text-gray-900 text-sm">{meal.name}</p>
-                  <p class="text-xs text-gray-600">
-                    {format_price(meal.price)} × <span data-item-quantity>{quantity}</span>
+              <%= if meal do %>
+                <div class="flex items-start justify-between" data-order-item>
+                  <div class="flex-1">
+                    <p class="font-medium text-gray-900 text-sm">{meal.name}</p>
+                    <p class="text-xs text-gray-600">
+                      {format_price(meal.price)} × <span data-item-quantity>{quantity}</span>
+                    </p>
+                  </div>
+                  <p class="font-semibold text-gray-900 text-sm ml-2">
+                    {format_price(Decimal.mult(meal.price, quantity))}
                   </p>
                 </div>
-                <p class="font-semibold text-gray-900 text-sm ml-2">
-                  {format_price(Decimal.mult(meal.price, quantity))}
-                </p>
-              </div>
+              <% else %>
+                <div class="flex items-start justify-between" data-order-item>
+                  <div class="flex-1">
+                    <p class="font-medium text-gray-900 text-sm">Unknown Item (ID: {meal_id})</p>
+                    <p class="text-xs text-gray-600">
+                      Unavailable × <span data-item-quantity>{quantity}</span>
+                    </p>
+                  </div>
+                  <p class="font-semibold text-gray-900 text-sm ml-2">
+                    N/A
+                  </p>
+                </div>
+              <% end %>
             <% end %>
           </div>
 
