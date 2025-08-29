@@ -123,5 +123,8 @@ defmodule EatfairWeb.Router do
 
     post "/users/log-in", UserSessionController, :create
     delete "/users/log-out", UserSessionController, :delete
+    
+    # Email verification route - no authentication required
+    get "/verify-email/:token", EmailVerificationController, :verify
   end
 end

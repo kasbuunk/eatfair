@@ -6,6 +6,7 @@ defmodule Eatfair.Orders.Order do
   alias Eatfair.Restaurants.Restaurant
   alias Eatfair.Orders.OrderItem
   alias Eatfair.Orders.Payment
+  alias Eatfair.Accounts.EmailVerification
 
   @valid_statuses [
     "pending",
@@ -45,6 +46,12 @@ defmodule Eatfair.Orders.Order do
     field :is_delayed, :boolean, default: false
     field :delay_reason, :string
     field :special_instructions, :string
+    
+    # Email verification fields
+    field :email_status, :string, default: "unverified"  # unverified, pending, verified
+    field :email_verified_at, :utc_datetime
+    field :tracking_token, :string
+    field :account_created_from_order, :boolean, default: false
 
     belongs_to :customer, User
     belongs_to :restaurant, Restaurant
@@ -52,6 +59,7 @@ defmodule Eatfair.Orders.Order do
     belongs_to :courier, User
     has_many :order_items, OrderItem
     has_one :payment, Payment
+    has_many :email_verifications, EmailVerification
 
     timestamps()
   end
@@ -80,7 +88,11 @@ defmodule Eatfair.Orders.Order do
       :actual_prep_time_minutes,
       :is_delayed,
       :delay_reason,
-      :special_instructions
+      :special_instructions,
+      :email_status,
+      :email_verified_at,
+      :tracking_token,
+      :account_created_from_order
     ])
     |> validate_required([:restaurant_id, :delivery_address])
     |> validate_customer_info()
@@ -168,4 +180,30 @@ defmodule Eatfair.Orders.Order do
         add_error(changeset, :status, "cannot transition from #{old_status} to #{new_status}")
     end
   end
+  
+  @doc """
+  Generates a secure tracking token for anonymous order tracking.
+  """
+  def generate_tracking_token do
+    :crypto.strong_rand_bytes(16) |> Base.url_encode64(padding: false)
+  end
+  
+  @doc """
+  Checks if the order email has been verified.
+  """
+  def email_verified?(%__MODULE__{email_status: "verified"}), do: true
+  def email_verified?(%__MODULE__{}), do: false
+  
+  @doc """
+  Checks if the order is from an authenticated user.
+  """
+  def authenticated_order?(%__MODULE__{customer_id: nil}), do: false
+  def authenticated_order?(%__MODULE__{}), do: true
+  
+  @doc """
+  Gets the primary email for this order (from customer or guest email).
+  """
+  def primary_email(%__MODULE__{customer_id: nil, customer_email: email}), do: email
+  def primary_email(%__MODULE__{customer: %User{email: email}}), do: email
+  def primary_email(_), do: nil
 end

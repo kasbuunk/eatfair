@@ -184,9 +184,51 @@ defmodule Eatfair.Orders do
   Creates an order.
   """
   def create_order(attrs \\ %{}) do
+    # Generate tracking token for anonymous orders
+    attrs = if is_nil(attrs[:customer_id]) and is_nil(attrs[:tracking_token]) do
+      Map.put(attrs, :tracking_token, Order.generate_tracking_token())
+    else
+      attrs
+    end
+    
     %Order{}
     |> Order.changeset(attrs)
     |> Repo.insert()
+  end
+  
+  @doc """
+  Creates an anonymous order with a soft account.
+  
+  This function creates a "soft account" (unconfirmed user) for the customer
+  email and associates the order with it. This ensures all orders have a
+  customer_id while still supporting the anonymous ordering flow.
+  """
+  def create_anonymous_order(attrs) when is_map(attrs) do
+    customer_email = attrs[:customer_email] || attrs["customer_email"]
+    
+    if customer_email do
+      Repo.transaction(fn ->
+        # Create or get existing soft account
+        case Eatfair.Accounts.create_soft_account(customer_email) do
+          {:ok, soft_user} ->
+            # Create order with soft account user_id and tracking token
+            order_attrs = 
+              attrs
+              |> Map.put(:customer_id, soft_user.id)
+              |> Map.put(:tracking_token, attrs[:tracking_token] || Order.generate_tracking_token())
+              |> Map.put(:email_status, "unverified")
+            
+            case create_order(order_attrs) do
+              {:ok, order} -> order
+              {:error, changeset} -> Repo.rollback(changeset)
+            end
+            
+          {:error, changeset} -> Repo.rollback(changeset)
+        end
+      end)
+    else
+      {:error, :missing_customer_email}
+    end
   end
 
   @doc """
@@ -480,5 +522,101 @@ defmodule Eatfair.Orders do
       ready: Enum.filter(orders, &(&1.status == "ready")),
       out_for_delivery: Enum.filter(orders, &(&1.status == "out_for_delivery"))
     }
+  end
+  
+  # Email verification functions
+  
+  @doc """
+  Updates the email verification status for an order.
+  """
+  def update_order_email_status(order_id, status) when status in ["unverified", "pending", "verified"] do
+    now = DateTime.utc_now()
+    
+    attrs = %{email_status: status}
+    attrs = if status == "verified", do: Map.put(attrs, :email_verified_at, now), else: attrs
+    
+    order = get_order!(order_id)
+    result = update_order(order, attrs)
+    
+    # Broadcast email verification status change
+    case result do
+      {:ok, updated_order} ->
+        broadcast_email_verification(updated_order)
+        result
+      error -> error
+    end
+  end
+  
+  @doc """
+  Gets an order by its tracking token (for anonymous tracking).
+  """
+  def get_order_by_tracking_token(nil), do: nil
+  
+  def get_order_by_tracking_token(token) when is_binary(token) do
+    Order
+    |> where([o], o.tracking_token == ^token)
+    |> preload([:restaurant, order_items: :meal])
+    |> Repo.one()
+  end
+  
+  @doc """
+  Gets orders by customer email (for anonymous orders and soft accounts).
+  
+  This function finds orders both by:
+  1. Direct customer_email field (legacy orders)
+  2. Associated user email for soft accounts
+  """
+  def list_orders_by_email(email) when is_binary(email) do
+    Order
+    |> join(:left, [o], u in Eatfair.Accounts.User, on: o.customer_id == u.id)
+    |> where([o, u], o.customer_email == ^email or u.email == ^email)
+    |> preload([:restaurant, order_items: :meal])
+    |> order_by(desc: :inserted_at)
+    |> Repo.all()
+  end
+  
+  @doc """
+  Associates an anonymous order with a user account after account creation.
+  """
+  def associate_order_with_user(order_id, user_id) do
+    order = get_order!(order_id)
+    
+    attrs = %{
+      customer_id: user_id,
+      account_created_from_order: true
+    }
+    
+    update_order(order, attrs)
+  end
+  
+  @doc """
+  Checks if an email address has any associated orders (for account creation).
+  """
+  def email_has_orders?(email) when is_binary(email) do
+    query = from o in Order, where: o.customer_email == ^email, limit: 1
+    Repo.exists?(query)
+  end
+  
+  # Private helper functions for email verification
+  
+  defp broadcast_email_verification(order) do
+    email = Order.primary_email(order)
+    
+    if email do
+      Phoenix.PubSub.broadcast(
+        Eatfair.PubSub,
+        "email_verification:#{email}",
+        {:email_verified, email}
+      )
+      
+      # Also broadcast to order-specific channel if tracking token exists
+      if order.tracking_token do
+        Phoenix.PubSub.broadcast(
+          Eatfair.PubSub,
+          "order_tracking:#{order.tracking_token}",
+          {:email_verified, order}
+        )
+      end
+    end
   end
 end

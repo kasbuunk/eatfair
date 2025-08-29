@@ -81,6 +81,40 @@ defmodule Eatfair.Accounts.User do
   end
 
   @doc """
+  A user changeset for creating accounts with profile information but without password.
+  Used for creating accounts from verified email addresses (like orders).
+  """
+  def profile_changeset(user, attrs, opts \\ []) do
+    user
+    |> cast(attrs, [:email, :name, :phone_number, :confirmed_at, :role])
+    |> validate_required([:email])
+    |> validate_email(opts)
+    |> validate_length(:name, min: 2, max: 100)
+    |> validate_format(:phone_number, ~r/^[\d\s\+\-\(\)]+$/,
+      message: "must be a valid phone number"
+    )
+    |> validate_inclusion(:role, ["customer", "restaurant_owner", "courier", "admin"],
+      message: "must be a valid role"
+    )
+  end
+
+  @doc """
+  A user changeset for updating existing accounts with profile information.
+  Used for upgrading soft accounts to full accounts.
+  """
+  def update_profile_changeset(user, attrs, _opts \\ []) do
+    user
+    |> cast(attrs, [:name, :phone_number, :confirmed_at, :role])
+    |> validate_length(:name, min: 2, max: 100)
+    |> validate_format(:phone_number, ~r/^[\d\s\+\-\(\)]+$/,
+      message: "must be a valid phone number"
+    )
+    |> validate_inclusion(:role, ["customer", "restaurant_owner", "courier", "admin"],
+      message: "must be a valid role"
+    )
+  end
+
+  @doc """
   A user changeset for changing the password.
 
   It is important to validate the length of the password, as long passwords may
