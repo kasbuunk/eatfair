@@ -9,6 +9,8 @@ defmodule Eatfair.Orders do
   alias Eatfair.Orders.Order
   alias Eatfair.Orders.OrderItem
   alias Eatfair.Orders.Payment
+  alias Eatfair.Orders.OrderStatusEvent
+  alias Eatfair.Orders.CourierLocationUpdate
 
   @doc """
   Counts orders based on optional filters for admin dashboard metrics.
@@ -618,5 +620,272 @@ defmodule Eatfair.Orders do
         )
       end
     end
+  end
+  
+  # Order tracking audit trail functions
+  
+  @doc """
+  Creates a new order status event for audit trail tracking.
+  
+  This function creates an immutable record of order status changes,
+  maintaining a complete audit trail. It also handles automatic 
+  status transitions and broadcasts real-time updates.
+  """
+  def create_order_status_event(attrs) do
+    changeset = OrderStatusEvent.create_changeset(attrs)
+    
+    case Repo.insert(changeset) do
+      {:ok, event} ->
+        # Broadcast real-time status update
+        broadcast_status_event(event)
+        
+        # Handle automatic status transitions if needed
+        handle_automatic_transitions(event)
+        
+        {:ok, event}
+      
+      error -> error
+    end
+  end
+  
+  @doc """
+  Gets the current status of an order by querying the most recent status event.
+  """
+  def get_current_order_status(order_id) do
+    OrderStatusEvent
+    |> where([e], e.order_id == ^order_id)
+    |> order_by([e], desc: e.occurred_at, desc: e.inserted_at)
+    |> limit(1)
+    |> Repo.one()
+  end
+  
+  @doc """
+  Gets the complete status history for an order, ordered chronologically.
+  """
+  def get_order_status_history(order_id) do
+    OrderStatusEvent
+    |> where([e], e.order_id == ^order_id)
+    |> preload([:actor])
+    |> order_by([e], asc: e.occurred_at, asc: e.inserted_at)
+    |> Repo.all()
+  end
+  
+  @doc """
+  Gets order tracking data including current status and location if available.
+  This is the main function for the customer order tracking interface.
+  """
+  def get_order_tracking_data(order_id) when is_integer(order_id) do
+    with order when not is_nil(order) <- get_order_with_tracking(order_id) do
+      current_status = get_current_order_status(order_id)
+      status_history = get_order_status_history(order_id)
+      
+      # If no status events exist, create initial tracking event for backward compatibility
+      {current_status, status_history} = 
+        if is_nil(current_status) and length(status_history) == 0 do
+          # Initialize tracking for existing orders
+          {:ok, initial_event} = initialize_order_tracking(order_id, %{
+            total_amount: order.total_price,
+            delivery_address_id: nil,
+            requested_delivery_time: order.estimated_delivery_at
+          })
+          
+          {initial_event, [initial_event]}
+        else
+          {current_status, status_history}
+        end
+      
+      tracking_data = %{
+        order: order,
+        current_status: current_status,
+        status_history: status_history
+      }
+      
+      # Add location data if order is in transit
+      final_tracking_data = if current_status && current_status.status == "in_transit" do
+        location_update = get_latest_courier_location(order_id)
+        Map.put(tracking_data, :courier_location, location_update)
+      else
+        tracking_data
+      end
+      
+      {:ok, final_tracking_data}
+    else
+      nil -> {:error, :order_not_found}
+    end
+  end
+  
+  @doc """
+  Gets order tracking data by tracking token (for anonymous access).
+  """
+  def get_order_tracking_by_token(token) when is_binary(token) do
+    case get_order_by_tracking_token(token) do
+      nil -> {:error, :invalid_token}
+      order -> get_order_tracking_data(order.id)
+    end
+  end
+  
+  @doc """
+  Transitions an order to a new status with audit trail.
+  
+  This is the main function for status transitions in the new system.
+  It creates an audit event and optionally updates the old status fields
+  for backwards compatibility.
+  """
+  def transition_order_status(order_id, new_status, attrs \\ %{}) when is_integer(order_id) do
+    attrs = Map.put(attrs, :order_id, order_id)
+    attrs = Map.put(attrs, :status, new_status)
+    
+    Repo.transaction(fn ->
+      # Create the audit trail event
+      case create_order_status_event(attrs) do
+        {:ok, event} ->
+          # For backwards compatibility, also update the order's status field
+          order = get_order!(order_id)
+          {:ok, updated_order} = update_order_legacy_status(order, new_status)
+          
+          %{event: event, order: updated_order}
+        
+        {:error, changeset} -> 
+          Repo.rollback(changeset)
+      end
+    end)
+  end
+  
+  @doc """
+  Creates a courier location update.
+  """
+  def create_courier_location_update(attrs) do
+    changeset = CourierLocationUpdate.create_changeset(attrs)
+    
+    case Repo.insert(changeset) do
+      {:ok, update} ->
+        # Broadcast location update to tracking interfaces
+        broadcast_location_update(update)
+        {:ok, update}
+      
+      error -> error
+    end
+  end
+  
+  @doc """
+  Gets the latest courier location for an order.
+  """
+  def get_latest_courier_location(order_id) do
+    CourierLocationUpdate
+    |> where([u], u.order_id == ^order_id)
+    |> preload([:courier])
+    |> order_by([u], desc: u.recorded_at)
+    |> limit(1)
+    |> Repo.one()
+  end
+  
+  @doc """
+  Gets courier location history for an order.
+  """
+  def get_courier_location_history(order_id) do
+    CourierLocationUpdate
+    |> where([u], u.order_id == ^order_id)
+    |> preload([:courier])
+    |> order_by([u], asc: u.recorded_at)
+    |> Repo.all()
+  end
+  
+  @doc """
+  Initializes order tracking by creating the initial "order_placed" event.
+  This should be called immediately after order creation.
+  """
+  def initialize_order_tracking(order_id, attrs \\ %{}) do
+    event_attrs = 
+      attrs
+      |> Map.put(:order_id, order_id)
+      |> Map.put(:status, "order_placed")
+      |> Map.put(:actor_type, "system")
+      |> Map.put_new(:metadata, %{
+        total_amount: attrs[:total_amount],
+        delivery_address_id: attrs[:delivery_address_id],
+        requested_delivery_time: attrs[:requested_delivery_time]
+      })
+    
+    create_order_status_event(event_attrs)
+  end
+  
+  # Private helper functions for order tracking
+  
+  defp get_order_with_tracking(order_id) do
+    Order
+    |> where([o], o.id == ^order_id)
+    |> preload([:customer, :restaurant, order_items: :meal])
+    |> Repo.one()
+  end
+  
+  defp update_order_legacy_status(order, new_status) do
+    # Map new status names to old status names for backwards compatibility
+    legacy_status = map_to_legacy_status(new_status)
+    update_order_status(order, legacy_status)
+  end
+  
+  defp map_to_legacy_status("order_placed"), do: "pending"
+  defp map_to_legacy_status("order_accepted"), do: "confirmed"
+  defp map_to_legacy_status("cooking"), do: "preparing"
+  defp map_to_legacy_status("ready_for_courier"), do: "ready"
+  defp map_to_legacy_status("in_transit"), do: "out_for_delivery"
+  defp map_to_legacy_status("delivered"), do: "delivered"
+  defp map_to_legacy_status("order_rejected"), do: "cancelled"
+  defp map_to_legacy_status("delivery_failed"), do: "cancelled"
+  defp map_to_legacy_status(status), do: status
+  
+  defp broadcast_status_event(event) do
+    order = get_order!(event.order_id)
+    
+    # Broadcast to customer tracking
+    Phoenix.PubSub.broadcast(
+      Eatfair.PubSub,
+      "order_tracking:#{order.id}",
+      {:status_event_created, event}
+    )
+    
+    # Broadcast to token-based tracking for anonymous users
+    if order.tracking_token do
+      Phoenix.PubSub.broadcast(
+        Eatfair.PubSub,
+        "order_tracking_token:#{order.tracking_token}",
+        {:status_event_created, event}
+      )
+    end
+  end
+  
+  defp broadcast_location_update(update) do
+    Phoenix.PubSub.broadcast(
+      Eatfair.PubSub,
+      "order_tracking:#{update.order_id}",
+      {:location_updated, update}
+    )
+    
+    # Also broadcast to token-based tracking
+    order = get_order!(update.order_id)
+    if order.tracking_token do
+      Phoenix.PubSub.broadcast(
+        Eatfair.PubSub,
+        "order_tracking_token:#{order.tracking_token}",
+        {:location_updated, update}
+      )
+    end
+  end
+  
+  defp handle_automatic_transitions(event) do
+    # Handle automatic status transitions based on business logic
+    case event.status do
+      "order_accepted" ->
+        # Automatically transition to cooking based on preparation timing
+        maybe_auto_transition_to_cooking(event)
+      
+      _ -> :ok
+    end
+  end
+  
+  defp maybe_auto_transition_to_cooking(_event) do
+    # This would implement automatic transition logic
+    # For now, we'll leave it as a placeholder for future enhancement
+    :ok
   end
 end

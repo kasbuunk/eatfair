@@ -28,7 +28,7 @@ When invoked with feedback, follow this comprehensive analysis and implementatio
 - **Extract Specific Issues**: Identify concrete problems, bugs, or improvement opportunities
 - **User Journey Mapping**: Determine which user journey(s) are affected
 - **Severity Assessment**: Categorize as Critical, High, Medium, or Low priority
-- **Specification Alignment**: Compare feedback against PROJECT_SPECIFICATION.md requirements
+- **Specification Alignment**: Compare feedback against documentation/product_specification.md requirements
 
 #### 1.2 Issue Categorization
 Classify each feedback item into one of these categories:

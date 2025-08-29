@@ -22,9 +22,20 @@ defmodule EatfairWeb.OrderLive.Success do
 
   @impl true
   def handle_event("track_order", _params, socket) do
-    # In a real implementation, this would redirect to an order tracking page
-    # For now, we'll just show a flash message
-    {:noreply, put_flash(socket, :info, "Order tracking will be available soon!")}
+    order = socket.assigns.order
+    
+    # Check if user is authenticated or if this is an anonymous order
+    if socket.assigns.current_scope.user do
+      # Authenticated user - redirect to authenticated order tracking
+      {:noreply, push_navigate(socket, to: ~p"/orders/track/#{order.id}")}
+    else
+      # Anonymous order - redirect with tracking token
+      if order.tracking_token do
+        {:noreply, push_navigate(socket, to: ~p"/orders/#{order.id}/track?token=#{order.tracking_token}")}
+      else
+        {:noreply, put_flash(socket, :error, "Order tracking is not available for this order.")}
+      end
+    end
   end
 
   def handle_event("order_again", _params, socket) do

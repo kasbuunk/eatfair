@@ -5,30 +5,60 @@ defmodule EatfairWeb.OrderTrackingLive do
   alias Phoenix.PubSub
 
   @impl true
+  def mount(%{"id" => order_id, "token" => token}, _session, socket) do
+    # Mount single order tracking with anonymous token
+    case Orders.get_order_tracking_by_token(token) do
+      {:ok, tracking_data} ->
+        if to_string(tracking_data.order.id) == order_id do
+          mount_order_tracking(socket, tracking_data, :token)
+        else
+          invalid_tracking_redirect(socket)
+        end
+      
+      {:error, :invalid_token} ->
+        invalid_tracking_redirect(socket)
+      
+      _error ->
+        invalid_tracking_redirect(socket)
+    end
+  end
+
+  @impl true
   def mount(%{"id" => order_id}, _session, socket) do
-    # Mount single order tracking
+    # Mount single order tracking for authenticated users
     current_user = socket.assigns.current_scope.user
-    order = Orders.get_order!(order_id)
+    
+    case Orders.get_order_tracking_data(String.to_integer(order_id)) do
+      {:ok, tracking_data} ->
+        order = tracking_data.order
+        
+        # Verify customer owns this order
+        if order.customer_id != current_user.id do
+          socket =
+            socket
+            |> put_flash(:error, "Order not found")
+            |> redirect(to: ~p"/orders/track")
 
-    # Verify customer owns this order
-    if order.customer_id != current_user.id do
-      socket =
-        socket
-        |> put_flash(:error, "Order not found")
-        |> redirect(to: ~p"/orders/track")
+          {:ok, socket}
+        else
+          mount_order_tracking(socket, tracking_data, :authenticated)
+        end
+      
+      {:error, :order_not_found} ->
+        socket =
+          socket
+          |> put_flash(:error, "Order not found")
+          |> redirect(to: ~p"/orders/track")
 
-      {:ok, socket}
-    else
-      # Subscribe to order updates
-      PubSub.subscribe(Eatfair.PubSub, "order_tracking:#{current_user.id}")
+        {:ok, socket}
+      
+      _error ->
+        socket =
+          socket
+          |> put_flash(:error, "Unable to load order tracking")
+          |> redirect(to: ~p"/orders/track")
 
-      socket =
-        socket
-        |> assign(:order, order)
-        |> assign(:estimated_delivery, Orders.calculate_estimated_delivery(order))
-        |> assign(:page_title, "Track Order ##{order.id}")
-
-      {:ok, socket}
+        {:ok, socket}
     end
   end
 
@@ -433,5 +463,44 @@ defmodule EatfairWeb.OrderTrackingLive do
       _ ->
         "Your order status has been updated."
     end
+  end
+  
+  # Helper functions for mounting order tracking
+  
+  defp mount_order_tracking(socket, tracking_data, access_type) do
+    order = tracking_data.order
+    current_status = tracking_data.current_status
+    status_history = tracking_data.status_history
+    
+    # Subscribe to real-time updates based on access type
+    case access_type do
+      :authenticated ->
+        PubSub.subscribe(Eatfair.PubSub, "order_tracking:#{order.id}")
+      :token ->
+        if order.tracking_token do
+          PubSub.subscribe(Eatfair.PubSub, "order_tracking_token:#{order.tracking_token}")
+        end
+    end
+    
+    socket =
+      socket
+      |> assign(:order, order)
+      |> assign(:current_status, current_status)
+      |> assign(:status_history, status_history)
+      |> assign(:courier_location, tracking_data[:courier_location])
+      |> assign(:estimated_delivery, Orders.calculate_estimated_delivery(order))
+      |> assign(:access_type, access_type)
+      |> assign(:page_title, "Track Order ##{order.id}")
+    
+    {:ok, socket}
+  end
+  
+  defp invalid_tracking_redirect(socket) do
+    socket =
+      socket
+      |> put_flash(:error, "Invalid tracking link. Please check your email for the correct link.")
+      |> redirect(to: ~p"/")
+    
+    {:ok, socket}
   end
 end

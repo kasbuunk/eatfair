@@ -35,6 +35,9 @@ defmodule EatfairWeb.Router do
       live "/order/:restaurant_id/confirm", OrderLive.Confirm, :confirm
       live "/order/:restaurant_id/payment", OrderLive.Payment, :payment
       live "/order/success/:id", OrderLive.Success, :success
+      
+      # Anonymous order tracking - accessible via email links
+      live "/orders/:id/track", OrderTrackingLive, :anonymous_show
     end
   end
 
