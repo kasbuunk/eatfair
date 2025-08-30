@@ -16,6 +16,7 @@ Enhance error handling, user feedback mechanisms, loading states, and accessibil
 - [x] Timezone-aware delivery time selection with clear UI context
 - [x] Restaurant operational hours system with comprehensive validation
 - [x] Restaurant closed state handling with next opening time display
+- [x] Restaurant availability consistency between discovery filter and order page
 - [ ] Accessibility improvements implemented
 - [ ] Error boundary testing completed
 
@@ -36,3 +37,8 @@ Enhance error handling, user feedback mechanisms, loading states, and accessibil
   - Added robust validation system to prevent edge cases and abuse
   - Comprehensive test coverage for operational hours and timezone handling
   - Enhanced UI with timezone indicators and clear restaurant status messaging
+* 2025-08-30 05:57:00: Fixed critical restaurant availability consistency bug:
+  - Discovery page "open for orders" filter now uses Restaurant.open_for_orders?/1
+  - Eliminated inconsistency where filtered restaurants appeared open but were actually closed
+  - Added comprehensive integration tests to prevent regression
+  - Established single source of truth for availability checks across the application

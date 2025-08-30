@@ -2,6 +2,7 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
   use EatfairWeb, :live_view
 
   alias Eatfair.Restaurants
+  alias Eatfair.Restaurants.Restaurant
   alias Eatfair.Accounts
   alias Eatfair.LocationInference
 
@@ -358,7 +359,7 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
   end
 
   defp filter_by_currently_open(restaurants, true) do
-    restaurants |> Enum.filter(& &1.is_open)
+    restaurants |> Enum.filter(&Restaurant.open_for_orders?/1)
   end
 
   defp filter_by_currently_open(restaurants, false), do: restaurants
