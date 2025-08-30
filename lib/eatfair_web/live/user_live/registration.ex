@@ -44,7 +44,12 @@ defmodule EatfairWeb.UserLive.Registration do
   @impl true
   def mount(_params, _session, %{assigns: %{current_scope: %{user: user}}} = socket)
       when not is_nil(user) do
-    {:ok, redirect(socket, to: EatfairWeb.UserAuth.signed_in_path(socket))}
+    # Determine redirect path based on user role
+    redirect_path = case user.role do
+      "courier" -> ~p"/courier/dashboard"
+      _ -> ~p"/users/settings"
+    end
+    {:ok, redirect(socket, to: redirect_path)}
   end
 
   def mount(_params, _session, socket) do

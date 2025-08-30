@@ -53,9 +53,9 @@ defmodule EatfairWeb.NotificationSystemTest do
     test "notifications can be dismissed by user", %{conn: conn} do
       # Setup
       restaurant_owner = user_fixture()
-      customer = user_fixture()
+      _customer = user_fixture()
       restaurant = restaurant_fixture(%{owner_id: restaurant_owner.id})
-      meal = meal_fixture(%{restaurant_id: restaurant.id})
+      _meal = meal_fixture(%{restaurant_id: restaurant.id})
 
       # Create notification event manually to test UI
       {:ok, _event} = Notifications.create_event(%{
@@ -133,7 +133,7 @@ defmodule EatfairWeb.NotificationSystemTest do
 
     test "notification center shows unread count", %{conn: conn} do
       restaurant_owner = user_fixture()
-      restaurant = restaurant_fixture(%{owner_id: restaurant_owner.id})
+      _restaurant = restaurant_fixture(%{owner_id: restaurant_owner.id})
 
       # Create multiple notifications
       {:ok, _event1} = Notifications.create_event(%{

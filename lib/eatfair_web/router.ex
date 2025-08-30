@@ -29,6 +29,7 @@ defmodule EatfairWeb.Router do
       live "/users/register", UserLive.Registration, :new
       live "/users/log-in", UserLive.Login, :new
       live "/users/log-in/:token", UserLive.Confirmation, :new
+      live "/courier/login", CourierLive.Login, :new
 
       # Streamlined ordering flow - no authentication required
       live "/order/:restaurant_id/details", OrderLive.Details, :details
@@ -100,6 +101,7 @@ defmodule EatfairWeb.Router do
       live "/restaurant/onboard", RestaurantLive.Onboarding, :new
     end
 
+
     # Admin routes - requires admin role
     live_session :require_admin,
       on_mount: [{EatfairWeb.UserAuth, :require_admin}] do
@@ -124,6 +126,17 @@ defmodule EatfairWeb.Router do
     end
 
     post "/users/update-password", UserSessionController, :update_password
+  end
+
+  # Courier routes - require courier role
+  scope "/", EatfairWeb do
+    pipe_through [:browser]
+
+    live_session :require_courier,
+      on_mount: [{EatfairWeb.UserAuth, :require_courier}] do
+      live "/courier/dashboard", CourierLive.Dashboard, :index
+      live "/courier/deliveries/:id", CourierLive.Delivery, :show
+    end
   end
 
   scope "/", EatfairWeb do

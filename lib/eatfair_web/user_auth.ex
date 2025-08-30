@@ -49,14 +49,21 @@ defmodule EatfairWeb.UserAuth do
     user_token = get_session(conn, :user_token)
     user_token && Accounts.delete_user_session_token(user_token)
 
+    # Determine redirect path based on current user role
+    redirect_path = 
+      case conn.assigns[:current_scope] do
+        %{user: %{role: "courier"}} -> ~p"/courier/login"
+        _ -> ~p"/"
+      end
+
     if live_socket_id = get_session(conn, :live_socket_id) do
       EatfairWeb.Endpoint.broadcast(live_socket_id, "disconnect", %{})
     end
 
     conn
-    |> renew_session(nil)
+    |> do_renew_session()
     |> delete_resp_cookie(@remember_me_cookie)
-    |> redirect(to: ~p"/")
+    |> redirect(to: redirect_path)
   end
 
   @doc """
@@ -120,9 +127,14 @@ defmodule EatfairWeb.UserAuth do
 
   # Do not renew session if the user is already logged in
   # to prevent CSRF errors or data being lost in tabs that are still open
-  defp renew_session(conn, user) when conn.assigns.current_scope.user.id == user.id do
-    conn
+  defp renew_session(conn, user) when is_map_key(conn.assigns, :current_scope) do
+    case conn.assigns.current_scope do
+      %{user: %{id: user_id}} when user_id == user.id -> conn
+      _ -> do_renew_session(conn)
+    end
   end
+  
+  defp renew_session(conn, _user), do: do_renew_session(conn)
 
   # This function renews the session ID and erases the whole
   # session to avoid fixation attacks. If there is any data
@@ -130,7 +142,7 @@ defmodule EatfairWeb.UserAuth do
   # you must explicitly fetch the session data before clearing
   # and then immediately set it after clearing, for example:
   #
-  #     defp renew_session(conn, _user) do
+  #     defp do_renew_session(conn) do
   #       delete_csrf_token()
   #       preferred_locale = get_session(conn, :preferred_locale)
   #
@@ -140,7 +152,7 @@ defmodule EatfairWeb.UserAuth do
   #       |> put_session(:preferred_locale, preferred_locale)
   #     end
   #
-  defp renew_session(conn, _user) do
+  defp do_renew_session(conn) do
     delete_csrf_token()
 
     conn
@@ -270,6 +282,31 @@ defmodule EatfairWeb.UserAuth do
     end
   end
 
+  def on_mount(:require_courier, _params, session, socket) do
+    socket = mount_current_scope(socket, session)
+
+    case socket.assigns.current_scope do
+      %{user: %{role: "courier"}} ->
+        {:cont, socket}
+
+      %{user: _} ->
+        socket =
+          socket
+          |> Phoenix.LiveView.put_flash(:error, "Access denied. You must be a courier to access this page.")
+          |> Phoenix.LiveView.redirect(to: ~p"/courier/login")
+
+        {:halt, socket}
+
+      _ ->
+        socket =
+          socket
+          |> Phoenix.LiveView.put_flash(:error, "You must log in to access this page.")
+          |> Phoenix.LiveView.redirect(to: ~p"/courier/login")
+
+        {:halt, socket}
+    end
+  end
+
   defp mount_current_scope(socket, session) do
     Phoenix.Component.assign_new(socket, :current_scope, fn ->
       {user, _} =
@@ -282,12 +319,26 @@ defmodule EatfairWeb.UserAuth do
   end
 
   @doc "Returns the path to redirect to after log in."
-  # the user was already logged in, redirect to settings
-  def signed_in_path(%Plug.Conn{assigns: %{current_scope: %Scope{user: %Accounts.User{}}}}) do
-    ~p"/users/settings"
+  # During login, we need to check for the user in the session instead of assigns
+  # since the current_scope may not be set yet
+  def signed_in_path(conn) do
+    # Check if we're in the middle of a login process
+    with user_token when not is_nil(user_token) <- get_session(conn, :user_token),
+         {user, _} when not is_nil(user) <- Accounts.get_user_by_session_token(user_token) do
+      case user.role do
+        "courier" -> ~p"/courier/dashboard"
+        _ -> ~p"/users/settings"
+      end
+    else
+      _ ->
+        # Fallback: check current_scope if available
+        case conn.assigns[:current_scope] do
+          %{user: %{role: "courier"}} -> ~p"/courier/dashboard"
+          %{user: %Accounts.User{}} -> ~p"/users/settings"
+          _ -> ~p"/"
+        end
+    end
   end
-
-  def signed_in_path(_), do: ~p"/"
 
   @doc """
   Plug for routes that require the user to be authenticated.

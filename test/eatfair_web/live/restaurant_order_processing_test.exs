@@ -190,7 +190,7 @@ defmodule EatfairWeb.RestaurantOrderProcessingTest do
       restaurant = restaurant_fixture(%{owner_id: restaurant_owner.id})
       meal = meal_fixture(%{restaurant_id: restaurant.id})
 
-      {:ok, order} =
+      {:ok, _order} =
         Orders.create_order_with_items(
           %{
             customer_id: customer.id,

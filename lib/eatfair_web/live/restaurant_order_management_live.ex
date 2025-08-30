@@ -183,7 +183,7 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
   end
 
   @impl true
-  def handle_event("reject_order", %{"order_id" => order_id, "reason" => reason}, socket) do
+  def handle_event("reject_order", %{"order_id" => order_id, "reason" => _reason}, socket) do
     # Store the order_id for form submission and show modal
     socket =
       socket
@@ -226,7 +226,7 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
   end
 
   @impl true
-  def handle_event("report_delivery_failure", %{"order_id" => order_id, "reason" => reason}, socket) do
+  def handle_event("report_delivery_failure", %{"order_id" => order_id, "reason" => _reason}, socket) do
     # Store the order_id for form submission and show modal
     socket =
       socket
@@ -797,7 +797,7 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
     # Extract order info and create appropriate title/message
     order_id = event.data["order_id"]
     new_status = event.data["new_status"] || event.data[:new_status]
-    old_status = event.data["old_status"] || event.data[:old_status]
+    _old_status = event.data["old_status"] || event.data[:old_status]
     
     {title, message} = case event.event_type do
       "order_status_changed" ->
