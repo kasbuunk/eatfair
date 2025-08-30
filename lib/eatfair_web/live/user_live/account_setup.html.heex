@@ -3,7 +3,7 @@
     <div class="text-center mb-8">
       <.header>
         Complete Your Account Setup
-        <:subtitle>Create a password and set your preferences</:subtitle>
+        <:subtitle>Secure your account or continue anonymously to track your order</:subtitle>
       </.header>
     </div>
 
@@ -14,21 +14,26 @@
       phx-submit="save"
       class="space-y-6"
     >
-      <.input
-        field={@form[:password]}
-        type="password"
-        label="Create Password (optional)"
-        placeholder="Leave blank to set later"
-        autocomplete="new-password"
-        required={false}
-      />
-      <.input
-        field={@form[:password_confirmation]}
-        type="password"
-        label="Confirm password"
-        autocomplete="new-password"
-        required={false}
-      />
+      <fieldset class="space-y-4 border border-gray-200 rounded-lg p-4">
+        <legend class="text-sm font-medium text-gray-900 px-2">
+          Account Security (Optional)
+        </legend>
+        <.input
+          field={@form[:password]}
+          type="password"
+          label="Create Password"
+          placeholder="Leave blank to skip password setup"
+          autocomplete="new-password"
+          required={false}
+        />
+        <.input
+          field={@form[:password_confirmation]}
+          type="password"
+          label="Confirm password"
+          autocomplete="new-password"
+          required={false}
+        />
+      </fieldset>
 
       <div class="mt-6 space-y-4">
         <label class="flex items-center gap-3">
@@ -51,7 +56,6 @@
             value="true"
             checked={@terms_accepted}
             class="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-600 mt-0.5"
-            required
           />
           <span class="text-sm text-gray-700">
             I agree to the
@@ -62,7 +66,6 @@
             <.link href={~p"/privacy"} class="text-brand-600 hover:underline">
               Privacy Policy
             </.link>
-            <span class="text-red-500">*</span>
           </span>
         </label>
       </div>
@@ -80,11 +83,19 @@
         <.button
           type="button"
           phx-click="skip"
-          class="w-full"
+          class="w-full bg-gray-200 text-gray-800 hover:bg-gray-300"
         >
-          Skip for now
+          Agree and continue without password
         </.button>
       </div>
+
+      <p class="text-xs text-gray-500 text-center italic mt-4">
+        By continuing you agree to the
+        <.link href={~p"/terms"} class="text-brand-600 hover:underline">
+          Terms and Conditions
+        </.link>
+        and <.link href={~p"/privacy"} class="text-brand-600 hover:underline">Privacy Policy</.link>.
+      </p>
     </.form>
 
     <div class="mt-6 text-center text-sm text-gray-600">

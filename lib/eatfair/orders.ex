@@ -453,6 +453,25 @@ defmodule Eatfair.Orders do
   end
 
   @doc """
+  Gets the most recent order for a customer.
+
+  This is useful for account setup flows after email verification
+  to redirect to the appropriate order tracking page.
+
+  Returns the most recent order or nil if no orders exist.
+  """
+  def get_latest_customer_order(customer_id) when is_integer(customer_id) do
+    Order
+    |> where([o], o.customer_id == ^customer_id)
+    |> preload([:restaurant, order_items: :meal])
+    |> order_by([o], desc: o.inserted_at)
+    |> limit(1)
+    |> Repo.one()
+  end
+
+  def get_latest_customer_order(nil), do: nil
+
+  @doc """
   Lists orders currently out for delivery.
   """
   def list_orders_out_for_delivery do

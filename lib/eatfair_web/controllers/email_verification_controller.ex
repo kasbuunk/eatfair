@@ -13,6 +13,7 @@ defmodule EatfairWeb.EmailVerificationController do
           conn
           |> put_flash(:info, "Email verified! Complete your account setup below.")
           |> create_session_for_user(user)
+          |> put_session(:post_verify_order_id, verification.order_id)
           |> redirect(to: ~p"/users/account-setup")
         else
           # Regular user verification with auto-login
