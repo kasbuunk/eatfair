@@ -619,6 +619,10 @@ defmodule Eatfair.Accounts do
 
   @doc """
   Verifies an email address using the provided token.
+
+  For anonymous orders, this function automatically creates a user account
+  and returns {:ok, %{verification: verification, user: user}} to enable 
+  auto-login functionality.
   """
   def verify_email(token) when is_binary(token) do
     verification = get_verification_by_token(token)
@@ -646,7 +650,14 @@ defmodule Eatfair.Accounts do
             # Broadcast verification success
             broadcast_email_verified(verification.email)
 
-            {:ok, verification}
+            # Auto-create account for anonymous orders
+            case maybe_create_account_for_order(verification) do
+              {:ok, user} -> {:ok, %{verification: verification, user: user}}
+              # Fall back to standard verification
+              {:error, _reason} -> {:ok, verification}
+              # Standard verification
+              :no_account_needed -> {:ok, verification}
+            end
 
           error ->
             error
@@ -768,6 +779,33 @@ defmodule Eatfair.Accounts do
   end
 
   # Private helper functions for email verification
+
+  # Creates account for anonymous order verification if needed
+  defp maybe_create_account_for_order(verification) do
+    # Only create/upgrade account if:
+    # 1. Verification has an associated order
+
+    if verification.order_id do
+      existing_user = get_user_by_email(verification.email)
+
+      # Create or upgrade account if:
+      # - No user exists, OR
+      # - User exists but is unconfirmed (soft account)
+      if is_nil(existing_user) || is_nil(existing_user.confirmed_at) do
+        # Get the order with preloaded data
+        order = Orders.get_order!(verification.order_id)
+
+        case create_account_from_order(order) do
+          {:ok, user, _order} -> {:ok, user}
+          {:error, reason} -> {:error, reason}
+        end
+      else
+        :no_account_needed
+      end
+    else
+      :no_account_needed
+    end
+  end
 
   defp cleanup_expired_verifications(email) do
     now = DateTime.utc_now()

@@ -6,6 +6,23 @@ defmodule EatfairWeb.EmailVerificationController do
 
   def verify(conn, %{"token" => token}) do
     case Accounts.verify_email(token) do
+      # Auto-login flow for anonymous orders that create accounts
+      {:ok, %{verification: verification, user: user}} ->
+        if verification.order_id do
+          # Log in the newly created user and redirect to account setup
+          conn
+          |> put_flash(:info, "Email verified! Complete your account setup below.")
+          |> create_session_for_user(user)
+          |> redirect(to: ~p"/users/account-setup")
+        else
+          # Regular user verification with auto-login
+          conn
+          |> put_flash(:info, "Email verified successfully!")
+          |> create_session_for_user(user)
+          |> redirect(to: ~p"/")
+        end
+
+      # Standard verification flow (no account creation)
       {:ok, verification} ->
         # If verification has an associated order, redirect to order tracking
         if verification.order_id do
@@ -44,4 +61,17 @@ defmodule EatfairWeb.EmailVerificationController do
         |> redirect(to: ~p"/")
     end
   end
+
+  # Creates a session for the user without redirecting (unlike UserAuth.log_in_user/2)
+  defp create_session_for_user(conn, user) do
+    token = Accounts.generate_user_session_token(user)
+
+    conn
+    |> configure_session(renew: true)
+    |> clear_session()
+    |> put_session(:user_token, token)
+    |> put_session(:live_socket_id, user_session_topic(token))
+  end
+
+  defp user_session_topic(token), do: "users_sessions:#{Base.url_encode64(token)}"
 end

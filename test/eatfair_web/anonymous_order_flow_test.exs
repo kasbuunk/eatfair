@@ -127,8 +127,8 @@ defmodule EatfairWeb.AnonymousOrderFlowTest do
 
       assert email.to == [{"", order.customer_email}]
       assert email.subject =~ "track your EatFair order"
-      assert email.text_body =~ "/orders/track/#{order.tracking_token}"
-      assert email.text_body =~ "Order ##{order.id}"
+      assert email.text_body =~ "/orders/#{order.id}/track?token=#{order.tracking_token}"
+      assert email.text_body =~ "Order: ##{order.id}"
     end
 
     test "anonymous user gets error message when tracking token is missing", %{conn: conn} do

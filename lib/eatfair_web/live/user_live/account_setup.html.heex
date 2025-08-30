@@ -1,0 +1,100 @@
+<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8 transition-colors">
+    <div class="text-center mb-8">
+      <.header>
+        Complete Your Account Setup
+        <:subtitle>Create a password and set your preferences</:subtitle>
+      </.header>
+    </div>
+
+    <.form
+      for={@form}
+      id="account_setup_form"
+      phx-change="validate"
+      phx-submit="save"
+      class="space-y-6"
+    >
+      <.input
+        field={@form[:password]}
+        type="password"
+        label="Create Password (optional)"
+        placeholder="Leave blank to set later"
+        autocomplete="new-password"
+        required={false}
+      />
+      <.input
+        field={@form[:password_confirmation]}
+        type="password"
+        label="Confirm password"
+        autocomplete="new-password"
+        required={false}
+      />
+
+      <div class="mt-6 space-y-4">
+        <label class="flex items-center gap-3">
+          <input
+            type="checkbox"
+            name="marketing_opt_in"
+            value="true"
+            checked={@marketing_opt_in}
+            class="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-600"
+          />
+          <span class="text-sm text-gray-700">
+            I'd like to receive marketing notifications and special offers
+          </span>
+        </label>
+
+        <label class="flex items-start gap-3">
+          <input
+            type="checkbox"
+            name="terms_accepted"
+            value="true"
+            checked={@terms_accepted}
+            class="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-600 mt-0.5"
+            required
+          />
+          <span class="text-sm text-gray-700">
+            I agree to the
+            <.link href={~p"/terms"} class="text-brand-600 hover:underline">
+              Terms and Conditions
+            </.link>
+            and
+            <.link href={~p"/privacy"} class="text-brand-600 hover:underline">
+              Privacy Policy
+            </.link>
+            <span class="text-red-500">*</span>
+          </span>
+        </label>
+      </div>
+
+      <div class="flex flex-col space-y-3">
+        <.button
+          type="submit"
+          phx-disable-with="Setting up..."
+          variant="primary"
+          class="w-full"
+        >
+          Complete Account Setup
+        </.button>
+
+        <.button
+          type="button"
+          phx-click="skip"
+          class="w-full"
+        >
+          Skip for now
+        </.button>
+      </div>
+    </.form>
+
+    <div class="mt-6 text-center text-sm text-gray-600">
+      <p>🎯 Your account benefits:</p>
+      <ul class="mt-2 text-left space-y-1">
+        <li>✅ Faster checkout on future orders</li>
+        <li>✅ Order history and favorites</li>
+        <li>✅ Exclusive loyalty rewards and offers</li>
+        <li>✅ Priority customer support</li>
+      </ul>
+    </div>
+  </div>
+</div>

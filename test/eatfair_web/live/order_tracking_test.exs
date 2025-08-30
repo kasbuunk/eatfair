@@ -583,7 +583,9 @@ defmodule EatfairWeb.OrderTrackingTest do
   end
 
   describe "🔍 Anonymous Order Tracking" do
-    test "anonymous order tracking succeeds after Decimal metadata sanitization fix", %{conn: conn} do
+    test "anonymous order tracking succeeds after Decimal metadata sanitization fix", %{
+      conn: conn
+    } do
       # 🚶 Setup: Anonymous user places order and gets tracking token
       restaurant = restaurant_fixture()
       meal = meal_fixture(%{restaurant_id: restaurant.id, price: Decimal.new("43.5")})
@@ -594,7 +596,8 @@ defmodule EatfairWeb.OrderTrackingTest do
           customer_email: "anonymous@example.com",
           customer_phone: "+31612345678",
           restaurant_id: restaurant.id,
-          total_price: meal.price,  # This is Decimal.new("43.5")
+          # This is Decimal.new("43.5")
+          total_price: meal.price,
           delivery_address: "Amsterdamsestraatweg 15, 1234AB Hilversum",
           delivery_notes: "Ring bell twice",
           status: "pending"
@@ -605,7 +608,8 @@ defmodule EatfairWeb.OrderTrackingTest do
 
       # Delete any existing status events to force initialization with metadata sanitization
       import Ecto.Query
-      from(e in Eatfair.Orders.OrderStatusEvent, where: e.order_id == ^order.id) 
+
+      from(e in Eatfair.Orders.OrderStatusEvent, where: e.order_id == ^order.id)
       |> Eatfair.Repo.delete_all()
 
       # Reload order with associations for full tracking
@@ -617,22 +621,24 @@ defmodule EatfairWeb.OrderTrackingTest do
 
       # ✅ After fix: This now succeeds with automatic Decimal metadata sanitization
       # When anonymous user clicks "Track Order" link from email, initialize_order_tracking is called
-      {:ok, _tracking_live, html} = live(conn, "/orders/#{order.id}/track?token=#{order.tracking_token}")
-      
+      {:ok, _tracking_live, html} =
+        live(conn, "/orders/#{order.id}/track?token=#{order.tracking_token}")
+
       # Verify order tracking page renders correctly
       assert html =~ "Order ##{order.id}"
       assert html =~ "Amsterdamsestraatweg 15, 1234AB Hilversum"
       assert html =~ "Ring bell twice"
       assert html =~ restaurant.name
-      
+
       # Verify that a status event was properly created with sanitized metadata
       events = Orders.get_order_status_history(order.id)
       assert length(events) > 0
       [event | _] = events
-      
+
       # The metadata should contain a float, not a Decimal struct
       # Check both atom and string keys since JSON might serialize differently
       total_amount = event.metadata[:total_amount] || event.metadata["total_amount"]
+
       if total_amount do
         assert is_float(total_amount)
         assert total_amount == 43.5
@@ -655,7 +661,8 @@ defmodule EatfairWeb.OrderTrackingTest do
           customer_email: "anonymous@example.com",
           customer_phone: "+31612345678",
           restaurant_id: restaurant.id,
-          total_price: meal.price,  # This is Decimal.new("43.5")
+          # This is Decimal.new("43.5")
+          total_price: meal.price,
           delivery_address: "Amsterdamsestraatweg 15, 1234AB Hilversum",
           delivery_notes: "Ring bell twice",
           status: "pending"
@@ -672,8 +679,9 @@ defmodule EatfairWeb.OrderTrackingTest do
       assert is_binary(order.tracking_token)
 
       # ✅ After fix: Anonymous user can track order without crash
-      {:ok, _tracking_live, html} = live(conn, "/orders/#{order.id}/track?token=#{order.tracking_token}")
-      
+      {:ok, _tracking_live, html} =
+        live(conn, "/orders/#{order.id}/track?token=#{order.tracking_token}")
+
       # Verify order tracking page renders correctly
       assert html =~ "Order ##{order.id}"
       assert html =~ "Amsterdamsestraatweg 15, 1234AB Hilversum"

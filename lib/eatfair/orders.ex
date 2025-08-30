@@ -649,12 +649,12 @@ defmodule Eatfair.Orders do
   """
   def create_order_status_event(attrs) do
     # Sanitize metadata to ensure all values are JSON-serializable
-    sanitized_attrs = 
+    sanitized_attrs =
       case attrs[:metadata] || attrs["metadata"] do
         nil -> attrs
         metadata -> Map.put(attrs, :metadata, sanitize_metadata(metadata))
       end
-    
+
     changeset = OrderStatusEvent.create_changeset(sanitized_attrs)
 
     case Repo.insert(changeset) do
@@ -919,22 +919,22 @@ defmodule Eatfair.Orders do
   end
 
   # Metadata sanitization helper to ensure JSON serialization compatibility
-  
+
   defp sanitize_metadata(metadata) when is_map(metadata) do
     Enum.into(metadata, %{}, fn {key, value} ->
       {key, sanitize_metadata_value(value)}
     end)
   end
-  
+
   defp sanitize_metadata(value), do: sanitize_metadata_value(value)
-  
+
   defp sanitize_metadata_value(%Decimal{} = decimal) do
     Decimal.to_float(decimal)
   end
-  
+
   defp sanitize_metadata_value(value) when is_map(value) do
     sanitize_metadata(value)
   end
-  
+
   defp sanitize_metadata_value(value), do: value
 end

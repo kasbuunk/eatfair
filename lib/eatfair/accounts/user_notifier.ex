@@ -104,7 +104,13 @@ defmodule Eatfair.Accounts.UserNotifier do
 
     body =
       if order do
-        build_order_verification_email_body(verification, order, verification_url, tracking_url, base_url)
+        build_order_verification_email_body(
+          verification,
+          order,
+          verification_url,
+          tracking_url,
+          base_url
+        )
       else
         build_simple_verification_email_body(verification, verification_url, base_url)
       end
@@ -112,10 +118,16 @@ defmodule Eatfair.Accounts.UserNotifier do
     deliver(verification.email, subject, body)
   end
 
-  defp build_order_verification_email_body(_verification, order, verification_url, tracking_url, base_url) do
+  defp build_order_verification_email_body(
+         _verification,
+         order,
+         verification_url,
+         tracking_url,
+         base_url
+       ) do
     # Ensure order has all necessary associations loaded
     order = ensure_order_preloaded(order)
-    
+
     assigns = %{
       order: order,
       restaurant: order.restaurant,
@@ -125,17 +137,33 @@ defmodule Eatfair.Accounts.UserNotifier do
       privacy_url: "#{base_url}/privacy",
       base_url: base_url
     }
-    
-    template_path = Path.join([:code.priv_dir(:eatfair) || ".", "..", "lib", "eatfair_web", "templates", "email", "order_verification.text.eex"])
-    
+
+    template_path =
+      Path.join([
+        :code.priv_dir(:eatfair) || ".",
+        "..",
+        "lib",
+        "eatfair_web",
+        "templates",
+        "email",
+        "order_verification.text.eex"
+      ])
+
     # Fallback to relative path if priv_dir not available (during tests)
-    template_path = 
+    template_path =
       if File.exists?(template_path) do
         template_path
       else
-        Path.join([File.cwd!(), "lib", "eatfair_web", "templates", "email", "order_verification.text.eex"])
+        Path.join([
+          File.cwd!(),
+          "lib",
+          "eatfair_web",
+          "templates",
+          "email",
+          "order_verification.text.eex"
+        ])
       end
-    
+
     EEx.eval_file(template_path, assigns: assigns)
   end
 
@@ -146,19 +174,36 @@ defmodule Eatfair.Accounts.UserNotifier do
       privacy_url: "#{base_url}/privacy",
       base_url: base_url
     }
-    
-    template_path = Path.join([:code.priv_dir(:eatfair) || ".", "..", "lib", "eatfair_web", "templates", "email", "simple_verification.text.eex"])
-    
+
+    template_path =
+      Path.join([
+        :code.priv_dir(:eatfair) || ".",
+        "..",
+        "lib",
+        "eatfair_web",
+        "templates",
+        "email",
+        "simple_verification.text.eex"
+      ])
+
     # Fallback to relative path if priv_dir not available (during tests)
-    template_path = 
+    template_path =
       if File.exists?(template_path) do
         template_path
       else
-        Path.join([File.cwd!(), "lib", "eatfair_web", "templates", "email", "simple_verification.text.eex"])
+        Path.join([
+          File.cwd!(),
+          "lib",
+          "eatfair_web",
+          "templates",
+          "email",
+          "simple_verification.text.eex"
+        ])
       end
-    
+
     EEx.eval_file(template_path, assigns: assigns)
   end
+
   # Helper to ensure order has necessary preloads for email template
   defp ensure_order_preloaded(order) do
     # Check if associations are already loaded

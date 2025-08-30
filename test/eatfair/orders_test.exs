@@ -18,7 +18,8 @@ defmodule Eatfair.OrdersTest do
           %{
             customer_id: customer.id,
             restaurant_id: restaurant.id,
-            total_price: meal.price,  # This is Decimal.new("43.5")
+            # This is Decimal.new("43.5")
+            total_price: meal.price,
             delivery_address: "Test Address",
             status: "pending"
           },
@@ -30,31 +31,34 @@ defmodule Eatfair.OrdersTest do
       assert Decimal.to_string(order.total_price) == "43.5"
 
       # Try creating status event with Decimal in metadata
-      result = Orders.create_order_status_event(%{
-        order_id: order.id,
-        status: "order_placed",
-        actor_type: "system",
-        metadata: %{
-          total_amount: order.total_price,  # This is a Decimal struct
-          delivery_address_id: nil,
-          requested_delivery_time: nil
-        }
-      })
+      result =
+        Orders.create_order_status_event(%{
+          order_id: order.id,
+          status: "order_placed",
+          actor_type: "system",
+          metadata: %{
+            # This is a Decimal struct
+            total_amount: order.total_price,
+            delivery_address_id: nil,
+            requested_delivery_time: nil
+          }
+        })
 
       case result do
         {:ok, event} ->
           # If this succeeds, examine what type was actually stored
           IO.inspect(event.metadata, label: "Stored metadata")
           IO.inspect(event.metadata["total_amount"], label: "Stored total_amount")
-          
+
           # The fact that this works shows the bug might be environment-specific
           # or the database adapter handles it differently in test vs prod
           # Let's proceed with implementing the fix anyway
-          assert true  # This test documents current behavior
-        
+          # This test documents current behavior
+          assert true
+
         {:error, %Ecto.Changeset{} = changeset} ->
           flunk("Got changeset error instead of ChangeError: #{inspect(changeset.errors)}")
-        
+
         other ->
           flunk("Unexpected result: #{inspect(other)}")
       end
@@ -71,7 +75,8 @@ defmodule Eatfair.OrdersTest do
           %{
             customer_id: customer.id,
             restaurant_id: restaurant.id,
-            total_price: meal.price,  # This is Decimal.new("43.5")
+            # This is Decimal.new("43.5")
+            total_price: meal.price,
             delivery_address: "Test Address",
             status: "pending"
           },
@@ -79,17 +84,19 @@ defmodule Eatfair.OrdersTest do
         )
 
       # ✅ After fix: This now succeeds with automatic Decimal sanitization
-      {:ok, event} = Orders.create_order_status_event(%{
-        order_id: order.id,
-        status: "order_placed",
-        actor_type: "system",
-        metadata: %{
-          total_amount: order.total_price,  # This is a Decimal struct that gets auto-converted
-          delivery_address_id: nil,
-          requested_delivery_time: nil
-        }
-      })
-      
+      {:ok, event} =
+        Orders.create_order_status_event(%{
+          order_id: order.id,
+          status: "order_placed",
+          actor_type: "system",
+          metadata: %{
+            # This is a Decimal struct that gets auto-converted
+            total_amount: order.total_price,
+            delivery_address_id: nil,
+            requested_delivery_time: nil
+          }
+        })
+
       # Verify the Decimal was converted to a float
       assert event.metadata[:total_amount] == 43.5
       assert is_float(event.metadata[:total_amount])
@@ -119,7 +126,8 @@ defmodule Eatfair.OrdersTest do
       # Test that initialize_order_tracking properly sanitizes Decimal values
       {:ok, event} =
         Orders.initialize_order_tracking(order.id, %{
-          total_amount: order.total_price,  # Decimal input
+          # Decimal input
+          total_amount: order.total_price,
           delivery_address_id: nil,
           requested_delivery_time: nil
         })
@@ -168,7 +176,7 @@ defmodule Eatfair.OrdersTest do
       assert event.metadata[:pricing][:tax] == 3.5
       assert event.metadata[:pricing][:total] == 43.5
       assert event.metadata[:other_field] == "unchanged"
-      
+
       # Verify all are floats now
       assert is_float(event.metadata[:pricing][:subtotal])
       assert is_float(event.metadata[:pricing][:tax])
@@ -230,7 +238,8 @@ defmodule Eatfair.OrdersTest do
           %{
             customer_id: customer.id,
             restaurant_id: restaurant.id,
-            total_price: meal.price,  # This is Decimal.new("43.5")
+            # This is Decimal.new("43.5")
+            total_price: meal.price,
             delivery_address: "Test Address",
             status: "pending"
           },
@@ -239,16 +248,19 @@ defmodule Eatfair.OrdersTest do
 
       # Delete any status events that might have been auto-created
       import Ecto.Query
+
       from(e in Eatfair.Orders.OrderStatusEvent, where: e.order_id == ^order.id)
       |> Repo.delete_all()
 
       # ✅ After fix: This now succeeds with automatic Decimal sanitization
-      {:ok, event} = Orders.initialize_order_tracking(order.id, %{
-        total_amount: order.total_price,  # This is a Decimal that gets auto-converted
-        delivery_address_id: nil,
-        requested_delivery_time: order.estimated_delivery_at
-      })
-      
+      {:ok, event} =
+        Orders.initialize_order_tracking(order.id, %{
+          # This is a Decimal that gets auto-converted
+          total_amount: order.total_price,
+          delivery_address_id: nil,
+          requested_delivery_time: order.estimated_delivery_at
+        })
+
       # Verify the event was created successfully and Decimal was converted
       assert event.order_id == order.id
       assert event.status == "order_placed"
@@ -277,13 +289,15 @@ defmodule Eatfair.OrdersTest do
 
       # Delete any status events that might have been auto-created
       import Ecto.Query
+
       from(e in Eatfair.Orders.OrderStatusEvent, where: e.order_id == ^order.id)
       |> Repo.delete_all()
 
       # ✅ After fix: This should succeed with properly converted metadata
       {:ok, event} =
         Orders.initialize_order_tracking(order.id, %{
-          total_amount: Decimal.to_float(order.total_price),  # Converted to float
+          # Converted to float
+          total_amount: Decimal.to_float(order.total_price),
           delivery_address_id: nil,
           requested_delivery_time: order.estimated_delivery_at
         })

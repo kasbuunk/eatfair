@@ -89,6 +89,7 @@ defmodule EatfairWeb.Router do
       live "/users/settings", UserLive.Settings, :edit
       live "/users/settings/confirm-email/:token", UserLive.Settings, :confirm_email
       live "/users/addresses", UserLive.Addresses, :index
+      live "/users/account-setup", UserLive.AccountSetup, :edit
       live "/checkout/:restaurant_id", CheckoutLive, :index
 
       # Order tracking - for customers
