@@ -6,7 +6,7 @@ defmodule Eatfair.Accounts do
   import Ecto.Query, warn: false
   alias Eatfair.Repo
 
-  alias Eatfair.Accounts.{User, UserToken, UserNotifier, Address, EmailVerification}
+  alias Eatfair.Accounts.{User, UserToken, UserNotifier, Address, EmailVerification, TermsAcceptance, UserNotificationPreference}
   alias Eatfair.Orders
 
   ## Database getters
@@ -247,6 +247,12 @@ defmodule Eatfair.Accounts do
   Updates the user password.
 
   Returns a tuple with the updated user, as well as a list of expired tokens.
+  
+  ## Security Note
+  
+  This function enforces email immutability by rejecting any attempts to update
+  the email field alongside password changes. Email updates must be done through
+  the dedicated email verification flow.
 
   ## Examples
 
@@ -255,12 +261,25 @@ defmodule Eatfair.Accounts do
 
       iex> update_user_password(user, %{password: "too short"})
       {:error, %Ecto.Changeset{}}
+      
+      iex> update_user_password(user, %{password: "valid", email: "new@example.com"})
+      {:error, %Ecto.Changeset{errors: [email: {"cannot be changed", []}]}}
 
   """
   def update_user_password(user, attrs) do
-    user
-    |> User.password_changeset(attrs)
-    |> update_user_and_delete_all_tokens()
+    # Enforce email immutability - reject if email field is present
+    if Map.has_key?(attrs, :email) || Map.has_key?(attrs, "email") do
+      # Create a changeset with email immutability error
+      changeset = user
+      |> User.password_changeset(attrs)
+      |> Ecto.Changeset.add_error(:email, "cannot be changed through password update")
+      
+      {:error, changeset}
+    else
+      user
+      |> User.password_changeset(attrs)
+      |> update_user_and_delete_all_tokens()
+    end
   end
 
   ## Session
@@ -825,10 +844,10 @@ defmodule Eatfair.Accounts do
   defp maybe_create_account_for_order(verification) do
     # Only create/upgrade account if:
     # 1. Verification has an associated order
-
+    
     if verification.order_id do
       existing_user = get_user_by_email(verification.email)
-
+      
       # Create or upgrade account if:
       # - No user exists, OR
       # - User exists but is unconfirmed (soft account)
@@ -878,30 +897,9 @@ defmodule Eatfair.Accounts do
     create_address(address_attrs)
   end
 
-  # Simple address parsing - in production this would be more sophisticated
+  # Use the AddressParser utility for consistent address parsing
   defp parse_delivery_address(delivery_address) do
-    # Handle format like "Street 123, 1000 AB City"
-    parts = String.split(delivery_address, ",")
-
-    case parts do
-      [street_part, city_part] ->
-        street = String.trim(street_part)
-        city_postal = String.trim(city_part)
-
-        # Try to extract postal code (pattern: digits + letters)
-        case Regex.run(~r/^(\d{4}\s?[A-Z]{2})\s+(.+)$/, city_postal) do
-          [_full, postal_code, city] ->
-            {street, String.trim(city), String.trim(postal_code)}
-
-          _ ->
-            # Fallback if parsing fails
-            {street, city_postal, "0000 AA"}
-        end
-
-      _ ->
-        # Fallback for unparseable addresses
-        {delivery_address, "Amsterdam", "1000 AA"}
-    end
+    Eatfair.AddressParser.parse_delivery_address(delivery_address)
   end
 
   defp broadcast_email_verified(email) do
@@ -910,6 +908,82 @@ defmodule Eatfair.Accounts do
       "email_verification:#{email}",
       {:email_verified, email}
     )
+  end
+
+  ## Marketing Preferences Management
+
+  @doc """
+  Updates marketing preferences for a user.
+  Creates/updates user notification preferences with marketing opt-in timestamp.
+  
+  ## Examples
+  
+      iex> update_marketing_preferences(user, true)
+      {:ok, %UserNotificationPreference{}}
+  """
+  def update_marketing_preferences(%User{} = user, opted_in) when is_boolean(opted_in) do
+    # Prepare preference attributes
+    attrs = %{
+      user_id: user.id,
+      marketing_emails: opted_in,
+      marketing_opt_in_at: if(opted_in, do: DateTime.utc_now(), else: nil)
+    }
+    
+    # Upsert preferences
+    case Repo.get_by(UserNotificationPreference, user_id: user.id) do
+      nil ->
+        # Create new preferences
+        %UserNotificationPreference{}
+        |> UserNotificationPreference.changeset(attrs)
+        |> Repo.insert()
+        
+      existing_prefs ->
+        # Update existing preferences
+        existing_prefs
+        |> UserNotificationPreference.changeset(attrs)
+        |> Repo.update()
+    end
+  end
+
+  ## Terms Acceptance Management
+
+  @doc """
+  Records a terms and conditions acceptance for a user.
+  Creates an immutable audit record for legal compliance.
+  
+  ## Examples
+  
+      iex> record_terms_acceptance(user, %{ip_address: "127.0.0.1", user_agent: "Browser"})
+      {:ok, %TermsAcceptance{}}
+  """
+  def record_terms_acceptance(%User{} = user, metadata \\ %{}) do
+    attrs = %{
+      user_id: user.id,
+      terms_version: "v1.0"
+    }
+    
+    TermsAcceptance.create_changeset(attrs, metadata)
+    |> Repo.insert()
+  end
+  
+  @doc """
+  Gets the terms acceptance history for a user.
+  Returns all terms acceptances ordered by most recent first.
+  """
+  def get_terms_acceptance_history(%User{} = user) do
+    TermsAcceptance
+    |> where([t], t.user_id == ^user.id)
+    |> order_by([t], desc: t.accepted_at)
+    |> Repo.all()
+  end
+  
+  @doc """
+  Checks if a user has accepted the current terms and conditions.
+  """
+  def has_accepted_terms?(%User{} = user, version \\ "v1.0") do
+    TermsAcceptance
+    |> where([t], t.user_id == ^user.id and t.terms_version == ^version)
+    |> Repo.exists?()
   end
 
   ## Token helper

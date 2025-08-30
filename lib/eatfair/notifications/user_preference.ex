@@ -14,6 +14,9 @@ defmodule Eatfair.Notifications.UserPreference do
     field :order_status_notifications, :boolean, default: true
     field :delivery_notifications, :boolean, default: true
     field :marketing_notifications, :boolean, default: false
+    field :marketing_opt_in, :boolean, default: false
+    field :marketing_opted_in_at, :utc_datetime
+    field :marketing_opted_out_at, :utc_datetime
     field :newsletter_enabled, :boolean, default: false
     field :system_announcements, :boolean, default: true
 
@@ -38,6 +41,9 @@ defmodule Eatfair.Notifications.UserPreference do
       :order_status_notifications,
       :delivery_notifications,
       :marketing_notifications,
+      :marketing_opt_in,
+      :marketing_opted_in_at,
+      :marketing_opted_out_at,
       :newsletter_enabled,
       :system_announcements,
       :quiet_hours_start,

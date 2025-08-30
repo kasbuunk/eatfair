@@ -254,30 +254,9 @@ defmodule EatfairWeb.UserLive.AccountSetup do
     end
   end
   
-  # Simple address parsing for order delivery addresses
+  # Use the new AddressParser utility for smart address parsing
   defp parse_order_delivery_address(delivery_address) when is_binary(delivery_address) do
-    # Handle format like "Street 123, 1000 AB City"
-    parts = String.split(delivery_address, ",")
-    
-    case parts do
-      [street_part, city_part] ->
-        street = String.trim(street_part)
-        city_postal = String.trim(city_part)
-        
-        # Try to extract postal code (pattern: digits + letters)
-        case Regex.run(~r/^(\d{4}\s?[A-Z]{2})\s+(.+)$/, city_postal) do
-          [_full, postal_code, city] ->
-            {street, String.trim(city), String.trim(postal_code)}
-          
-          _ ->
-            # Fallback if parsing fails
-            {street, city_postal, "1000 AA"}
-        end
-      
-      _ ->
-        # Fallback for unparseable addresses
-        {delivery_address, "Amsterdam", "1000 AA"}
-    end
+    Eatfair.AddressParser.parse_delivery_address(delivery_address)
   end
   
   defp parse_order_delivery_address(_), do: {"", "", ""}
