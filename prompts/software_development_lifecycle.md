@@ -1,59 +1,45 @@
-# Development Lifecycle
+# EatFair Development Lifecycle
 
-*This document defines the development practices, workflows, and standards for the EatFair project.*
+Tags: #lifecycle #eatfair #workflow
+
+*EatFair-specific development practices, workflows, and standards that implement universal principles for our food platform.*
 
 ## Core Development Philosophy
 
-### Test-Driven Development (TDD) - Non-Negotiable
-**TDD is the cornerstone of this project.** Every feature follows the Red-Green-Refactor cycle:
+**Foundation**: This project follows universal development principles detailed in:
+- **TDD Approach**: See [TDD Principles](tdd_principles.md) for core test-driven development cycle
+- **Quality Standards**: See [Quality Gates](quality_gates.md) for comprehensive quality requirements
+- **Version Control**: See [Git Workflow](git.md) for version control practices
 
-1. **🔴 RED**: Write a failing test that describes the desired behavior
-2. **🟢 GREEN**: Write the minimal code to make the test pass  
-3. **🔵 REFACTOR**: Improve code quality while keeping tests green
+### EatFair-Specific TDD Implementation
 
-#### TDD Benefits for EatFair
-- **Confidence**: Every feature is proven to work through tests
-- **Documentation**: Tests serve as executable specifications
-- **Design**: TDD drives better API design and architecture
-- **Regression Prevention**: Comprehensive test suite prevents breaking changes
-- **Fast Feedback**: Quick validation of implementation correctness
-
-### Testing Hierarchy & Strategy
+**Testing Hierarchy for Food Platform**:
 
 #### 1. End-to-End Tests (Primary Focus)
-**Purpose**: Validate complete user journeys match PROJECT_SPECIFICATION.md
+**Purpose**: Validate complete user journeys match [Product Specification](../documentation/product_specification.md)
 - **Location**: `test/eatfair_web/live/*_test.exs`
-- **Coverage**: Full user interactions from UI to database
+- **Coverage**: Restaurant owner, consumer, and courier workflows
 - **Speed**: Fast enough for continuous feedback (< 5 seconds per test)
-- **Readability**: Delightful to read, tell user stories clearly
+- **Readability**: Tell clear food platform user stories
 
 #### 2. Integration Tests (Secondary)
-**Purpose**: Test interactions between contexts and boundaries
+**Purpose**: Test interactions between EatFair contexts
 - **Location**: `test/eatfair/*_test.exs`  
-- **Coverage**: Context boundaries, external integrations
-- **Focus**: Data flow between modules
+- **Coverage**: Restaurant, Order, User, and Delivery context boundaries
+- **Focus**: Data flow between food platform modules
 
 #### 3. Unit Tests (As Needed)
-**Purpose**: Test complex business logic and edge cases
+**Purpose**: Test complex EatFair business logic
 - **Location**: `test/eatfair/*/unit/*_test.exs`
-- **Coverage**: Complex algorithms, calculations, validations
-- **Principle**: Only when logic is too complex for integration tests
+- **Coverage**: Pricing calculations, delivery algorithms, restaurant matching
+- **Principle**: Only when food domain logic is too complex for integration tests
 
-### Quality Standards
+### EatFair Quality Standards
 
-#### Test Quality Metrics
-- **Readability**: Tests should read like user stories
-- **Speed**: Full test suite runs in < 30 seconds
-- **Coverage**: 100% of user journeys covered by E2E tests
-- **Reliability**: Tests pass consistently, no flakiness
-- **Maintainability**: Easy to update when requirements change
-
-#### Code Quality Standards  
-- **Simplicity**: Choose simple solutions over clever ones
-- **Clarity**: Code should be self-documenting
-- **Consistency**: Follow established patterns within the codebase
-- **Performance**: Fast enough for great user experience
-- **Security**: No security vulnerabilities in implementation
+**Inherits from**: [Quality Gates](quality_gates.md) with food platform specifics:
+- **User Journey Coverage**: 100% of restaurant discovery, ordering, and delivery flows
+- **Performance Targets**: Restaurant search < 300ms, order placement < 200ms
+- **Domain Validation**: All food safety and business rules properly tested
 
 ## Development Workflow
 

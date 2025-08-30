@@ -1,13 +1,21 @@
 # Start Development Work
 
+Tags: #development #eatfair #tdd
+
 *Auto-determine and implement the next most important work item for EatFair using the appropriate development approach.*
+
+**Foundation**: This prompt integrates universal development principles with EatFair-specific workflow:
+- **TDD Methodology**: [TDD Principles](tdd_principles.md) for test-driven development cycle
+- **MVP Context**: [MVP Development](mvp_development.md) for appropriate development approach
+- **Quality Standards**: [Quality Gates](quality_gates.md) for comprehensive validation
+- **Phoenix Patterns**: [Phoenix Framework](phoenix.md) for technology-specific guidance
 
 ---
 
 ## 🚀 One-Liner (Most Common)
 
 ```
-Implement the next highest-priority work item from PROJECT_IMPLEMENTATION.md.
+Implement the next highest-priority work item from PROJECT_IMPLEMENTATION.md using #tdd #phoenix #mvp principles.
 ```
 
 ---

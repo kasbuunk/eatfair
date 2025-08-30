@@ -145,6 +145,55 @@ All agent types must:
 
 ---
 
+## Prompt Tag Directory
+
+*When users include #tags in their requests, reference the appropriate prompts to provide comprehensive guidance.*
+
+### Universal Principles (Project-Agnostic)
+- **#tdd** → `prompts/tdd_principles.md` - Core test-driven development cycle and practices
+- **#quality** → `prompts/quality_gates.md` - Universal quality standards and automated checks
+- **#git** → `prompts/git.md` - Version control workflow and best practices
+
+### Technology-Specific Guidelines
+- **#elixir** → `prompts/elixir.md` - Elixir language patterns and conventions
+- **#phoenix** → `prompts/phoenix.md` - Phoenix framework patterns and LiveView guidelines
+- **#llms** → `prompts/llms.md` - LLM interaction patterns and prompt engineering
+
+### Project Development Methodology
+- **#mvp** → `prompts/mvp_development.md` - MVP development methodology and early-stage practices
+- **#greenfield** → `prompts/greenfield_project.md` - New project development without legacy constraints
+
+### Workflow and Process
+- **#prioritization** → `prompts/prioritize_work.md` - Work prioritization system and decision framework
+- **#feedback** → `prompts/process_feedback.md` - Systematic feedback processing and issue resolution
+- **#documentation** → `prompts/sync_documentation.md` - Documentation sync and maintenance
+- **#testing** → `prompts/validate_and_fix_tests.md` - Test validation and debugging
+- **#development** → `prompts/start_feature_development.md` - Feature development workflow
+
+### Comprehensive Development
+- **#prompts** → `prompts/development_prompts.md` - Collection of common development task prompts
+- **#lifecycle** → `prompts/software_development_lifecycle.md` - EatFair-specific development workflow
+
+### Tag Usage Guidelines
+
+**Single Tag Usage**: Use one primary tag to focus on specific guidance
+```
+"I need help with #tdd for implementing user authentication"
+```
+
+**Multiple Tag Usage**: Combine tags for comprehensive guidance
+```
+"I need to implement a new feature using #tdd #phoenix #mvp principles"
+```
+
+**Tag Resolution Process**:
+1. **Identify Primary Domain**: Determine the main area of focus
+2. **Reference Appropriate Prompts**: Read the tagged prompt files for guidance
+3. **Apply Context**: Adapt general principles to specific project context
+4. **Integrate Guidelines**: Combine multiple tagged guidelines when relevant
+
+---
+
 **Related Documents**:
 - [System Constitution (WARP.md)](WARP.md) - Global principles and operational rules
 - [Backlog Dashboard](backlog_dashboard.md) - Current work prioritization

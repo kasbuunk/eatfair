@@ -1,6 +1,13 @@
 # EatFair Work Prioritization System
 
+Tags: #prioritization #eatfair #mvp
+
 *Intelligent work prioritization for early-stage MVP development - recognizes project state and balances feature development with quality engineering.*
+
+**Foundation**: This system applies universal work prioritization principles with EatFair-specific context. For foundational concepts, see:
+- **MVP Methodology**: [MVP Development](mvp_development.md) for early-stage principles and anti-patterns
+- **TDD Approach**: [TDD Principles](tdd_principles.md) for test-driven development cycle
+- **Quality Standards**: [Quality Gates](quality_gates.md) for comprehensive quality requirements
 
 ---
 

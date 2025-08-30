@@ -1,11 +1,19 @@
 # Test Validation & Fix Prompt
 
+Tags: #testing #validation #tdd
+
 **Purpose:** Systematically validate that all tests pass by ensuring production code correctly implements project specifications and test requirements.
+
+**Foundation**: This system applies universal testing principles with EatFair-specific validation:
+- **TDD Methodology**: [TDD Principles](tdd_principles.md) for test-driven debugging and validation
+- **Quality Standards**: [Quality Gates](quality_gates.md) for comprehensive quality assurance
+- **Phoenix Patterns**: [Phoenix Framework](phoenix.md) for technology-specific test patterns
+- **Elixir Guidelines**: [Elixir Language](elixir.md) for language-specific testing practices
 
 ## Quick Usage
 
 ```
-"Run comprehensive test validation to ensure all tests pass and production code aligns with project specifications"
+"Run comprehensive test validation using #testing #tdd #phoenix principles to ensure all tests pass"
 ```
 
 ## Comprehensive Test Validation Process

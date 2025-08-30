@@ -50,6 +50,7 @@ mix run priv/repo/seeds.exs
 | Marie Dubois | `marie@jordaanbistro.com` | Jordaan Bistro | Amsterdam |
 | Raj Patel | `raj@spicegarden.com` | Spice Garden Utrecht | Utrecht |
 | Carlos Mendoza | `carlos@utrechttaco.com` | Utrecht Taco Bar | Utrecht |
+| **Wei Chen** | `owner22@nightowlexpressnl.nl` | **Night Owl Express NL** | **Utrecht** |
 
 ### 📱 Customer Accounts
 | Name | Email | Location | Special Features |
@@ -154,16 +155,23 @@ mix ecto.rollback
 3. **View restaurant ratings** - average ratings update automatically
 4. **Test authorization** - cannot review without completing orders
 
----
+### Night Owl Express Order Processing Testing
+**Restaurant Owner**: Wei Chen (`owner22@nightowlexpressnl.nl` / `password123456`)
 
-## 📊 Project Status
+1. **Login** as Night Owl restaurant owner: `owner22@nightowlexpressnl.nl`
+2. **Access restaurant dashboard** at `/restaurant/dashboard`
+3. **Process incoming orders** at `/restaurant/orders` - Night Owl has extensive order history
+4. **Test high-volume order management** - 120+ orders across multiple statuses
+5. **Update order statuses** in real-time - customers receive immediate notifications
+6. **24/7 operations testing** - Night Owl operates around the clock
+7. **Wide delivery coverage** - 49km radius covers most of Netherlands
 
-- **Test Coverage**: 163 tests passing (100% success rate)
-- **Test Execution Time**: ~0.9 seconds
-- **MVP Completion**: 75% (Features complete, quality engineering required)
-- **Production Readiness**: Quality engineering phase required before launch
-
-See [PROJECT_IMPLEMENTATION.md](PROJECT_IMPLEMENTATION.md) for detailed implementation status and work items.
+**Special Features**:
+- **24/7 Operations**: All operational hours set to 24/7 (00:00 - 24:00)
+- **Nationwide Delivery**: 49km delivery radius for extensive coverage testing
+- **High Volume**: 120+ test orders with realistic status distribution
+- **Comprehensive Menu**: 5 menu categories with 25+ items
+- **Multiple Cuisines**: Late Night, Fast Casual, Pizza, Comfort Food
 
 ---
 

@@ -1,6 +1,14 @@
 # Process Feedback Prompt
 
-*Comprehensive feedback processing prompt for manual testing results, user experience issues, and production improvements. Integrates with EatFair's TDD approach and quality engineering standards.*
+Tags: #feedback #eatfair #systematic
+
+*Comprehensive feedback processing prompt for manual testing results, user experience issues, and production improvements.*
+
+**Foundation**: This system applies universal development principles to systematic feedback processing:
+- **TDD Resolution**: [TDD Principles](tdd_principles.md) for test-driven issue resolution
+- **Quality Validation**: [Quality Gates](quality_gates.md) for ensuring fixes meet standards
+- **Documentation Updates**: [Documentation Sync](sync_documentation.md) for keeping records current
+- **Phoenix Patterns**: [Phoenix Framework](phoenix.md) for technology-specific fixes
 
 ---
 
@@ -8,12 +16,12 @@
 
 **One-liner Usage**: 
 ```
-Read, understand and act on the prompt in PROCESS_FEEDBACK.md with the following feedback: [YOUR_SPECIFIC_FEEDBACK]
+Process feedback using #feedback #tdd principles: [YOUR_SPECIFIC_FEEDBACK]
 ```
 
 **Full Process Usage**:
 ```
-Use PROCESS_FEEDBACK.md to systematically address the following manual testing feedback: [YOUR_DETAILED_FEEDBACK]
+Use #feedback processing framework to systematically address: [YOUR_DETAILED_FEEDBACK]
 ```
 
 ---

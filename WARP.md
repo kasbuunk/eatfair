@@ -158,78 +158,27 @@ This document defines the global principles and operational rules that govern ou
 
 ## 🎯 Agent Navigation Guide
 
-*Find exactly what you need, when you need it - this section is automatically available in every conversation.*
+*For comprehensive prompt navigation and agent coordination, see [AGENTS.md](AGENTS.md) which contains the complete tag-based prompt directory and agent interaction patterns.*
 
-### 📋 **I Want To... (Quick Navigation)**
+### 📋 **Quick Start for Warp Terminal**
 
-**Plan & Prioritize Work:**
-- **What should I work on next?** → [prioritize_work.md](prompts/prioritize_work.md) (Master prioritization system)
-- **Start feature development** → [start_feature_development.md](prompts/start_feature_development.md) (Auto-determines next feature)
-- **Sync documentation** → [sync_documentation.md](prompts/sync_documentation.md) (Update implementation status)
+**Most Common Workflows:**
+- **What should I work on next?** → Use `#prioritization` tag for work prioritization
+- **Start feature development** → Use `#development` tag for feature implementation
+- **Fix failing tests** → Use `#testing` tag for test debugging
+- **Process user feedback** → Use `#feedback` tag for systematic issue resolution
+- **Technical guidance** → Use `#phoenix` `#elixir` tags for framework-specific help
 
-**Understand the Project:**
-- **What is EatFair?** → [product_specification.md](documentation/product_specification.md) (Vision, features, requirements)
-- **What's the current status?** → [backlog_dashboard.md](backlog_dashboard.md) (Current work priorities and backlog items)
-- **Technical architecture** → [architectural_decision_records.md](documentation/architectural_decision_records.md) (Design decisions)
+**Key Documents:**
+- **Project Vision** → [product_specification.md](documentation/product_specification.md) (What we're building and why)
+- **Current Status** → [backlog_dashboard.md](backlog_dashboard.md) (Work priorities and progress)
+- **Agent Coordination** → [AGENTS.md](AGENTS.md) (Complete prompt navigation and agent roles)
 
-**Develop Features:**
-- **Phoenix/Elixir patterns** → [AGENTS.md](AGENTS.md) (Development guidelines)
-- **Development workflow** → [software_development_lifecycle.md](prompts/software_development_lifecycle.md) (TDD process)
-- **Common prompts** → [development_prompts.md](prompts/development_prompts.md) (Code review, debugging, etc.)
-
-### 🤖 Agent Decision Trees
-
-**"I'm starting a new development session"**
-```
-1. First time on project? → Read product_specification.md
-2. Need current priorities? → Check backlog_dashboard.md
-3. Ready to work? → Use: "Use prioritize_work.md to analyze current state and recommend next work"
-```
-
-**"I want to implement something"**
-```
-1. Don't know what to build? → Use start_feature_development.md prompt
-2. Have specific feature? → Follow software_development_lifecycle.md TDD process
-3. Need technical guidance? → Reference AGENTS.md for Phoenix/Elixir patterns
-```
-
-**"Something isn't working"**
-```
-1. Tests failing? → Use validate_and_fix_tests.md
-2. Code issues? → Use development_prompts.md debugging section
-3. Architecture questions? → Check architectural_decision_records.md
-```
-
-**"I need to understand progress"**
-```
-1. What's the priority? → Check backlog_dashboard.md priority order
-2. Need to process feedback? → Use process_feedback.md
-3. Plan next work? → Use prioritize_work.md master prompt
-```
-
-### 📚 Complete Document Catalog
-
-**Core Planning & Strategy:**
-- [product_specification.md](documentation/product_specification.md) - Vision & Requirements (what we're building and why)
-- [backlog_dashboard.md](backlog_dashboard.md) - Priority Order (single source of truth for work prioritization)
-- [prioritize_work.md](prompts/prioritize_work.md) - Work Prioritization (intelligent task selection system)
-
-**Development Process:**
-- [start_feature_development.md](prompts/start_feature_development.md) - Feature Development (auto-determine and implement next feature)
-- [process_feedback.md](prompts/process_feedback.md) - Feedback Processing (systematic issue resolution)
-- [validate_and_fix_tests.md](prompts/validate_and_fix_tests.md) - Test Validation & Fixing
-- [software_development_lifecycle.md](prompts/software_development_lifecycle.md) - TDD Workflow (development process and quality standards)
-- [development_prompts.md](prompts/development_prompts.md) - Prompt Library (templates for common development tasks)
-
-**Technical Reference:**
-- [AGENTS.md](AGENTS.md) - Agent Types and Capabilities (roles and responsibilities)
-- [architectural_decision_records.md](documentation/architectural_decision_records.md) - Technical Decisions (architecture choices and reasoning)
-- [phoenix_elixir_reference.md](documentation/phoenix_elixir_reference.md) - Phoenix/Elixir Technical Guidelines
-
-**System Management:**
-- [definition_of_done.md](documentation/definition_of_done.md) - Quality criteria for completion
-- [development_log.md](documentation/development_log.md) - Progress tracking and notes
-- [backlog_dashboard.md](backlog_dashboard.md) - Single source of truth for work prioritization
+**Using Tags:**
+Include hashtags in your requests to access specific guidance:
+- `"I need to implement user authentication using #tdd #phoenix #mvp principles"`
+- `"Help me with #feedback processing for the search feature"`
+- `"Show me #quality gates for this code change"`
 
 ## Development Workflow
 
