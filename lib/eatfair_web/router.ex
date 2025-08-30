@@ -39,6 +39,10 @@ defmodule EatfairWeb.Router do
       # Anonymous order tracking - accessible via email links
       live "/orders/:id/track", OrderTrackingLive, :anonymous_show
     end
+
+    # Static legal pages - no authentication required
+    get "/terms", PageController, :terms
+    get "/privacy", PageController, :privacy
   end
 
   # Other scopes may use custom stacks.

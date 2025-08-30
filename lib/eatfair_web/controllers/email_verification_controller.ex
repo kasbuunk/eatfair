@@ -14,7 +14,7 @@ defmodule EatfairWeb.EmailVerificationController do
 
             conn
             |> put_flash(:info, "Email verified! You can now track your order.")
-            |> redirect(to: ~p"/orders/track/#{order.tracking_token}")
+            |> redirect(to: ~p"/orders/#{order.id}/track?token=#{order.tracking_token}")
           rescue
             Ecto.NoResultsError ->
               conn

@@ -1,0 +1,50 @@
+==========================================
+
+Hi there!
+
+Thank you for your order from <%= @restaurant.name %>!
+
+To track your order in real-time and receive delivery updates, please verify your email address:
+
+<%= @verification_url %>
+
+Once verified, you can track your order here: <%= @tracking_url %>
+
+🍽️ ORDER DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Order: #<%= @order.id %>
+Status: <%= String.capitalize(@order.status) %>
+Total: €<%= Decimal.to_float(@order.total_price) |> :erlang.float_to_binary(decimals: 2) %>
+
+ITEMS:
+<%= for item <- @order.order_items do %>• <%= item.meal.name %> x <%= item.quantity %> - €<%= Decimal.to_float(item.meal.price) |> :erlang.float_to_binary(decimals: 2) %> each = €<%= Decimal.to_float(Decimal.mult(item.meal.price, item.quantity)) |> :erlang.float_to_binary(decimals: 2) %>
+<% end %>
+🏪 RESTAURANT DETAILS
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+<%= @restaurant.name %>
+<%= @restaurant.address %>
+
+🚚 DELIVERY INFORMATION  
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+Delivery to: <%= @order.delivery_address %>
+Estimated delivery time: <%= if @order.estimated_delivery_at do %><%= Calendar.strftime(@order.estimated_delivery_at, "%H:%M") %><% else %><%= @restaurant.avg_preparation_time + 20 %> minutes<% end %><%= if @order.special_instructions && String.trim(@order.special_instructions) != "", do: "\nSpecial instructions: #{@order.special_instructions}", else: "" %>
+
+🎯 CREATE YOUR ACCOUNT FOR faster re-ordering
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+After verifying your email, you'll have the option to create your account and save your details for:
+✅ Faster checkout on future orders
+✅ Order history and favorites
+✅ Exclusive loyalty rewards and offers
+✅ Priority customer support
+
+If you didn't place this order, please contact us immediately at support@eatfair.com.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+This email was sent by EatFair Food Delivery Service.
+By using our service, you agree to our Terms of Service (<%= @terms_url %>) and Privacy Policy (<%= @privacy_url %>).
+
+For support, visit <%= @base_url %> or email support@eatfair.com
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==========================================

@@ -92,7 +92,7 @@ defmodule Eatfair.Accounts.UserNotifier do
 
     tracking_url =
       if order && order.tracking_token do
-        "#{base_url}/orders/track/#{order.tracking_token}"
+        "#{base_url}/orders/#{order.id}/track?token=#{order.tracking_token}"
       end
 
     subject =
@@ -104,59 +104,75 @@ defmodule Eatfair.Accounts.UserNotifier do
 
     body =
       if order do
-        build_order_verification_email_body(verification, order, verification_url, tracking_url)
+        build_order_verification_email_body(verification, order, verification_url, tracking_url, base_url)
       else
-        build_simple_verification_email_body(verification, verification_url)
+        build_simple_verification_email_body(verification, verification_url, base_url)
       end
 
     deliver(verification.email, subject, body)
   end
 
-  defp build_order_verification_email_body(_verification, order, verification_url, tracking_url) do
-    """
-
-    ==============================
-
-    Hi there!
-
-    Thank you for your order from #{if Ecto.assoc_loaded?(order.restaurant), do: order.restaurant.name, else: "the restaurant"}!
-
-    To track your order in real-time and receive delivery updates, please verify your email address:
-
-    #{verification_url}
-
-    #{if tracking_url, do: "Once verified, you can track your order here: #{tracking_url}"}
-
-    Order Details:
-    - Order ##{order.id}
-    - Status: #{String.capitalize(order.status)}
-    - Delivery to: #{order.delivery_address}
-
-    Want to create an account for easier ordering?
-    After verifying your email, you'll have the option to save your details for future orders.
-
-    If you didn't place this order, please contact us immediately.
-
-    ==============================
-    """
+  defp build_order_verification_email_body(_verification, order, verification_url, tracking_url, base_url) do
+    # Ensure order has all necessary associations loaded
+    order = ensure_order_preloaded(order)
+    
+    assigns = %{
+      order: order,
+      restaurant: order.restaurant,
+      verification_url: verification_url,
+      tracking_url: tracking_url,
+      terms_url: "#{base_url}/terms",
+      privacy_url: "#{base_url}/privacy",
+      base_url: base_url
+    }
+    
+    template_path = Path.join([:code.priv_dir(:eatfair) || ".", "..", "lib", "eatfair_web", "templates", "email", "order_verification.text.eex"])
+    
+    # Fallback to relative path if priv_dir not available (during tests)
+    template_path = 
+      if File.exists?(template_path) do
+        template_path
+      else
+        Path.join([File.cwd!(), "lib", "eatfair_web", "templates", "email", "order_verification.text.eex"])
+      end
+    
+    EEx.eval_file(template_path, assigns: assigns)
   end
 
-  defp build_simple_verification_email_body(_verification, verification_url) do
-    """
-
-    ==============================
-
-    Hi there!
-
-    Please verify your email address by clicking the link below:
-
-    #{verification_url}
-
-    This link will expire in 24 hours.
-
-    If you didn't request this verification, please ignore this email.
-
-    ==============================
-    """
+  defp build_simple_verification_email_body(_verification, verification_url, base_url) do
+    assigns = %{
+      verification_url: verification_url,
+      terms_url: "#{base_url}/terms",
+      privacy_url: "#{base_url}/privacy",
+      base_url: base_url
+    }
+    
+    template_path = Path.join([:code.priv_dir(:eatfair) || ".", "..", "lib", "eatfair_web", "templates", "email", "simple_verification.text.eex"])
+    
+    # Fallback to relative path if priv_dir not available (during tests)
+    template_path = 
+      if File.exists?(template_path) do
+        template_path
+      else
+        Path.join([File.cwd!(), "lib", "eatfair_web", "templates", "email", "simple_verification.text.eex"])
+      end
+    
+    EEx.eval_file(template_path, assigns: assigns)
+  end
+  # Helper to ensure order has necessary preloads for email template
+  defp ensure_order_preloaded(order) do
+    # Check if associations are already loaded
+    if Ecto.assoc_loaded?(order.restaurant) && Ecto.assoc_loaded?(order.order_items) do
+      # Check if order_items have meals loaded
+      if Enum.any?(order.order_items, fn item -> not Ecto.assoc_loaded?(item.meal) end) do
+        # Reload with proper associations
+        Eatfair.Orders.get_order!(order.id)
+      else
+        order
+      end
+    else
+      # Reload with proper associations
+      Eatfair.Orders.get_order!(order.id)
+    end
   end
 end

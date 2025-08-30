@@ -1,0 +1,22 @@
+==========================================
+
+Hi there!
+
+Please verify your email address by clicking the link below:
+
+<%= @verification_url %>
+
+This link will expire in 24 hours.
+
+If you didn't request this verification, please ignore this email.
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+This email was sent by EatFair Food Delivery Service.
+By using our service, you agree to our Terms of Service (<%= @terms_url %>) and Privacy Policy (<%= @privacy_url %>).
+
+For support, visit <%= @base_url %> or email support@eatfair.com
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+==========================================
