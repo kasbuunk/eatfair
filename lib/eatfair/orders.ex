@@ -11,6 +11,7 @@ defmodule Eatfair.Orders do
   alias Eatfair.Orders.Payment
   alias Eatfair.Orders.OrderStatusEvent
   alias Eatfair.Orders.CourierLocationUpdate
+  alias Eatfair.Refunds
 
   @doc """
   Counts orders based on optional filters for admin dashboard metrics.
@@ -416,6 +417,9 @@ defmodule Eatfair.Orders do
           new_status,
           Map.take(attrs, [:delay_reason, :estimated_delivery_at, :rejection_reason, :rejection_notes, :failure_reason, :failure_notes])
         )
+
+        # Create refund if order is rejected or delivery failed
+        maybe_create_refund(updated_order, new_status, attrs)
 
         # Broadcast real-time update
         broadcast_order_update(updated_order, old_status)
@@ -959,4 +963,59 @@ defmodule Eatfair.Orders do
   end
 
   defp sanitize_metadata_value(value), do: value
+
+  # Helper function to create refunds when appropriate
+  defp maybe_create_refund(order, new_status, attrs) do
+    case new_status do
+      "cancelled" ->
+        # Order was rejected - create a refund
+        reason_details = build_refund_reason_details("order_rejected", attrs)
+        
+        case Refunds.create_refund_for_order(order, %{
+          reason: "order_rejected",
+          reason_details: reason_details
+        }) do
+          {:ok, _refund} -> :ok
+          {:error, _changeset} -> :ok  # Log error but don't fail the order update
+        end
+        
+      "delivery_failed" ->
+        # Delivery failed - create a refund
+        reason_details = build_refund_reason_details("delivery_failed", attrs)
+        
+        case Refunds.create_refund_for_order(order, %{
+          reason: "delivery_failed", 
+          reason_details: reason_details
+        }) do
+          {:ok, _refund} -> :ok
+          {:error, _changeset} -> :ok  # Log error but don't fail the order update
+        end
+        
+      _ -> :ok
+    end
+  end
+  
+  defp build_refund_reason_details("order_rejected", attrs) do
+    rejection_reason = attrs[:rejection_reason] || "order_rejected"
+    rejection_notes = attrs[:rejection_notes]
+    
+    details = "Order rejected - #{rejection_reason}"
+    if rejection_notes do
+      details <> ": #{rejection_notes}"
+    else
+      details
+    end
+  end
+  
+  defp build_refund_reason_details("delivery_failed", attrs) do
+    failure_reason = attrs[:failure_reason] || "delivery_failed"
+    failure_notes = attrs[:failure_notes]
+    
+    details = "Delivery failed - #{failure_reason}"
+    if failure_notes do
+      details <> ": #{failure_notes}"
+    else
+      details
+    end
+  end
 end

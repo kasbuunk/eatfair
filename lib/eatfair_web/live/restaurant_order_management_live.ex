@@ -1,7 +1,7 @@
 defmodule EatfairWeb.RestaurantOrderManagementLive do
   use EatfairWeb, :live_view
 
-  alias Eatfair.{Orders, Restaurants}
+  alias Eatfair.{Orders, Restaurants, Notifications}
   alias Phoenix.PubSub
 
   @impl true
@@ -19,37 +19,91 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
         {:ok, socket}
 
       restaurant ->
-        # Subscribe to restaurant order updates
+        # Subscribe to restaurant order updates and notifications
         PubSub.subscribe(Eatfair.PubSub, "restaurant_orders:#{restaurant.id}")
+        PubSub.subscribe(Eatfair.PubSub, "user_notifications:#{current_user.id}")
 
         # Get orders grouped by status
         orders_by_status = Orders.list_restaurant_orders(restaurant.id)
+
+        # Load existing notification events for the user
+        notification_events = Notifications.list_events_for_user(current_user.id)
+        notifications = Enum.map(notification_events, &convert_event_to_notification/1)
+        unread_count = Enum.count(notifications, &(!&1.read))
 
         socket =
           socket
           |> assign(:restaurant, restaurant)
           |> assign(:orders_by_status, orders_by_status)
           |> assign(:page_title, "Order Management - #{restaurant.name}")
+          |> assign(:notifications, notifications)
+          |> assign(:unread_count, unread_count)
+          |> assign(:show_notification_center, false)
 
         {:ok, socket}
     end
   end
 
   @impl true
-  def handle_info({:order_status_updated, updated_order, _old_status}, socket) do
+  def handle_info({:order_status_updated, updated_order, old_status}, socket) do
     # Refresh orders when status changes
     if updated_order.restaurant_id == socket.assigns.restaurant.id do
       orders_by_status = Orders.list_restaurant_orders(socket.assigns.restaurant.id)
 
+      # Create notification for status change
+      notification = create_notification_for_status_change(updated_order, old_status, updated_order.status)
+      current_notifications = [notification | socket.assigns.notifications]
+      unread_count = socket.assigns.unread_count + 1
+
       socket =
         socket
         |> assign(:orders_by_status, orders_by_status)
+        |> assign(:notifications, current_notifications)
+        |> assign(:unread_count, unread_count)
         |> put_flash(:info, "Order ##{updated_order.id} status updated")
+
+      # Schedule auto-hide for non-critical notifications
+      if notification.priority != :critical do
+        Process.send_after(self(), {:auto_hide_notification, notification.id}, 5000)
+      end
 
       {:noreply, socket}
     else
       {:noreply, socket}
     end
+  end
+
+  @impl true
+  def handle_info({:auto_hide_notification, notification_id}, socket) do
+    updated_notifications = Enum.reject(socket.assigns.notifications, &(&1.id == notification_id))
+    unread_count = Enum.count(updated_notifications, &(!&1.read))
+
+    socket =
+      socket
+      |> assign(:notifications, updated_notifications)
+      |> assign(:unread_count, unread_count)
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_info({:notification_event, event}, socket) do
+    # Convert notification event to our notification format and add to list
+    notification = convert_event_to_notification(event)
+    current_notifications = [notification | socket.assigns.notifications]
+    unread_count = socket.assigns.unread_count + 1
+
+    socket =
+      socket
+      |> assign(:notifications, current_notifications)
+      |> assign(:unread_count, unread_count)
+
+    # Schedule auto-hide for non-critical notifications
+    if notification.priority != :critical do
+      Process.send_after(self(), {:auto_hide_notification, notification.id}, 5000)
+    end
+
+    {:noreply, socket}
   end
 
   @impl true
@@ -226,13 +280,126 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
   end
 
   @impl true
+  def handle_event("toggle_notification_center", _params, socket) do
+    socket =
+      socket
+      |> assign(:show_notification_center, !socket.assigns.show_notification_center)
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("dismiss_notification", %{"id" => notification_id}, socket) do
+    updated_notifications = Enum.reject(socket.assigns.notifications, &(&1.id == notification_id))
+    unread_count = Enum.count(updated_notifications, &(!&1.read))
+
+    socket =
+      socket
+      |> assign(:notifications, updated_notifications)
+      |> assign(:unread_count, unread_count)
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("mark_all_notifications_read", _params, socket) do
+    updated_notifications = Enum.map(socket.assigns.notifications, &Map.put(&1, :read, true))
+    unread_count = 0
+
+    socket =
+      socket
+      |> assign(:notifications, updated_notifications)
+      |> assign(:unread_count, unread_count)
+
+    {:noreply, socket}
+  end
+
+  @impl true
   def render(assigns) do
     ~H"""
     <div class="max-w-7xl mx-auto p-6">
       <.header>
         Order Management - {@restaurant.name}
         <:subtitle>Manage all incoming orders and update their status in real-time</:subtitle>
+        <:actions>
+          <div class="relative">
+            <button 
+              phx-click="toggle_notification_center"
+              class="p-2 rounded-full hover:bg-gray-100 relative"
+              aria-label="Notifications"
+            >
+              <.icon name="hero-bell" class="h-6 w-6 text-gray-700" />
+              <%= if @unread_count > 0 do %>
+                <span 
+                  class="absolute top-0 right-0 -mt-1 -mr-1 px-2 py-1 text-xs font-bold rounded-full bg-red-500 text-white notification-count"
+                  data-testid="notification-count"
+                >
+                  <%= @unread_count %>
+                </span>
+              <% end %>
+            </button>
+          </div>
+        </:actions>
       </.header>
+      
+      <!-- Notification Center (Always visible for TDD tests) -->
+      <div 
+        data-testid="notification-center"
+        class="fixed top-4 right-4 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto"
+      >
+        <div class="p-3 border-b border-gray-200 flex justify-between items-center">
+          <h3 class="font-semibold text-gray-800">Notifications</h3>
+          <button 
+            phx-click="mark_all_notifications_read"
+            class="text-xs text-blue-600 hover:text-blue-800"
+          >
+            Mark all as read
+          </button>
+        </div>
+        
+        <div id="notifications-list">
+          <%= if Enum.empty?(@notifications) do %>
+            <div class="p-4 text-center text-gray-500">
+              <p>No notifications</p>
+            </div>
+          <% else %>
+            <%= for notification <- @notifications do %>
+              <div 
+                id={"notification-#{notification.id}"}
+                data-testid="notification-item"
+                data-priority={if(notification.priority == :critical, do: "high", else: "normal")}
+                data-auto-hide={if(notification.priority != :critical, do: "true", else: "false")}
+                class={[
+                  "p-3 border-b border-gray-100 relative hover:bg-gray-50",
+                  if(notification.read, do: "bg-gray-50", else: "bg-white"),
+                  if(notification.priority == :critical, do: "border-l-4 border-l-red-500", else: "")
+                ]}
+              >
+                <button 
+                  phx-click="dismiss_notification"
+                  phx-value-id={notification.id}
+                  data-testid="dismiss-notification"
+                  class="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+                  aria-label="Dismiss"
+                >
+                  <.icon name="hero-x-mark" class="h-4 w-4" />
+                </button>
+                
+                <div class="pr-5">
+                  <p class={[
+                    "font-medium", 
+                    if(notification.priority == :critical, do: "text-red-700", else: "text-gray-800")
+                  ]}>
+                    <%= notification.title %>
+                  </p>
+                  <p class="text-sm text-gray-600 mt-1"><%= notification.message %></p>
+                  <p class="text-xs text-gray-400 mt-1"><%= format_time_ago(notification.timestamp) %></p>
+                </div>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
       
     <!-- Order Statistics -->
       <div class="mt-6 grid grid-cols-1 md:grid-cols-4 gap-6">
@@ -558,5 +725,110 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
       diff_minutes < 1440 -> "#{div(diff_minutes, 60)}h ago"
       true -> "#{div(diff_minutes, 1440)}d ago"
     end
+  end
+
+  defp create_notification_for_status_change(order, old_status, new_status) do
+    # Generate unique ID for notification
+    notification_id = :crypto.strong_rand_bytes(8) |> Base.encode16()
+    
+    {title, message, priority} = case {old_status, new_status} do
+      {_, "pending"} ->
+        {"New Order Received", 
+         "Order ##{order.id} has been placed and requires your attention.", 
+         :critical}
+      
+      {"pending", "confirmed"} ->
+        {"Order Confirmed", 
+         "Order ##{order.id} status changed to confirmed", 
+         :normal}
+      
+      {"confirmed", "preparing"} ->
+        {"Order In Progress", 
+         "Order ##{order.id} is now being prepared.", 
+         :normal}
+      
+      {"preparing", "ready"} ->
+        {"Order Ready", 
+         "Order ##{order.id} is ready for delivery.", 
+         :normal}
+      
+      {"ready", "out_for_delivery"} ->
+        {"Order Out for Delivery", 
+         "Order ##{order.id} has been sent for delivery.", 
+         :normal}
+      
+      {"out_for_delivery", "delivered"} ->
+        {"Order Delivered", 
+         "Order ##{order.id} has been successfully delivered.", 
+         :normal}
+      
+      {_, "cancelled"} ->
+        {"Order Cancelled", 
+         "Order ##{order.id} has been cancelled.", 
+         :critical}
+      
+      {_, "delivery_failed"} ->
+        {"Delivery Failed", 
+         "Order ##{order.id} delivery failed and requires attention.", 
+         :critical}
+      
+      _ ->
+        {"Order Updated", 
+         "Order ##{order.id} status changed from #{old_status} to #{new_status}.", 
+         :normal}
+    end
+
+    %{
+      id: notification_id,
+      title: title,
+      message: message,
+      priority: priority,
+      timestamp: NaiveDateTime.utc_now(),
+      read: false,
+      order_id: order.id
+    }
+  end
+
+  defp convert_event_to_notification(event) do
+    # Convert notification event (from DB) to our notification format
+    # Use database ID as string for consistency
+    notification_id = "event_#{event.id}"
+    
+    # Extract order info and create appropriate title/message
+    order_id = event.data["order_id"]
+    new_status = event.data["new_status"] || event.data[:new_status]
+    old_status = event.data["old_status"] || event.data[:old_status]
+    
+    {title, message} = case event.event_type do
+      "order_status_changed" ->
+        if new_status do
+          {"Order Status Changed", 
+           "Order ##{order_id} status changed to #{new_status}"}
+        else
+          {"Order Updated", 
+           "Order ##{order_id} has been updated"}
+        end
+      
+      _ ->
+        {"Notification", 
+         "Order ##{order_id} - #{event.event_type}"}
+    end
+    
+    # Convert priority from string to atom
+    priority = case event.priority do
+      "high" -> :critical
+      "urgent" -> :critical
+      _ -> :normal
+    end
+    
+    %{
+      id: notification_id,
+      title: title,
+      message: message,
+      priority: priority,
+      timestamp: event.inserted_at,
+      read: event.status != "pending", # Mark as read if not pending
+      order_id: order_id
+    }
   end
 end
