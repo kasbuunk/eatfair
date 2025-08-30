@@ -576,6 +576,47 @@ defmodule Eatfair.Accounts do
     )
   end
 
+  @doc """
+  Creates or updates delivery and invoice addresses for a user during account setup.
+  This supports the account setup flow with address collection.
+  """
+  def upsert_user_addresses(user, delivery_attrs, invoice_attrs \\ nil, same_as_delivery \\ true) do
+    Repo.transaction(fn ->
+      # Create delivery address as default
+      delivery_result = create_address(Map.merge(delivery_attrs, %{
+        "user_id" => user.id,
+        "name" => "Delivery Address",
+        "is_default" => true
+      }))
+
+      case delivery_result do
+        {:ok, delivery_address} ->
+          # Create invoice address if different from delivery
+          invoice_result = if same_as_delivery do
+            # Use delivery address as invoice address (don't create duplicate)
+            {:ok, delivery_address}
+          else
+            # Create separate invoice address
+            create_address(Map.merge(invoice_attrs || %{}, %{
+              "user_id" => user.id,
+              "name" => "Invoice Address",
+              "is_default" => false
+            }))
+          end
+
+          case invoice_result do
+            {:ok, invoice_address} ->
+              {delivery_address, invoice_address}
+            {:error, changeset} ->
+              Repo.rollback({:invoice_error, changeset})
+          end
+
+        {:error, changeset} ->
+          Repo.rollback({:delivery_error, changeset})
+      end
+    end)
+  end
+
   ## Email verification functions
 
   @doc """

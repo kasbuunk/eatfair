@@ -1,9 +1,9 @@
-<div class="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+<div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
   <div class="bg-white dark:bg-gray-800 shadow-lg rounded-lg p-8 transition-colors">
     <div class="text-center mb-8">
       <.header>
-        Complete Your Account Setup
-        <:subtitle>Secure your account or continue anonymously to track your order</:subtitle>
+        Set Up Your Account
+        <:subtitle>Secure your account or continue without a password — both give you full access</:subtitle>
       </.header>
     </div>
 
@@ -12,30 +12,200 @@
       id="account_setup_form"
       phx-change="validate"
       phx-submit="save"
-      class="space-y-6"
+      class="space-y-8"
     >
-      <fieldset class="space-y-4 border border-gray-200 rounded-lg p-4">
-        <legend class="text-sm font-medium text-gray-900 px-2">
-          Account Security (Optional)
+      <!-- Personal Information -->
+      <fieldset class="space-y-4 border border-gray-200 rounded-lg p-6">
+        <legend class="text-lg font-medium text-gray-900 px-2">
+          Personal Information
         </legend>
         <.input
-          field={@form[:password]}
-          type="password"
-          label="Create Password"
-          placeholder="Leave blank to skip password setup"
-          autocomplete="new-password"
-          required={false}
-        />
-        <.input
-          field={@form[:password_confirmation]}
-          type="password"
-          label="Confirm password"
-          autocomplete="new-password"
-          required={false}
+          field={@form[:name]}
+          type="text"
+          label="Full Name"
+          placeholder="Enter your full name"
+          required={true}
         />
       </fieldset>
 
-      <div class="mt-6 space-y-4">
+      <!-- Delivery Address -->
+      <fieldset class="space-y-4 border border-gray-200 rounded-lg p-6">
+        <legend class="text-lg font-medium text-gray-900 px-2">
+          Delivery Address
+        </legend>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="fieldset mb-2">
+            <label>
+              <span class="label mb-1">Street Address</span>
+              <input
+                type="text"
+                name="delivery[street_address]"
+                id="delivery_street_address"
+                value={@delivery_form[:street_address].value || ""}
+                class="w-full input"
+                placeholder="e.g. Prinsengracht 263"
+                required
+              />
+            </label>
+          </div>
+          <div class="fieldset mb-2">
+            <label>
+              <span class="label mb-1">Postal Code</span>
+              <input
+                type="text"
+                name="delivery[postal_code]"
+                id="delivery_postal_code"
+                value={@delivery_form[:postal_code].value || ""}
+                class="w-full input"
+                placeholder="e.g. 1012 AB"
+                required
+              />
+            </label>
+          </div>
+        </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div class="fieldset mb-2">
+            <label>
+              <span class="label mb-1">City</span>
+              <input
+                type="text"
+                name="delivery[city]"
+                id="delivery_city"
+                value={@delivery_form[:city].value || ""}
+                class="w-full input"
+                placeholder="e.g. Amsterdam"
+                required
+              />
+            </label>
+          </div>
+          <div class="fieldset mb-2">
+            <label>
+              <span class="label mb-1">Country</span>
+              <input
+                type="text"
+                name="delivery[country]"
+                id="delivery_country"
+                value="Netherlands"
+                class="w-full input"
+                readonly
+              />
+            </label>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- Invoice Address -->
+      <fieldset class="space-y-4 border border-gray-200 rounded-lg p-6">
+        <legend class="text-lg font-medium text-gray-900 px-2">
+          Invoice Address
+        </legend>
+        <label class="flex items-center gap-3 mb-4">
+          <input type="hidden" name="same_as_delivery" value="false" />
+          <input
+            type="checkbox"
+            name="same_as_delivery"
+            value="true"
+            checked={@same_as_delivery}
+            class="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-600"
+          />
+          <span class="text-sm font-medium text-gray-700">
+            Invoice address same as delivery address
+          </span>
+        </label>
+        
+        <div class={unless(@same_as_delivery, do: "space-y-4", else: "space-y-4 opacity-50")}>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="fieldset mb-2">
+              <label>
+                <span class="label mb-1">Street Address</span>
+                <input
+                  type="text"
+                  name="invoice[street_address]"
+                  id="invoice_street_address"
+                  value={@invoice_form[:street_address].value || ""}
+                  class="w-full input"
+                  placeholder="e.g. Different Street 456"
+                  disabled={@same_as_delivery}
+                />
+              </label>
+            </div>
+            <div class="fieldset mb-2">
+              <label>
+                <span class="label mb-1">Postal Code</span>
+                <input
+                  type="text"
+                  name="invoice[postal_code]"
+                  id="invoice_postal_code"
+                  value={@invoice_form[:postal_code].value || ""}
+                  class="w-full input"
+                  placeholder="e.g. 1013 CD"
+                  disabled={@same_as_delivery}
+                />
+              </label>
+            </div>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="fieldset mb-2">
+              <label>
+                <span class="label mb-1">City</span>
+                <input
+                  type="text"
+                  name="invoice[city]"
+                  id="invoice_city"
+                  value={@invoice_form[:city].value || ""}
+                  class="w-full input"
+                  placeholder="e.g. Amsterdam"
+                  disabled={@same_as_delivery}
+                />
+              </label>
+            </div>
+            <div class="fieldset mb-2">
+              <label>
+                <span class="label mb-1">Country</span>
+                <input
+                  type="text"
+                  name="invoice[country]"
+                  id="invoice_country"
+                  value="Netherlands"
+                  class="w-full input"
+                  disabled={@same_as_delivery}
+                  readonly
+                />
+              </label>
+            </div>
+          </div>
+        </div>
+      </fieldset>
+
+      <!-- Account Security (Optional) -->
+      <fieldset class="space-y-4 border border-gray-200 rounded-lg p-6">
+        <legend class="text-lg font-medium text-gray-900 px-2">
+          Account Security (Optional)
+        </legend>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <.input
+            field={@form[:password]}
+            type="password"
+            label="Create Password"
+            placeholder="Leave blank to skip password setup"
+            autocomplete="new-password"
+            required={false}
+          />
+          <.input
+            field={@form[:password_confirmation]}
+            type="password"
+            label="Confirm password"
+            autocomplete="new-password"
+            required={false}
+          />
+        </div>
+      </fieldset>
+
+      <!-- Marketing Preferences -->
+      <fieldset class="space-y-4 border border-gray-200 rounded-lg p-6">
+        <legend class="text-lg font-medium text-gray-900 px-2">
+          Preferences
+        </legend>
         <label class="flex items-center gap-3">
           <input
             type="checkbox"
@@ -48,14 +218,18 @@
             I'd like to receive marketing notifications and special offers
           </span>
         </label>
+      </fieldset>
 
-        <label class="flex items-start gap-3">
+      <!-- Terms Acceptance (Required for Both Flows) -->
+      <div class="border-t border-gray-200 pt-6">
+        <label class="flex items-start gap-3 mb-6">
           <input
             type="checkbox"
             name="terms_accepted"
             value="true"
             checked={@terms_accepted}
             class="h-4 w-4 rounded border-gray-300 text-brand-600 focus:ring-brand-600 mt-0.5"
+            required
           />
           <span class="text-sm text-gray-700">
             I agree to the
@@ -68,39 +242,43 @@
             </.link>
           </span>
         </label>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <.button
+            type="submit"
+            phx-disable-with="Creating account..."
+            variant="primary"
+            class="w-full py-3 text-lg"
+          >
+            Complete Setup with Password
+          </.button>
+          
+          <div class="or-separator flex items-center justify-center py-2 md:hidden">
+            <div class="border-t border-gray-300 flex-grow"></div>
+            <span class="px-4 text-sm font-medium text-gray-500 bg-white">OR</span>
+            <div class="border-t border-gray-300 flex-grow"></div>
+          </div>
+          
+          <.button
+            type="button"
+            phx-click="skip"
+            class="w-full py-3 text-lg bg-gray-200 text-gray-800 hover:bg-gray-300"
+          >
+            Complete Setup without Password
+          </.button>
+        </div>
+        
+        <div class="or-separator hidden md:flex items-center justify-center py-4">
+          <div class="border-t border-gray-300 flex-grow"></div>
+          <span class="px-4 text-sm font-medium text-gray-500 bg-white">OR</span>
+          <div class="border-t border-gray-300 flex-grow"></div>
+        </div>
       </div>
-
-      <div class="flex flex-col space-y-3">
-        <.button
-          type="submit"
-          phx-disable-with="Setting up..."
-          variant="primary"
-          class="w-full"
-        >
-          Complete Account Setup
-        </.button>
-
-        <.button
-          type="button"
-          phx-click="skip"
-          class="w-full bg-gray-200 text-gray-800 hover:bg-gray-300"
-        >
-          Agree and continue without password
-        </.button>
-      </div>
-
-      <p class="text-xs text-gray-500 text-center italic mt-4">
-        By continuing you agree to the
-        <.link href={~p"/terms"} class="text-brand-600 hover:underline">
-          Terms and Conditions
-        </.link>
-        and <.link href={~p"/privacy"} class="text-brand-600 hover:underline">Privacy Policy</.link>.
-      </p>
     </.form>
 
-    <div class="mt-6 text-center text-sm text-gray-600">
-      <p>🎯 Your account benefits:</p>
-      <ul class="mt-2 text-left space-y-1">
+    <div class="mt-8 text-center text-sm text-gray-600 border-t border-gray-100 pt-6">
+      <p class="text-lg font-medium mb-2">🎯 Your account benefits:</p>
+      <ul class="mt-2 text-left space-y-1 max-w-md mx-auto">
         <li>✅ Faster checkout on future orders</li>
         <li>✅ Order history and favorites</li>
         <li>✅ Exclusive loyalty rewards and offers</li>

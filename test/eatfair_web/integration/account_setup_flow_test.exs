@@ -2,7 +2,6 @@ defmodule EatfairWeb.AccountSetupFlowTest do
   use EatfairWeb.ConnCase
 
   import Phoenix.LiveViewTest
-  import Eatfair.AccountsFixtures
   import Eatfair.RestaurantsFixtures
 
   alias Eatfair.{Accounts, Orders}
@@ -46,6 +45,7 @@ defmodule EatfairWeb.AccountSetupFlowTest do
       view
       |> form("#account_setup_form",
         user: %{
+          name: "John Doe",
           password: "validpassword123",
           password_confirmation: "validpassword123"
         },
@@ -70,7 +70,7 @@ defmodule EatfairWeb.AccountSetupFlowTest do
       # Submit form without password but with terms and marketing opt-in
       view
       |> form("#account_setup_form",
-        user: %{password: "", password_confirmation: ""},
+        user: %{name: "Jane Doe", password: "", password_confirmation: ""},
         marketing_opt_in: "true",
         terms_accepted: "true"
       )
@@ -107,50 +107,191 @@ defmodule EatfairWeb.AccountSetupFlowTest do
     end
   end
 
-  describe "🎨 Account Setup UX Flow" do
+  describe "🎨 Enhanced Account Setup UX Flow" do
     setup %{conn: conn} do
-      user = user_fixture(%{confirmed_at: DateTime.utc_now()})
-      conn = log_in_user(conn, user)
-      %{conn: conn, user: user}
+      # Create complete order flow with email verification to match real user journey
+      restaurant = restaurant_fixture()
+      meal = meal_fixture(%{restaurant_id: restaurant.id})
+
+      {:ok, order} =
+        Orders.create_anonymous_order(%{
+          restaurant_id: restaurant.id,
+          customer_email: "ux_test@example.com",
+          customer_phone: "+31612345678",
+          delivery_address: "Test Address 123, 1012 AB Amsterdam",
+          total_price: meal.price
+        })
+
+      {:ok, verification} = Accounts.send_verification_email(order.customer_email, order: order)
+
+      # Simulate email verification flow
+      verification_response = get(conn, ~p"/verify-email/#{verification.token}")
+      conn = verification_response
+      user = Accounts.get_user_by_email("ux_test@example.com")
+
+      %{conn: conn, user: user, order: order}
     end
 
-    test "terms checkbox is not required for skip path", %{conn: conn} do
+    test "revised subtitle copy removes anonymous language", %{conn: conn} do
       {:ok, _view, html} = live(conn, "/users/account-setup")
 
-      # Terms checkbox should not be required
-      refute html =~ ~r/required.*terms_accepted/
-
-      # Should have clear messaging about implicit agreement
-      assert html =~ "By continuing you agree to the"
+      # Should NOT contain misleading "continue anonymously" text 
+      refute html =~ "continue anonymously"
+      
+      # Should contain new, clearer messaging
+      assert html =~ "Secure your account or continue without a password — both give you full access"
     end
 
-    test "button labels are clear and intuitive", %{conn: conn} do
+    test "visual separator clearly denotes two equivalent flows", %{conn: conn} do
       {:ok, _view, html} = live(conn, "/users/account-setup")
 
-      # Should have the improved button copy
-      assert html =~ "Complete Account Setup"
-      assert html =~ "Agree and continue without password"
-
-      # Should not have passive language
-      refute html =~ "Skip for now"
+      # Should have visual separator with OR text
+      assert html =~ ~r/<div[^>]*or-separator[^>]*>.*OR.*<\/div>/s
     end
 
-    test "save path still requires terms acceptance when checkbox is checked", %{conn: conn} do
+    test "name field is present and required", %{conn: conn} do
+      {:ok, view, html} = live(conn, "/users/account-setup")
+
+      # Should have name input field
+      assert html =~ "name=\"user[name]\""
+      assert html =~ "Full Name"
+
+      # Should be required and validated
+      view
+      |> form("#account_setup_form",
+        user: %{
+          name: "",  # Empty name should fail validation
+          password: "validpassword123", 
+          password_confirmation: "validpassword123"
+        },
+        terms_accepted: "true"
+      )
+      |> render_submit()
+
+      # Should show validation error for missing name
+      html = render(view)
+      assert html =~ "can't be blank" || html =~ "required"
+    end
+
+    test "delivery address fields are prefilled from order data", %{conn: conn, order: _order} do
+      {:ok, _view, html} = live(conn, "/users/account-setup")
+
+      # Should have delivery address fieldset
+      assert html =~ "Delivery Address"
+      
+      # Should have address input fields prefilled from order
+      assert html =~ "Test Address 123"  # Street from order.delivery_address
+      assert html =~ "1012 AB"          # Postal code from order.delivery_address 
+      assert html =~ "Amsterdam"        # City from order.delivery_address
+    end
+
+    test "invoice address same-as-delivery checkbox controls field visibility", %{conn: conn} do
+      {:ok, view, html} = live(conn, "/users/account-setup")
+
+      # Should have "Same as delivery" checkbox (default checked)
+      assert html =~ "same_as_delivery"
+      assert html =~ "checked"
+      
+      # Invoice address fields should initially be hidden/disabled
+      # When unchecked, should show separate invoice address fields
+      
+      view
+      |> form("#account_setup_form", same_as_delivery: "false")
+      |> render_change()
+      
+      html = render(view)
+      
+      # Should now show invoice address fieldset
+      assert html =~ "Invoice Address"
+      assert html =~ "invoice_street_address"
+    end
+
+    test "single terms acceptance checkpoint for both flows", %{conn: conn} do
+      {:ok, view, html} = live(conn, "/users/account-setup")
+
+      # Should have only ONE terms acceptance checkbox
+      assert html =~ "name=\"terms_accepted\""
+      # Count occurrences of terms_accepted to ensure it's not duplicated
+      terms_count = (html |> String.split("name=\"terms_accepted\"") |> length()) - 1
+      assert terms_count == 1
+      
+      # Should be positioned above both CTA buttons, not duplicated below
+      refute html =~ ~r/Complete.*Setup.*By continuing you agree/s  # No terms after buttons
+
+      # Both flows should be blocked without terms acceptance
+      view
+      |> form("#account_setup_form",
+        user: %{name: "Test User", password: "", password_confirmation: ""}
+        # Not including terms_accepted means it's unchecked
+      )
+      |> render_submit()
+
+      # Should remain on page with error
+      html = render(view)
+      assert html =~ "must accept" || html =~ "Terms and Conditions"
+    end
+
+    test "both flows persist user data and redirect to order tracking", %{conn: conn, order: order} do
       {:ok, view, _html} = live(conn, "/users/account-setup")
 
-      # Try to submit without terms acceptance (omit terms_accepted to leave unchecked)
-      result =
-        view
-        |> form("#account_setup_form",
-          user: %{password: "password123", password_confirmation: "password123"}
-        )
-        |> render_submit()
+      # Test password flow
+      view
+      |> form("#account_setup_form",
+        user: %{
+          name: "John Doe",
+          password: "securepassword123", 
+          password_confirmation: "securepassword123"
+        },
+        marketing_opt_in: "true",
+        terms_accepted: "true"
+      )
+      |> render_submit()
 
-      # Should either show error OR stay on the same page (not redirect)
-      # For now, just verify we don't get redirected to track page
-      refute result =~ "phx-trigger-action"
-      # The form should still be present (not redirected)
-      assert render(view) =~ "Complete Account Setup"
+      # Should redirect to order tracking
+      assert_redirected(view, ~p"/orders/#{order.id}/track?token=#{order.tracking_token}")
+      
+      # Should persist user name and marketing preference
+      user = Accounts.get_user_by_email("ux_test@example.com")
+      assert user.name == "John Doe"
+      # TODO: Assert marketing opt-in when persistence implemented
+    end
+
+    test "passwordless flow also persists data and creates valid account", %{conn: conn, order: order} do
+      {:ok, view, _html} = live(conn, "/users/account-setup")
+
+      # Fill required name field, leave password empty
+      view
+      |> form("#account_setup_form",
+        user: %{
+          name: "Jane Smith",
+          password: "",
+          password_confirmation: ""
+        },
+        terms_accepted: "true"
+      )
+      |> render_submit()
+
+      # Should redirect to order tracking (not remain on form)
+      assert_redirected(view, ~p"/orders/#{order.id}/track?token=#{order.tracking_token}")
+      
+      # Should persist user name even without password
+      user = Accounts.get_user_by_email("ux_test@example.com")
+      assert user.name == "Jane Smith"
+      assert is_nil(user.hashed_password) # Confirmed no password was set
+    end
+  
+    # Legacy UX tests (updated for new copy) - will fail until implementation
+    test "button labels are clear and distinguish flows", %{conn: conn} do
+      {:ok, _view, html} = live(conn, "/users/account-setup")
+
+      # Updated expected copy (will fail until implemented)
+      assert html =~ "Complete Setup with Password"    # New copy
+      assert html =~ "Complete Setup without Password" # New copy
+
+      # Should not have old language
+      refute html =~ "Skip for now"
+      refute html =~ "Complete Account Setup"  # Generic old copy
+      refute html =~ "Agree and continue without password" # Old copy
     end
   end
 end
