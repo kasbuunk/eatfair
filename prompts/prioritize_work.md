@@ -54,6 +54,13 @@ OUTPUT FORMAT:
 - [ ] Set next "Current Recommended Work"
 - [ ] Document architectural decisions made
 
+**Backlog Item Creation**:
+- **For substantial feature work or comprehensive implementations**, create backlog item in `backlog/YYYYMMDDHHMMSS_descriptive_name.md`
+- **Include backlog metadata**: Status, Priority, Estimated Effort, Dependencies
+- **Add user story and acceptance criteria** for clear scope
+- **Update backlog_dashboard.md** with appropriate priority position
+- **Use backlog format when user requests "extensive" or "comprehensive" implementation**
+
 ## 📊 Alternative Options Considered
 1. **[Alternative 1]**: [Why deprioritized]
 2. **[Alternative 2]**: [Why deprioritized]  

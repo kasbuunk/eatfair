@@ -228,6 +228,13 @@ For each prioritized item:
 - Document any new technical debt or enhancement opportunities
 - Update "Current Recommended Work" with next highest priorities
 
+**Backlog Item Creation**:
+- **When user requests "an extensive prompt" or "comprehensive implementation guide"**, create a backlog item in `backlog/YYYYMMDDHHMMSS_descriptive_name.md` format
+- **Include proper backlog metadata**: Status (#status/todo), Priority, Estimated Effort, Dependencies
+- **Add user story and acceptance criteria** for clear scope definition
+- **Update backlog_dashboard.md** with new item in appropriate priority order
+- **Use backlog format, not generic prompt format** for substantial feature work
+
 ---
 
 ## 🎯 **SUCCESS CRITERIA FOR FEEDBACK PROCESSING**

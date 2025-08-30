@@ -10,24 +10,25 @@ This dashboard contains an ordered list of all current work items. The order of 
 
 ### High Priority
 
-1. [Order Delivery Tracking Journey](backlog/20250829153620_order_delivery_tracking_journey.md)
-2. [Test Validation Prompt Enhancement](backlog/20250827175200_test_validation_prompt_enhancement.md)
-3. [Performance Optimization](backlog/20250827174200_performance_optimization.md)
-4. [Enhanced Error Handling & User Experience](backlog/20250827174300_enhanced_error_handling_ux.md)
-5. [Accessibility & Dark Mode Enhancement](backlog/20250827174700_accessibility_dark_mode.md)
+1. [Marketing Preferences & User Settings Enhancement](backlog/20250830130539_marketing_preferences_user_settings.md)
+2. [Order Delivery Tracking Journey](backlog/20250829153620_order_delivery_tracking_journey.md)
+3. [Test Validation Prompt Enhancement](backlog/20250827175200_test_validation_prompt_enhancement.md)
+4. [Performance Optimization](backlog/20250827174200_performance_optimization.md)
+5. [Enhanced Error Handling & User Experience](backlog/20250827174300_enhanced_error_handling_ux.md)
+6. [Accessibility & Dark Mode Enhancement](backlog/20250827174700_accessibility_dark_mode.md)
 
 ### Medium Priority
 
-6. [Enhanced Location-Based Restaurant Discovery](backlog/20250827174400_enhanced_location_discovery.md)
-7. [User Feedback Collection System](backlog/20250827174800_user_feedback_system.md)
-8. [Platform Donation System](backlog/20250827174900_platform_donation_system.md)
+7. [Enhanced Location-Based Restaurant Discovery](backlog/20250827174400_enhanced_location_discovery.md)
+8. [User Feedback Collection System](backlog/20250827174800_user_feedback_system.md)
+9. [Platform Donation System](backlog/20250827174900_platform_donation_system.md)
 
 ### Lower Priority
 
-9. [Advanced Multi-Select Filter System](backlog/20250827174600_advanced_multi_select_filters.md)
-10. [Interactive Map-Based Restaurant Discovery](backlog/20250827174500_interactive_map_discovery.md)
-11. [Courier Interface & Delivery Management](backlog/20250827175000_courier_delivery_management.md)
-12. [Restaurant Owner Analytics Dashboard](backlog/20250827175100_restaurant_analytics_dashboard.md)
+10. [Advanced Multi-Select Filter System](backlog/20250827174600_advanced_multi_select_filters.md)
+11. [Interactive Map-Based Restaurant Discovery](backlog/20250827174500_interactive_map_discovery.md)
+12. [Courier Interface & Delivery Management](backlog/20250827175000_courier_delivery_management.md)
+13. [Restaurant Owner Analytics Dashboard](backlog/20250827175100_restaurant_analytics_dashboard.md)
 
 ---
 
