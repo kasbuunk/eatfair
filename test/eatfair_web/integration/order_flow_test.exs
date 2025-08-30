@@ -236,10 +236,10 @@ defmodule EatfairWeb.OrderFlowTest do
       # Step 10: Wait for payment processing and verify order creation
       # The payment process is asynchronous with a 2-second delay
       # Instead of trying to test the redirect directly, we'll verify the side effects
-      
+
       # Wait for payment processing to complete
       :timer.sleep(3000)
-      
+
       # The payment should have created an order even if we can't test the redirect easily
       # This is a more reliable test as it checks the business logic outcome
 

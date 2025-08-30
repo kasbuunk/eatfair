@@ -46,20 +46,23 @@ defmodule Eatfair.Notifications do
   This is the main integration point with the order tracking system.
   """
   def notify_order_status_change(order, old_status, new_status, context \\ %{}) do
+    event_data =
+      %{
+        order_id: order.id,
+        restaurant_name: order.restaurant.name,
+        old_status: old_status,
+        new_status: new_status,
+        delivery_address: order.delivery_address,
+        total_price: order.total_price
+      }
+      |> Map.merge(context)
+      |> sanitize_event_data()
+
     with {:ok, event} <-
            create_event(%{
              event_type: "order_status_changed",
              recipient_id: order.customer_id,
-             data:
-               %{
-                 order_id: order.id,
-                 restaurant_name: order.restaurant.name,
-                 old_status: old_status,
-                 new_status: new_status,
-                 delivery_address: order.delivery_address,
-                 total_price: order.total_price
-               }
-               |> Map.merge(context),
+             data: event_data,
              priority: priority_for_status(new_status)
            }) do
       # In production, this would trigger actual notifications
@@ -130,6 +133,29 @@ defmodule Eatfair.Notifications do
         |> Repo.update()
     end
   end
+
+  # Sanitizes event data to ensure all values can be serialized to JSON.
+  # Specifically handles Decimal types by converting them to strings,
+  # preventing Ecto.ChangeError when storing notification data.
+  defp sanitize_event_data(%Decimal{} = decimal) do
+    Decimal.to_string(decimal)
+  end
+
+  defp sanitize_event_data(data) when is_struct(data) do
+    # Handle other structs (like NaiveDateTime) by leaving them as-is
+    # since they are typically JSON-serializable
+    data
+  end
+
+  defp sanitize_event_data(data) when is_map(data) do
+    Map.new(data, fn {key, value} -> {key, sanitize_event_data(value)} end)
+  end
+
+  defp sanitize_event_data(data) when is_list(data) do
+    Enum.map(data, &sanitize_event_data/1)
+  end
+
+  defp sanitize_event_data(data), do: data
 
   defp priority_for_status("confirmed"), do: "normal"
   defp priority_for_status("preparing"), do: "normal"
