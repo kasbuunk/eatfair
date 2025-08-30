@@ -58,13 +58,19 @@ defmodule EatfairWeb.OrderFlowTest do
           rating: Decimal.new("4.5"),
           image_url: "https://example.com/pizza.jpg",
           owner_id: owner.id,
-          # Restaurant operating hours - always open for testing
+          # Restaurant operating hours - 24/7 for testing
           timezone: "Europe/Amsterdam",
-          operating_days: 127, # All days
-          order_open_time: 0,    # 00:00 (always open)
-          order_close_time: 1400, # 23:20 (allows 39 min buffer before kitchen closes)
-          kitchen_close_time: 1439, # 23:59 
-          order_cutoff_before_kitchen_close: 30
+          # All days
+          operating_days: 127,
+          # 00:00 (always open)
+          order_open_time: 0,
+          # 24:00 (24/7 operation)
+          order_close_time: 1440,
+          # 24:00 (24/7 kitchen)
+          kitchen_close_time: 1440,
+          # Minimal buffer for validation
+          order_cutoff_before_kitchen_close: 5,
+          force_closed: false
         })
 
       # Create cuisine and associate with restaurant
@@ -202,7 +208,7 @@ defmodule EatfairWeb.OrderFlowTest do
       |> render_change()
 
       # Step 6: User submits the order details form to proceed to confirmation
-      {:ok, confirm_view, _html} = 
+      {:ok, confirm_view, _html} =
         details_view
         |> form("#checkout-form")
         |> render_submit()
@@ -230,8 +236,12 @@ defmodule EatfairWeb.OrderFlowTest do
       # Wait for payment processing to complete - it's asynchronous with a 2-second delay
       # The payment process creates the order first, then updates its status after payment
       :timer.sleep(4000)
-      
-      # Step 10: Verify order was created successfully
+
+      # Step 10: Verify navigation to success page after payment
+      # The LiveView should redirect to /order/success/:id
+      assert_redirect(payment_view)
+
+      # Step 11: Verify order was created successfully
       assert Repo.aggregate(Order, :count) == initial_order_count + 1
 
       # Get the created order
@@ -294,20 +304,21 @@ defmodule EatfairWeb.OrderFlowTest do
       initial_order_count = Repo.aggregate(Order, :count)
 
       # Form validation should prevent submission and show errors
-      submit_result = details_view
-      |> form("#checkout-form", %{
-        "order" => %{
-          "email" => "test@example.com",
-          # Empty address
-          "delivery_address" => "",
-          # Empty phone
-          "phone_number" => "",
-          # Include required delivery_time
-          "delivery_time" => "as_soon_as_possible",
-          "special_instructions" => "Optional notes"
-        }
-      })
-      |> render_submit()
+      submit_result =
+        details_view
+        |> form("#checkout-form", %{
+          "order" => %{
+            "email" => "test@example.com",
+            # Empty address
+            "delivery_address" => "",
+            # Empty phone
+            "phone_number" => "",
+            # Include required delivery_time
+            "delivery_time" => "as_soon_as_possible",
+            "special_instructions" => "Optional notes"
+          }
+        })
+        |> render_submit()
 
       # Validation is working correctly if:
       # 1. render_submit returns HTML (doesn't redirect)
@@ -316,8 +327,10 @@ defmodule EatfairWeb.OrderFlowTest do
       case submit_result do
         {:ok, _view, _html} ->
           # This means it redirected, which shouldn't happen with validation errors
-          flunk("Form submitted successfully despite validation errors - should have validation errors")
-        
+          flunk(
+            "Form submitted successfully despite validation errors - should have validation errors"
+          )
+
         html when is_binary(html) ->
           # Form stayed on same page - this is correct validation behavior
           # The form should display the order details page, not redirect

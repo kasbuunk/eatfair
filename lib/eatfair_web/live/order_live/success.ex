@@ -6,12 +6,12 @@ defmodule EatfairWeb.OrderLive.Success do
   @impl true
   def mount(%{"id" => order_id}, _session, socket) do
     order = Orders.get_order!(order_id)
-    
-    socket = 
+
+    socket =
       socket
       |> assign(:order, order)
       |> assign(:estimated_delivery_time, calculate_estimated_delivery(order))
-      
+
     {:ok, socket}
   end
 
@@ -23,15 +23,18 @@ defmodule EatfairWeb.OrderLive.Success do
   @impl true
   def handle_event("track_order", _params, socket) do
     order = socket.assigns.order
-    
+
     # Check if user is authenticated or if this is an anonymous order
-    if socket.assigns.current_scope.user do
+    current_scope = socket.assigns[:current_scope]
+
+    if current_scope && current_scope.user do
       # Authenticated user - redirect to authenticated order tracking
       {:noreply, push_navigate(socket, to: ~p"/orders/track/#{order.id}")}
     else
       # Anonymous order - redirect with tracking token
       if order.tracking_token do
-        {:noreply, push_navigate(socket, to: ~p"/orders/#{order.id}/track?token=#{order.tracking_token}")}
+        {:noreply,
+         push_navigate(socket, to: ~p"/orders/#{order.id}/track?token=#{order.tracking_token}")}
       else
         {:noreply, put_flash(socket, :error, "Order tracking is not available for this order.")}
       end
@@ -50,9 +53,10 @@ defmodule EatfairWeb.OrderLive.Success do
   defp calculate_estimated_delivery(order) do
     # Calculate based on restaurant prep time + delivery time
     prep_time_minutes = order.restaurant.avg_preparation_time || 30
-    delivery_time_minutes = 20  # Estimated delivery time
+    # Estimated delivery time
+    delivery_time_minutes = 20
     total_minutes = prep_time_minutes + delivery_time_minutes
-    
+
     DateTime.add(DateTime.utc_now(), total_minutes * 60)
   end
 
