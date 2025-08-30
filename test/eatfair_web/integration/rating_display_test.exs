@@ -80,7 +80,7 @@ defmodule EatfairWeb.RatingDisplayTest do
       conn: conn,
       restaurant: restaurant
     } do
-      {:ok, lv, html} = live(conn, ~p"/restaurants")
+      {:ok, _lv, html} = live(conn, ~p"/restaurants")
 
       # Should show the calculated average rating with one decimal point
       assert html =~ "4.0 (3 reviews)"
@@ -91,7 +91,7 @@ defmodule EatfairWeb.RatingDisplayTest do
       conn: conn,
       restaurant: restaurant
     } do
-      {:ok, lv, html} = live(conn, ~p"/restaurants/#{restaurant.id}")
+      {:ok, _lv, html} = live(conn, ~p"/restaurants/#{restaurant.id}")
 
       # Should show the calculated average rating with one decimal point
       assert html =~ "4.0"
@@ -103,7 +103,7 @@ defmodule EatfairWeb.RatingDisplayTest do
       owner = user_fixture(%{role: :restaurant_owner})
       restaurant_no_reviews = restaurant_fixture(%{owner_id: owner.id})
 
-      {:ok, lv, html} = live(conn, ~p"/restaurants")
+      {:ok, _lv, html} = live(conn, ~p"/restaurants")
 
       # Should not show rating for restaurant without reviews
       refute html =~ "0.0 (0 reviews)"

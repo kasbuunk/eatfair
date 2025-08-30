@@ -2,7 +2,6 @@ defmodule EatfairWeb.Integration.HomepageAddressSearchBugTest do
   use EatfairWeb.ConnCase
 
   import Phoenix.LiveViewTest
-  import Eatfair.AccountsFixtures
 
   @moduledoc """
   Test suite to reproduce and verify the fix for the homepage address search issue
@@ -68,7 +67,7 @@ defmodule EatfairWeb.Integration.HomepageAddressSearchBugTest do
       end
     end
 
-    test "address autocomplete system provides good suggestions", %{conn: conn} do
+    test "address autocomplete system provides good suggestions", %{conn: _conn} do
       # Test that the AddressAutocomplete module provides good suggestions
       alias Eatfair.AddressAutocomplete
 
@@ -119,7 +118,7 @@ defmodule EatfairWeb.Integration.HomepageAddressSearchBugTest do
       assert_redirected(lv, expected_path)
     end
 
-    test "address autocomplete handles edge cases gracefully", %{conn: conn} do
+    test "address autocomplete handles edge cases gracefully", %{conn: _conn} do
       alias Eatfair.AddressAutocomplete
 
       # Empty input should not cause errors and return no suggestions
@@ -272,7 +271,7 @@ defmodule EatfairWeb.Integration.HomepageAddressSearchBugTest do
           :exit, _reason ->
             # LiveView crashed - this is expected until the component is fixed
             # Get a fresh view to continue testing
-            {:ok, lv, _html} = live(conn, "/")
+            {:ok, _lv, _html} = live(conn, "/")
         end
       end
     end

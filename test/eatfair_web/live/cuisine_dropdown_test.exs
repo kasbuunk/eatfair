@@ -84,7 +84,7 @@ defmodule EatfairWeb.Live.CuisineDropdownTest do
       if has_element?(view, "input[phx-click='toggle_cuisine']") do
         # Use the first available cuisine checkbox by targeting a specific cuisine_id
         # Since there are multiple elements, we'll test the UI interaction by checking element presence
-        all_elements = view |> element("#cuisine-dropdown")
+        _all_elements = view |> element("#cuisine-dropdown")
 
         # Simulate clicking on a cuisine checkbox - we'll just verify the interface exists
         assert has_element?(view, "input[phx-click='toggle_cuisine'][phx-value-cuisine_id]")

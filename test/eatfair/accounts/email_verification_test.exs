@@ -2,8 +2,6 @@ defmodule Eatfair.Accounts.EmailVerificationTest do
   use Eatfair.DataCase
 
   alias Eatfair.Accounts.EmailVerification
-  alias Eatfair.Accounts
-  alias Eatfair.Orders
 
   describe "email_verification schema" do
     test "changeset/2 validates required fields" do

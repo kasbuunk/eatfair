@@ -3104,13 +3104,285 @@ if Mix.env() == :dev do
         end)
         |> Enum.filter(& &1)
 
-      IO.puts("✅ Created #{length(night_owl_reviews)} reviews for Night Owl Express")
+  IO.puts("✅ Created #{length(night_owl_reviews)} reviews for Night Owl Express")
     else
       IO.puts("⚠️ No menu items found for Night Owl Express - skipping order generation")
     end
   else
     IO.puts("⚠️ Night Owl Express restaurant not found - skipping order generation")
   end
+
+  # ============================================================================
+  # 6.2 CREATE COMPREHENSIVE TRACKING TEST ORDERS (ALL STATUS STATES)
+  # ============================================================================
+
+  IO.puts("🎯 Creating comprehensive delivery tracking test orders...")
+
+  # Create tracking test orders for key test users to ensure manual testing coverage
+  tracking_test_users = [
+    {"frequent@eatfair.nl", "Jan de Frequent"},
+    {"test@eatfair.nl", "Test Customer"}
+  ]
+
+  Enum.each(tracking_test_users, fn {email, name} ->
+    user = Enum.find(customers, fn c -> c.email == email end)
+
+    if user do
+      IO.puts("📱 Creating tracking test orders for #{name} (#{email})...")
+
+      # Select varied restaurants for different experiences
+      test_restaurants = [
+        Enum.find(restaurants, fn r -> r.name == "Bella Italia Central" end),
+        Enum.find(restaurants, fn r -> r.name == "Sushi Tokyo East" end),
+        Enum.find(restaurants, fn r -> r.name == "Thai Garden Amsterdam" end),
+        Enum.find(restaurants, fn r -> r.name == "Golden Lotus Amsterdam" end),
+        Enum.find(restaurants, fn r -> r.name == "Night Owl Express NL" end)
+      ] |> Enum.filter(& &1)
+
+      # Create orders in each critical status for testing
+      status_test_orders = [
+        %{
+          status: "pending",
+          restaurant: Enum.at(test_restaurants, 0),
+          created_minutes_ago: 2,
+          note: "Just placed - payment processing"
+        },
+        %{
+          status: "confirmed", 
+          restaurant: Enum.at(test_restaurants, 1),
+          created_minutes_ago: 8,
+          note: "Order confirmed, restaurant notified"
+        },
+        %{
+          status: "preparing",
+          restaurant: Enum.at(test_restaurants, 2), 
+          created_minutes_ago: 15,
+          note: "Kitchen is preparing your meal"
+        },
+        %{
+          status: "ready",
+          restaurant: Enum.at(test_restaurants, 3),
+          created_minutes_ago: 25,
+          note: "Food ready, awaiting courier pickup"
+        },
+        %{
+          status: "out_for_delivery",
+          restaurant: Enum.at(test_restaurants, 4),
+          created_minutes_ago: 35,
+          note: "Courier en route to delivery"
+        },
+        %{
+          status: "cancelled",
+          restaurant: Enum.at(test_restaurants, 0),
+          created_minutes_ago: 45,
+          note: "Order cancelled - restaurant issue"
+        },
+        %{
+          status: "delivered",
+          restaurant: Enum.at(test_restaurants, 1),
+          created_minutes_ago: 120,
+          note: "Successfully delivered 2 hours ago"
+        }
+      ]
+
+      created_orders = 
+        status_test_orders
+        |> Enum.with_index()
+        |> Enum.map(fn {order_config, index} ->
+          restaurant = order_config.restaurant
+          
+          if restaurant do
+            # Get restaurant's menu items for the order
+            restaurant_with_menus =
+              Restaurants.get_restaurant!(restaurant.id) |> Repo.preload(menus: :meals)
+
+            available_meals = 
+              restaurant_with_menus.menus
+              |> Enum.flat_map(fn menu -> menu.meals end)
+              |> Enum.filter(fn meal -> meal.is_available end)
+
+            if length(available_meals) > 0 do
+              # Select 1-3 meals for variety
+              selected_meals = available_meals |> Enum.take_random(min(2 + rem(index, 2), length(available_meals)))
+              
+              # Calculate realistic order time
+              order_time = 
+                DateTime.utc_now()
+                |> DateTime.add(-order_config.created_minutes_ago * 60, :second)
+                |> DateTime.to_naive()
+                |> NaiveDateTime.truncate(:second)
+
+              # Calculate total price
+              item_total = 
+                selected_meals
+                |> Enum.reduce(Decimal.new("0"), fn meal, acc ->
+                  quantity = rem(index, 2) + 1
+                  Decimal.add(acc, Decimal.mult(meal.price, quantity))
+                end)
+
+              # Add delivery fee for small orders
+              delivery_fee = 
+                if Decimal.cmp(item_total, restaurant.min_order_value) == :lt do
+                  Decimal.new("3.50")
+                else
+                  Decimal.new("0.00")
+                end
+
+              total_price = Decimal.add(item_total, delivery_fee)
+
+              # Create order with proper status timestamps
+              order_attrs = %{
+                customer_id: user.id,
+                restaurant_id: restaurant.id,
+                status: order_config.status,
+                total_price: total_price,
+                delivery_address: user.default_address || "Test Tracking Address, 1000 TT Amsterdam",
+                phone_number: user.phone_number || "+31-20-555-0000",
+                delivery_notes: order_config.note,
+                inserted_at: order_time,
+                updated_at: order_time
+              }
+
+              # Add appropriate status timestamps based on order status
+              order_attrs = 
+                case order_config.status do
+                  "pending" ->
+                    order_attrs
+                  
+                  "confirmed" ->
+                    order_attrs |> Map.put(:confirmed_at, order_time)
+                  
+                  "preparing" ->
+                    confirmed_time = DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -5 * 60, :second)
+                      |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+                    prep_time = DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -2 * 60, :second)
+                      |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+                    
+                    order_attrs
+                    |> Map.put(:confirmed_at, confirmed_time)
+                    |> Map.put(:preparing_at, prep_time)
+                  
+                  "ready" ->
+                    confirmed_time = DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -20 * 60, :second)
+                      |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+                    prep_time = DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -15 * 60, :second)
+                      |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+                    ready_time = DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -5 * 60, :second)
+                      |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+                    
+                    order_attrs
+                    |> Map.put(:confirmed_at, confirmed_time)
+                    |> Map.put(:preparing_at, prep_time)
+                    |> Map.put(:ready_at, ready_time)
+                  
+                  "out_for_delivery" ->
+                    confirmed_time = DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -30 * 60, :second)
+                      |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+                    prep_time = DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -25 * 60, :second)
+                      |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+                    ready_time = DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -15 * 60, :second)
+                      |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+                    delivery_time = DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -10 * 60, :second)
+                      |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+
+                    # Assign random courier
+                    courier = couriers |> Enum.random()
+                    
+                    order_attrs
+                    |> Map.put(:confirmed_at, confirmed_time)
+                    |> Map.put(:preparing_at, prep_time)
+                    |> Map.put(:ready_at, ready_time)
+                    |> Map.put(:out_for_delivery_at, delivery_time)
+                    |> Map.put(:courier_id, courier.id)
+                    |> Map.put(:courier_assigned_at, ready_time)
+                  
+                  "cancelled" ->
+                    confirmed_time = DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -10 * 60, :second)
+                      |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+                    
+                    order_attrs
+                    |> Map.put(:confirmed_at, confirmed_time)
+                    |> Map.put(:cancelled_at, order_time)
+                    |> Map.put(:delay_reason, "Restaurant temporarily closed due to technical issues")
+                  
+                  "delivered" ->
+                    confirmed_time = DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -90 * 60, :second)
+                      |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+                    prep_time = DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -75 * 60, :second)
+                      |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+                    ready_time = DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -45 * 60, :second)
+                      |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+                    out_time = DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -25 * 60, :second)
+                      |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+                    
+                    # Assign random courier
+                    courier = couriers |> Enum.random()
+                    
+                    order_attrs
+                    |> Map.put(:confirmed_at, confirmed_time)
+                    |> Map.put(:preparing_at, prep_time)
+                    |> Map.put(:ready_at, ready_time)
+                    |> Map.put(:out_for_delivery_at, out_time)
+                    |> Map.put(:delivered_at, order_time)
+                    |> Map.put(:courier_id, courier.id)
+                    |> Map.put(:courier_assigned_at, ready_time)
+                end
+
+              # Create the order
+              {:ok, order} = 
+                %Order{}
+                |> Order.changeset(order_attrs)
+                |> Repo.insert()
+
+              # Create order items
+              order_items = 
+                selected_meals
+                |> Enum.map(fn meal ->
+                  quantity = rem(index, 2) + 1
+                  %{
+                    order_id: order.id,
+                    meal_id: meal.id,
+                    quantity: quantity,
+                    inserted_at: NaiveDateTime.truncate(order_time, :second),
+                    updated_at: NaiveDateTime.truncate(order_time, :second)
+                  }
+                end)
+
+              if length(order_items) > 0 do
+                Repo.insert_all("order_items", order_items)
+              end
+
+              # Create payment
+              payment_status = 
+                case order_config.status do
+                  s when s in ["pending"] -> "pending"
+                  s when s in ["cancelled"] -> "failed"
+                  _ -> "completed"
+                end
+
+              {:ok, _payment} = 
+                Repo.insert(%Payment{
+                  order_id: order.id,
+                  amount: total_price,
+                  status: payment_status,
+                  inserted_at: NaiveDateTime.truncate(order_time, :second),
+                  updated_at: NaiveDateTime.truncate(order_time, :second)
+                })
+
+              {order_config.status, order}
+            end
+          end
+        end)
+        |> Enum.filter(& &1)
+
+      IO.puts("   ✅ Created #{length(created_orders)} tracking test orders for #{name}:")
+      Enum.each(created_orders, fn {status, order} ->
+        IO.puts("      • Order ##{order.id}: #{status} (#{order.restaurant.name})")
+      end)
+    else
+      IO.puts("   ⚠️ User #{email} not found - skipping tracking orders")
+    end
+  end)
 end
 
 # ============================================================================

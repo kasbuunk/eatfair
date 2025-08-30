@@ -68,18 +68,18 @@ defmodule EatfairWeb.OrderLive.DeliveryTimeSelectionTest do
     end
 
     test "shows restaurant closed message when force_closed", %{
-      conn: conn,
+      conn: _conn,
       restaurant: restaurant
     } do
       # Update restaurant to be force closed
-      closed_restaurant = %{
+      _closed_restaurant = %{
         restaurant
         | force_closed: true,
           force_closed_reason: "temporarily closed for maintenance"
       }
 
       cart = %{"1" => 2}
-      cart_encoded = Jason.encode!(cart) |> URI.encode()
+      _cart_encoded = Jason.encode!(cart) |> URI.encode()
 
       # Need to mock the restaurant retrieval or create a closed restaurant in DB
       # For this test, we'll just verify the function logic separately
@@ -163,7 +163,7 @@ defmodule EatfairWeb.OrderLive.DeliveryTimeSelectionTest do
     test "handles restaurant closed outside operating hours" do
       user = user_fixture()
       # Restaurant only open Monday (bit 1) from 10:00-21:00
-      restaurant =
+      _restaurant =
         restaurant_fixture(%{
           owner_id: user.id,
           timezone: "Europe/Amsterdam",

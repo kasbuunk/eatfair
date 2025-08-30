@@ -116,7 +116,7 @@ defmodule EatfairWeb.AddressManagementTest do
       |> render_submit()
 
       # Navigate to restaurant discovery
-      {:ok, discovery_lv, discovery_html} = live(conn, ~p"/restaurants")
+      {:ok, _discovery_lv, discovery_html} = live(conn, ~p"/restaurants")
 
       # The discovery page should now work with the user's address
       assert discovery_html =~ "Discover Restaurants"
@@ -130,7 +130,7 @@ defmodule EatfairWeb.AddressManagementTest do
       conn = log_in_user(conn, user)
 
       # Visit any page with navigation
-      {:ok, lv, html} = live(conn, ~p"/")
+      {:ok, _lv, html} = live(conn, ~p"/")
 
       # Should show navigation with user menu
       assert html =~ "EatFair"
@@ -156,7 +156,7 @@ defmodule EatfairWeb.AddressManagementTest do
       assert html =~ "/users/addresses"
 
       # Click the address management link from the address prompt section
-      {:ok, address_lv, address_html} =
+      {:ok, _address_lv, address_html} =
         lv
         |> element(".bg-yellow-50 a[href='/users/addresses']")
         |> render_click()

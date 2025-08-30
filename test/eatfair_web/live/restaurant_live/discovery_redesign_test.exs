@@ -97,7 +97,7 @@ defmodule EatfairWeb.RestaurantLive.DiscoveryRedesignTest do
       # Open the dropdown to access individual cuisines
       lv |> element("button[phx-click='toggle_cuisine_dropdown']") |> render_click()
 
-      updated_html = render(lv)
+      _updated_html = render(lv)
 
       # Now should have individual cuisine checkboxes in the dropdown
       assert has_element?(

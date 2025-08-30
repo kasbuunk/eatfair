@@ -7,7 +7,6 @@ defmodule Eatfair.AccountsTest do
   import Ecto.Query
   alias Eatfair.Accounts.{User, UserToken, EmailVerification}
   alias Eatfair.Orders
-  alias Eatfair.Orders.Order
 
   describe "get_user_by_email/1" do
     test "does not return the user if the email does not exist" do

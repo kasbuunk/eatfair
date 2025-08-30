@@ -44,7 +44,7 @@ defmodule EatfairWeb.AddressAutocompleteTest do
       assert_redirected(lv, "/restaurants?location=Utrecht")
     end
 
-    test "address autocomplete provides fuzzy search suggestions", %{conn: conn} do
+    test "address autocomplete provides fuzzy search suggestions", %{conn: _conn} do
       # Test the actual AddressAutocomplete module
       suggestions = Eatfair.AddressAutocomplete.suggest_addresses("Dam")
 
@@ -61,7 +61,7 @@ defmodule EatfairWeb.AddressAutocompleteTest do
       assert dam_suggestion.display =~ "Dam"
     end
 
-    test "address autocomplete handles partial postal codes", %{conn: conn} do
+    test "address autocomplete handles partial postal codes", %{conn: _conn} do
       # Test partial postal code
       suggestions = Eatfair.AddressAutocomplete.suggest_addresses("1012")
 
@@ -77,7 +77,7 @@ defmodule EatfairWeb.AddressAutocompleteTest do
       assert centrum_suggestion != nil
     end
 
-    test "address autocomplete handles street name search", %{conn: conn} do
+    test "address autocomplete handles street name search", %{conn: _conn} do
       # Test street name search
       suggestions = Eatfair.AddressAutocomplete.suggest_addresses("Prinsengracht")
 

@@ -121,7 +121,7 @@ defmodule EatfairWeb.GeographicEdgeCaseTest do
       assert html =~ "Discover Restaurants"
     end
 
-    test "coordinate edge cases and boundary precision", %{conn: conn} do
+    test "coordinate edge cases and boundary precision", %{conn: _conn} do
       # Test with extreme coordinates
       restaurant =
         restaurant_fixture(%{
@@ -167,7 +167,7 @@ defmodule EatfairWeb.GeographicEdgeCaseTest do
   end
 
   describe "🗺️ Address Format Variations and International Support" do
-    test "Dutch address format variations", %{conn: conn} do
+    test "Dutch address format variations", %{conn: _conn} do
       user = user_fixture()
 
       # Test various Dutch address formats
@@ -209,7 +209,7 @@ defmodule EatfairWeb.GeographicEdgeCaseTest do
       end)
     end
 
-    test "international address formats graceful handling", %{conn: conn} do
+    test "international address formats graceful handling", %{conn: _conn} do
       user = user_fixture()
 
       # Test international addresses (should fail gracefully, not crash)
@@ -239,7 +239,7 @@ defmodule EatfairWeb.GeographicEdgeCaseTest do
       end)
     end
 
-    test "geocoding accuracy and fallback handling", %{conn: conn} do
+    test "geocoding accuracy and fallback handling", %{conn: _conn} do
       user = user_fixture()
 
       # Test address that should geocode successfully
@@ -357,7 +357,7 @@ defmodule EatfairWeb.GeographicEdgeCaseTest do
         end)
 
       # Test restaurant page with different address selections
-      {:ok, lv, _html} = live(conn, "/restaurants/#{restaurant.id}")
+      {:ok, _lv, _html} = live(conn, "/restaurants/#{restaurant.id}")
 
       # Test each address and verify delivery availability
       Enum.each(created_addresses, fn %{address: address, actual_in_range: in_range} ->
@@ -478,7 +478,7 @@ defmodule EatfairWeb.GeographicEdgeCaseTest do
       |> render_submit(%{"location" => %{"address" => "Amsterdam"}})
 
       # Should not crash and should provide some response
-      html = render(lv)
+      _html = render(lv)
 
       # Restaurant should be visible or show no results message
       assert has_element?(lv, "#restaurant-#{amsterdam_restaurant.id}") or
@@ -505,7 +505,7 @@ defmodule EatfairWeb.GeographicEdgeCaseTest do
   end
 
   describe "🧮 Distance Calculation Algorithm Validation" do
-    test "haversine formula accuracy with known distances", %{conn: conn} do
+    test "haversine formula accuracy with known distances", %{conn: _conn} do
       # Test known distances between Amsterdam landmarks
       test_cases = [
         # From Central Station to Rijksmuseum (corrected actual distance)
@@ -548,7 +548,7 @@ defmodule EatfairWeb.GeographicEdgeCaseTest do
       end)
     end
 
-    test "distance calculation edge cases and mathematical properties", %{conn: conn} do
+    test "distance calculation edge cases and mathematical properties", %{conn: _conn} do
       # Test mathematical properties of distance calculation
 
       # Same point should have zero distance

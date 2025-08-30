@@ -9,7 +9,7 @@ defmodule EatfairWeb.OrderTrackingStressTest do
   alias Eatfair.Notifications
 
   describe "🚀 Order Tracking System - Production Stress Testing" do
-    test "concurrent order status updates maintain data integrity", %{conn: conn} do
+    test "concurrent order status updates maintain data integrity", %{conn: _conn} do
       # 🎯 Setup: Multiple concurrent orders and users
       restaurant_owner = user_fixture()
       restaurant = restaurant_fixture(%{owner_id: restaurant_owner.id})
@@ -410,7 +410,7 @@ defmodule EatfairWeb.OrderTrackingStressTest do
   end
 
   describe "🚨 Edge Case and Failure Scenario Testing" do
-    test "cancelled orders during different stages handle gracefully", %{conn: conn} do
+    test "cancelled orders during different stages handle gracefully", %{conn: _conn} do
       # 🎯 Test cancellation at each possible stage
       customer = user_fixture()
       restaurant = restaurant_fixture()

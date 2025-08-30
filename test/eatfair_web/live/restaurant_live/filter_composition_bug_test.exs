@@ -119,7 +119,7 @@ defmodule EatfairWeb.RestaurantLive.FilterCompositionBugTest do
       |> element("#restaurant-search")
       |> render_keyup(%{"value" => ""})
 
-      html_after_clear = render(lv)
+      _html_after_clear = render(lv)
 
       # Location filter should still be active - only show nearby restaurants
       assert has_element?(lv, "#restaurant-#{laren_restaurant.id}")

@@ -7,7 +7,7 @@ defmodule EatfairWeb.RestaurantDiscoveryFlowTest do
 
   describe "restaurant availability consistency" do
     test "filter_by_currently_open/2 uses consistent availability logic with order page", %{
-      conn: conn
+      conn: _conn
     } do
       # Create restaurants with different availability states
       open_restaurant = create_genuinely_open_restaurant()
@@ -67,52 +67,6 @@ defmodule EatfairWeb.RestaurantDiscoveryFlowTest do
       refute String.contains?(order_html, "currently closed")
     end
 
-    defp create_restaurant_appearing_open_but_actually_closed do
-      # Create a restaurant with is_open=true but outside operational hours
-      current_time = DateTime.now!("Europe/Amsterdam")
-      current_hour = current_time.hour
-
-      # Set order hours so restaurant is closed right now
-      # If it's morning (before 10), set hours to afternoon only
-      # If it's afternoon/evening, set hours to morning only
-      {order_open, order_close} =
-        if current_hour < 10 do
-          # Restaurant only open 14:00-18:00 (when it's currently morning)
-          {14 * 60, 18 * 60}
-        else
-          # Restaurant only open 06:00-10:00 (when it's currently afternoon/evening)  
-          {6 * 60, 10 * 60}
-        end
-
-      owner = Eatfair.AccountsFixtures.user_fixture()
-
-      {:ok, restaurant} =
-        Restaurants.create_restaurant(%{
-          name: "Test Restaurant (Appears Open But Closed)",
-          address: "Test Address, Amsterdam",
-          description: "Test restaurant for availability bug reproduction",
-          owner_id: owner.id,
-          # This field shows as "open"
-          is_open: true,
-          order_open_time: order_open,
-          order_close_time: order_close,
-          # Set to today's day so operating_days allows today
-          operating_days: :math.pow(2, Date.day_of_week(current_time) - 1) |> round(),
-          timezone: "Europe/Amsterdam",
-          latitude: Decimal.new("52.3676"),
-          longitude: Decimal.new("4.9041"),
-          city: "Amsterdam",
-          postal_code: "1000",
-          avg_preparation_time: 30,
-          delivery_radius_km: 10
-        })
-
-      # Verify our setup: restaurant should appear open (is_open=true) but actually be closed
-      assert restaurant.is_open == true
-      assert Restaurant.open_for_orders?(restaurant) == false
-
-      restaurant
-    end
 
     defp create_genuinely_open_restaurant do
       # Create a restaurant that is actually open for orders right now

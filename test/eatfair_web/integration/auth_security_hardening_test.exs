@@ -193,7 +193,7 @@ defmodule EatfairWeb.Integration.AuthSecurityHardeningTest do
       refute token == token2
 
       # Both tokens should be valid simultaneously (multi-device support)
-      assert {authenticated_user, _} = Accounts.get_user_by_session_token(token)
+      assert {_authenticated_user, _} = Accounts.get_user_by_session_token(token)
       assert {authenticated_user, _} = Accounts.get_user_by_session_token(token2)
       assert authenticated_user.id == user.id
     end
@@ -629,7 +629,7 @@ defmodule EatfairWeb.Integration.AuthSecurityHardeningTest do
     test "CSRF protection for authentication endpoints" do
       # Test that CSRF protection is present in forms
       # The login page should include CSRF token fields
-      {:ok, lv, html} = live(build_conn(), ~p"/users/log-in")
+      {:ok, _lv, html} = live(build_conn(), ~p"/users/log-in")
 
       # Login form should include CSRF protection
       assert html =~ "csrf_token" or html =~ "_csrf_token"

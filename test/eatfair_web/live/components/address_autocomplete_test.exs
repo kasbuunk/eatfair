@@ -192,7 +192,7 @@ defmodule EatfairWeb.Live.Components.AddressAutocompleteTest do
 
   describe "suggestion selection" do
     test "clicking on suggestion selects it", %{conn: conn} do
-      {:ok, view, _html} =
+      {:ok, _view, _html} =
         live_isolated(conn, AddressAutocomplete, %{
           id: "test-autocomplete",
           placeholder: "Enter your address",
@@ -214,7 +214,7 @@ defmodule EatfairWeb.Live.Components.AddressAutocompleteTest do
     end
 
     test "mouse hover updates selected index", %{conn: conn} do
-      {:ok, view, _html} =
+      {:ok, _view, _html} =
         live_isolated(conn, AddressAutocomplete, %{
           id: "test-autocomplete",
           placeholder: "Enter your address",
@@ -227,7 +227,7 @@ defmodule EatfairWeb.Live.Components.AddressAutocompleteTest do
   end
 
   describe "integration with parent component" do
-    test "notifies parent when address is selected", %{conn: conn} do
+    test "notifies parent when address is selected", %{conn: _conn} do
       # This would test the full integration with a parent LiveView
       # that uses the AddressAutocomplete component and receives
       # the selection messages
@@ -279,7 +279,7 @@ defmodule EatfairWeb.Live.Components.AddressAutocompleteTest do
     end
 
     test "announces selection to screen readers", %{conn: conn} do
-      {:ok, view, _html} =
+      {:ok, _view, _html} =
         live_isolated(conn, AddressAutocomplete, %{
           id: "test-autocomplete",
           placeholder: "Enter your address",

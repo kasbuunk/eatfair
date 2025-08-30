@@ -44,7 +44,7 @@ defmodule EatfairWeb.LocationPersistenceTest do
       assert html =~ restaurant.name
 
       # 2. Navigate to restaurant detail page via "View Menu" button for the specific restaurant
-      html =
+      _html =
         discovery_view
         |> element("button[phx-value-id='#{restaurant.id}']", "View Menu")
         |> render_click()
@@ -56,7 +56,7 @@ defmodule EatfairWeb.LocationPersistenceTest do
       )
 
       # 3. Follow the redirect to restaurant detail page  
-      {:ok, restaurant_view, restaurant_html} =
+      {:ok, _restaurant_view, restaurant_html} =
         live(conn, ~p"/restaurants/#{restaurant.id}?location=#{search_location}")
 
       # Verify restaurant page loads with correct info
@@ -108,7 +108,7 @@ defmodule EatfairWeb.LocationPersistenceTest do
     } do
       # Test with a more complex address that needs URL encoding
       complex_location = "Utrecht neuden"
-      encoded_location = URI.encode(complex_location)
+      _encoded_location = URI.encode(complex_location)
 
       {:ok, discovery_view, html} = live(conn, ~p"/restaurants?location=#{complex_location}")
 
@@ -116,7 +116,7 @@ defmodule EatfairWeb.LocationPersistenceTest do
       assert html =~ restaurant.name
 
       # Navigate to restaurant detail
-      html =
+      _html =
         discovery_view
         |> element("button[phx-value-id='#{restaurant.id}']", "View Menu")
         |> render_click()

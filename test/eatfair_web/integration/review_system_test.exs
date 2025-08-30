@@ -442,7 +442,7 @@ defmodule EatfairWeb.ReviewSystemTest do
 
   describe "🔒 Advanced Authorization & Edge Case Testing" do
     test "concurrent review submissions maintain data integrity", %{
-      conn: conn,
+      conn: _conn,
       restaurant: restaurant
     } do
       # Create multiple users with delivered orders
@@ -549,7 +549,7 @@ defmodule EatfairWeb.ReviewSystemTest do
     end
 
     test "validates comment length boundaries and rating range", %{
-      conn: conn,
+      conn: _conn,
       restaurant: restaurant
     } do
       customer = user_fixture(%{email: "boundary_test@example.com"})
