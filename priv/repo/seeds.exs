@@ -3543,7 +3543,7 @@ IO.puts("   • multi@eatfair.nl - User with multiple addresses")
 IO.puts("   • boundary@eatfair.nl - Edge case delivery testing")
 
 IO.puts("\n🏒 **RESTAURANT OWNERS:**")
-IO.puts("   • owner0@bellaitaliaamsterdam.nl - Bella Italia Central")
+IO.puts("   • owner0@bellaitaliacentral.nl - Bella Italia Central")
 IO.puts("   • owner1@goldenlotuscentral.nl - Golden Lotus (Chinese)")
 IO.puts("   • owner2@jordaanbistro.nl - Jordaan Bistro (French)")
 
