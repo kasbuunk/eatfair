@@ -727,6 +727,18 @@ defmodule Eatfair.Accounts do
   end
 
   @doc """
+  Gets the most recent email verification by email address.
+  """
+  def get_verification_by_email(email) when is_binary(email) do
+    EmailVerification
+    |> where([v], v.email == ^email)
+    |> order_by([v], desc: v.inserted_at)
+    |> preload([:order, :user])
+    |> limit(1)
+    |> Repo.one()
+  end
+
+  @doc """
   Creates an email verification record.
   """
   def create_email_verification(attrs \\ %{}) do

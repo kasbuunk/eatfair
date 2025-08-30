@@ -107,6 +107,23 @@ defmodule EatfairWeb.OrderLive.Payment do
 
           case Orders.process_payment(order.id, payment_attrs) do
             {:ok, _payment} ->
+              # Send email verification for anonymous orders
+              if is_nil(socket.assigns[:current_scope]) do
+                case Eatfair.Accounts.send_verification_email(order.customer_email, order: order) do
+                  {:ok, _verification} ->
+                    # Email sent successfully, continue normally
+                    :ok
+
+                  {:error, reason} ->
+                    # Log error but don't block user flow
+                    require Logger
+
+                    Logger.error(
+                      "Failed to send verification email for order #{order.id}: #{inspect(reason)}"
+                    )
+                end
+              end
+
               # Navigate to success page
               success_url = ~p"/order/success/#{order.id}"
 
@@ -156,62 +173,65 @@ defmodule EatfairWeb.OrderLive.Payment do
     cart_total = socket.assigns.cart_total
 
     # Check if user is authenticated or if this is a guest order
-    {customer_id, customer_email, customer_phone} =
-      case socket.assigns[:current_scope] do
-        %{user: %{id: user_id}} ->
-          # Authenticated user - use their ID and store contact info for this order
-          {user_id, order_details["email"], order_details["phone_number"]}
+    case socket.assigns[:current_scope] do
+      %{user: %{id: user_id}} ->
+        # Authenticated user - use regular order creation
+        order_attrs = %{
+          restaurant_id: restaurant.id,
+          customer_id: user_id,
+          customer_email: order_details["email"],
+          customer_phone: order_details["phone_number"],
+          delivery_address: order_details["delivery_address"],
+          special_instructions: order_details["special_instructions"],
+          total_price: cart_total,
+          estimated_delivery_time: order_details["delivery_time"],
+          status: "pending"
+        }
 
-        _ ->
-          # Guest order - create or get guest customer for SQLite constraint
-          guest_customer_id = get_or_create_guest_customer_id()
-          {guest_customer_id, order_details["email"], order_details["phone_number"]}
-      end
+        # Prepare order items
+        items_attrs =
+          Enum.map(cart, fn {meal_id, quantity} ->
+            %{meal_id: meal_id, quantity: quantity}
+          end)
 
-    # Prepare order attributes
-    order_attrs = %{
-      restaurant_id: restaurant.id,
-      customer_id: customer_id,
-      customer_email: customer_email,
-      customer_phone: customer_phone,
-      delivery_address: order_details["delivery_address"],
-      special_instructions: order_details["special_instructions"],
-      total_price: cart_total,
-      estimated_delivery_time: order_details["delivery_time"],
-      status: "pending"
-    }
+        # Create order with items
+        Orders.create_order_with_items(order_attrs, items_attrs)
 
-    # Prepare order items
-    items_attrs =
-      Enum.map(cart, fn {meal_id, quantity} ->
-        %{meal_id: meal_id, quantity: quantity}
-      end)
+      _ ->
+        # Anonymous guest order - use anonymous order creation with automatic soft account
+        order_attrs = %{
+          restaurant_id: restaurant.id,
+          customer_email: order_details["email"],
+          customer_phone: order_details["phone_number"],
+          delivery_address: order_details["delivery_address"],
+          special_instructions: order_details["special_instructions"],
+          total_price: cart_total,
+          estimated_delivery_time: order_details["delivery_time"],
+          status: "pending"
+        }
 
-    # Create order with items
-    Orders.create_order_with_items(order_attrs, items_attrs)
-  end
+        # Create anonymous order (this will create soft account + tracking token)
+        case Orders.create_anonymous_order(order_attrs) do
+          {:ok, order} ->
+            # Add order items
+            items_attrs =
+              Enum.map(cart, fn {meal_id, quantity} ->
+                %{meal_id: meal_id, quantity: quantity}
+              end)
 
-  # Get or create a dummy "guest" customer for guest orders
-  # This is a workaround for SQLite's non-nullable constraint
-  defp get_or_create_guest_customer_id do
-    alias Eatfair.Accounts
+            case Orders.create_order_items(order.id, items_attrs) do
+              {:ok, _items} ->
+                # Reload order with associations
+                order = Orders.get_order!(order.id)
+                {:ok, order}
 
-    case Accounts.get_user_by_email("guest@eatfair.internal") do
-      nil ->
-        # Create guest user if it doesn't exist
-        {:ok, guest_user} =
-          Accounts.register_user(%{
-            email: "guest@eatfair.internal",
-            name: "Guest User",
-            password: "dummy_password_123",
-            phone_number: "+00-000-000-0000",
-            role: "customer"
-          })
+              error ->
+                error
+            end
 
-        guest_user.id
-
-      guest_user ->
-        guest_user.id
+          error ->
+            error
+        end
     end
   end
 
