@@ -5,6 +5,8 @@
 **Status**: #status/in_progress
 **Estimated Effort**: Large (5-7 days)
 
+**CRITICAL BLOCKER RESOLVED**: Fixed Decimal serialization error in notifications that was preventing successful order completion and routing to success page. Users can now complete the full order journey and reach the tracking starting point.
+
 ## Overview
 
 Implement comprehensive order delivery tracking system that allows customers to track their order from placement to delivery through a detailed state machine with full audit trail of all status changes.
@@ -250,6 +252,7 @@ CREATE INDEX courier_location_updates_courier_id_recorded_at_idx ON courier_loca
 - [ ] Add map integration for courier location display
 
 #### Phase 3: Integration & Email Updates
+- [x] **RESOLVED**: Fixed notification system Decimal serialization preventing order completion
 - [ ] Add "Track Order" button to order success page
 - [ ] Update order confirmation email template with tracking link
 - [ ] Implement secure token-based tracking access
