@@ -440,7 +440,7 @@ restaurants_data = [
     delivery_radius_km: 8,
     min_order_value: Decimal.new("16.00"),
     image_url:
-      "https://images.unsplash.com/photo-1544806846-351ba102b6d5?w=400&h=300&fit=crop&crop=center",
+      "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop&crop=center",
     cuisine_names: ["Mediterranean", "Greek"],
     description: "Fresh Mediterranean flavors and Greek classics"
   },
@@ -595,7 +595,7 @@ restaurants_data = [
     delivery_radius_km: 5,
     min_order_value: Decimal.new("11.00"),
     image_url:
-      "https://images.unsplash.com/photo-1516975264800-d9c59bd19104?w=400&h=300&fit=crop&crop=center",
+      "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop&crop=center",
     cuisine_names: ["French", "Desserts"],
     description: "Traditional French crêpes and galettes"
   },
@@ -611,7 +611,7 @@ restaurants_data = [
     delivery_radius_km: 7,
     min_order_value: Decimal.new("12.50"),
     image_url:
-      "https://images.unsplash.com/photo-1544468044-75d7b6b5a195?w=400&h=300&fit=crop&crop=center",
+      "https://images.unsplash.com/photo-1529042410759-befb1204b468?w=400&h=300&fit=crop&crop=center",
     cuisine_names: ["British", "Seafood"],
     description: "Traditional British fish & chips in the heart of London"
   },
@@ -630,7 +630,7 @@ restaurants_data = [
     delivery_radius_km: 10,
     min_order_value: Decimal.new("8.50"),
     image_url:
-      "https://images.unsplash.com/photo-1544468044-75d7b6b5a195?w=400&h=300&fit=crop&crop=center",
+      "https://images.unsplash.com/photo-1513104890138-7c749659a591?w=400&h=300&fit=crop&crop=center",
     cuisine_names: ["Canadian", "Comfort Food"],
     description: "Authentic Canadian poutine and comfort food"
   },
@@ -740,6 +740,44 @@ restaurants_data = [
       "https://images.unsplash.com/photo-1551782450-a2132b4ba21d?w=400&h=300&fit=crop&crop=center",
     cuisine_names: ["Fast Casual"],
     description: "Quick and affordable meals for busy people"
+  },
+
+  # 24/7 Wide-coverage restaurant for testing
+  %{
+    name: "Night Owl Express NL",
+    address: "Utrecht Central Station 1, 3584 AA Utrecht",
+    latitude: Decimal.new("52.0907"),
+    longitude: Decimal.new("5.1214"),
+    city: "Utrecht",
+    postal_code: "3584 AA",
+    country: "Netherlands",
+    avg_preparation_time: 15,
+    delivery_radius_km: 49,
+    min_order_value: Decimal.new("12.00"),
+    image_url:
+      "https://images.unsplash.com/photo-1544367567-0f2fcb009e0b?w=400&h=300&fit=crop&crop=center",
+    cuisine_names: ["Late Night", "Fast Casual", "Pizza", "Comfort Food"],
+    description:
+      "24/7 nationwide delivery service - satisfying late-night cravings across the Netherlands with lightning-fast preparation",
+    # 24/7 operational hours
+    timezone: "Europe/Amsterdam",
+    # 00:00
+    contact_open_time: 0,
+    # 24:00
+    contact_close_time: 1440,
+    # 00:00 
+    order_open_time: 0,
+    # 24:00
+    order_close_time: 1440,
+    # 00:00
+    kitchen_open_time: 0,
+    # 24:00
+    kitchen_close_time: 1440,
+    # 24:00
+    last_delivery_time: 1440,
+    # All days
+    operating_days: 127,
+    force_closed: false
   },
 
   # Late night restaurant
@@ -1840,6 +1878,206 @@ comprehensive_menu_data = [
           end)
       }
     ]
+  },
+
+  # 24/7 Night Owl Express restaurant with comprehensive late-night menu
+  %{
+    restaurant: "Night Owl Express NL",
+    menus: [
+      %{
+        name: "Late Night Pizzas",
+        meals: [
+          %{
+            name: "Midnight Margherita",
+            description: "Classic tomato, mozzarella, and basil - comfort food for night owls",
+            price: 14.50,
+            is_available: true
+          },
+          %{
+            name: "Night Shift Supreme",
+            description: "Pepperoni, mushrooms, bell peppers, olives - loaded for hungry workers",
+            price: 18.50,
+            is_available: true
+          },
+          %{
+            name: "3AM Meat Lovers",
+            description: "Pepperoni, sausage, bacon, ham - maximum protein for late shifts",
+            price: 21.00,
+            is_available: true
+          },
+          %{
+            name: "Study Session Veggie",
+            description: "Bell peppers, mushrooms, spinach, red onions, tomatoes",
+            price: 16.50,
+            is_available: true
+          },
+          %{
+            name: "Post-Party Hawaiian",
+            description: "Ham and pineapple - sweet relief after a long night out",
+            price: 17.50,
+            is_available: true
+          },
+          %{
+            name: "Trucker's BBQ",
+            description: "BBQ sauce, chicken, red onions, bacon - hearty fuel for the road",
+            price: 19.50,
+            is_available: true
+          }
+        ]
+      },
+      %{
+        name: "Night Shift Burgers",
+        meals: [
+          %{
+            name: "Owl Classic Burger",
+            description: "Beef patty, lettuce, tomato, pickles, special night sauce",
+            price: 12.50,
+            is_available: true
+          },
+          %{
+            name: "Double Trouble",
+            description: "Double beef, double cheese, bacon - for when one isn't enough",
+            price: 16.50,
+            is_available: true
+          },
+          %{
+            name: "Night Worker Special",
+            description: "Triple meat stack with fried onions and mushrooms",
+            price: 19.50,
+            is_available: true
+          },
+          %{
+            name: "Crispy Chicken Deluxe",
+            description: "Fried chicken breast, coleslaw, spicy mayo",
+            price: 14.50,
+            is_available: true
+          },
+          %{
+            name: "Veggie Night Owl",
+            description: "Plant-based patty, avocado, sprouts, vegan mayo",
+            price: 13.50,
+            is_available: true
+          }
+        ]
+      },
+      %{
+        name: "Quick Snacks & Sides",
+        meals: [
+          %{
+            name: "Loaded Nachos",
+            description: "Tortilla chips with cheese sauce, jalapeños, sour cream",
+            price: 9.50,
+            is_available: true
+          },
+          %{
+            name: "Buffalo Wings (8 pieces)",
+            description: "Spicy buffalo wings with blue cheese dip",
+            price: 11.50,
+            is_available: true
+          },
+          %{
+            name: "Mozzarella Sticks (6 pieces)",
+            description: "Crispy breaded mozzarella with marinara sauce",
+            price: 8.50,
+            is_available: true
+          },
+          %{
+            name: "Midnight Fries",
+            description: "Crispy golden fries - perfect night-time comfort",
+            price: 5.50,
+            is_available: true
+          },
+          %{
+            name: "Loaded Fries",
+            description: "Fries topped with cheese, bacon bits, and green onions",
+            price: 8.50,
+            is_available: true
+          },
+          %{
+            name: "Onion Rings",
+            description: "Golden crispy onion rings with spicy aioli",
+            price: 7.50,
+            is_available: true
+          },
+          %{
+            name: "Chicken Nuggets (10 pieces)",
+            description: "Crispy chicken nuggets with choice of sauce",
+            price: 9.50,
+            is_available: true
+          }
+        ]
+      },
+      %{
+        name: "Energy Drinks & Beverages",
+        meals: [
+          %{
+            name: "Double Espresso",
+            description: "Strong coffee shot for night shift energy",
+            price: 3.50,
+            is_available: true
+          },
+          %{
+            name: "Night Owl Energy Drink",
+            description: "High caffeine energy drink to keep you going",
+            price: 4.50,
+            is_available: true
+          },
+          %{
+            name: "Late Night Latte",
+            description: "Smooth latte perfect for all-night work sessions",
+            price: 4.50,
+            is_available: true
+          },
+          %{
+            name: "Ice Cold Cola",
+            description: "Refreshing cola to wash down your late night meal",
+            price: 3.00,
+            is_available: true
+          },
+          %{
+            name: "Fresh Orange Juice",
+            description: "Vitamin C boost for night workers",
+            price: 4.00,
+            is_available: true
+          },
+          %{
+            name: "Sparkling Water",
+            description: "Refreshing sparkling water with natural flavors",
+            price: 3.50,
+            is_available: true
+          }
+        ]
+      },
+      %{
+        name: "Sweet Night Treats",
+        meals: [
+          %{
+            name: "Midnight Chocolate Brownie",
+            description: "Rich chocolate brownie - perfect late-night indulgence",
+            price: 6.50,
+            is_available: true
+          },
+          %{
+            name: "Apple Pie Slice",
+            description: "Classic apple pie slice with cinnamon",
+            price: 5.50,
+            is_available: true
+          },
+          %{
+            name: "Ice Cream Sandwich",
+            description: "Vanilla ice cream between chocolate cookies",
+            price: 4.50,
+            is_available: true
+          },
+          %{
+            name: "Night Owl Cookies (4 pieces)",
+            description: "Fresh-baked chocolate chip cookies",
+            price: 6.00,
+            is_available: true
+          }
+        ]
+      }
+    ]
   }
 ]
 
@@ -2533,6 +2771,346 @@ if Mix.env() == :dev do
     |> length()
 
   IO.puts("✅ Created #{total_orders_created} orders with realistic patterns across 90 days")
+
+  # ============================================================================
+  # 6.1 CREATE HIGH-VOLUME ORDERS FOR NIGHT OWL EXPRESS (24/7 Testing)
+  # ============================================================================
+
+  IO.puts("🌙 Creating high-volume orders for Night Owl Express...")
+
+  # Find Night Owl Express restaurant
+  night_owl = Enum.find(restaurants, fn r -> r.name == "Night Owl Express NL" end)
+
+  if night_owl do
+    # Get Night Owl's menu items
+    night_owl_with_menus =
+      Restaurants.get_restaurant!(night_owl.id) |> Repo.preload(menus: :meals)
+
+    night_owl_meals =
+      night_owl_with_menus.menus
+      |> Enum.flat_map(fn menu -> menu.meals end)
+      |> Enum.filter(fn meal -> meal.is_available end)
+
+    if length(night_owl_meals) > 0 do
+      # Create 120 orders over the last 48 hours with realistic status distribution
+      night_owl_orders =
+        1..120
+        |> Enum.map(fn order_num ->
+          # Distribute across 48 hours with heavier concentration in evening/night hours
+          hours_ago = rem(order_num, 48)
+          # Vary minutes within the hour (realistic ordering patterns)
+          minutes_offset = rem(order_num * 13, 60)
+
+          order_time =
+            DateTime.utc_now()
+            |> DateTime.add(-hours_ago * 60 * 60, :second)
+            |> DateTime.add(-minutes_offset * 60, :second)
+            |> DateTime.to_naive()
+            |> NaiveDateTime.truncate(:second)
+
+          # Status distribution: 15% pending, 15% confirmed, 20% preparing, 15% ready, 15% out_for_delivery, 20% delivered
+          status =
+            case rem(order_num, 20) do
+              # 15%
+              0..2 -> "pending"
+              # 15%
+              3..5 -> "confirmed"
+              # 20%
+              6..9 -> "preparing"
+              # 15%
+              10..12 -> "ready"
+              # 15%
+              13..15 -> "out_for_delivery"
+              # 20%
+              _ -> "delivered"
+            end
+
+          # Select random customer (prefer Dutch customers for realism)
+          customer =
+            customers
+            |> Enum.filter(fn c ->
+              String.contains?(c.default_address || "", ["Netherlands", "Amsterdam", "Utrecht"])
+            end)
+            |> Enum.random()
+            |> case do
+              # Fallback to any customer
+              nil -> Enum.random(customers)
+              dutch_customer -> dutch_customer
+            end
+
+          # Select 1-5 random meals (Night Owl serves larger orders)
+          num_items = rem(order_num, 5) + 1
+
+          selected_meals =
+            night_owl_meals |> Enum.take_random(min(num_items, length(night_owl_meals)))
+
+          # Calculate total price
+          item_total =
+            selected_meals
+            |> Enum.reduce(Decimal.new("0"), fn meal, acc ->
+              quantity = rem(order_num * String.to_integer(to_string(meal.id)), 3) + 1
+              Decimal.add(acc, Decimal.mult(meal.price, quantity))
+            end)
+
+          # Add delivery fee for small orders
+          delivery_fee =
+            if Decimal.cmp(item_total, night_owl.min_order_value) == :lt do
+              Decimal.new("3.50")
+            else
+              Decimal.new("0.00")
+            end
+
+          total_price = Decimal.add(item_total, delivery_fee)
+
+          # Create order attributes with proper timestamps
+          order_attrs = %{
+            customer_id: customer.id,
+            restaurant_id: night_owl.id,
+            status: status,
+            total_price: total_price,
+            delivery_address: customer.default_address || "Test Address 1, 1000 AA Amsterdam",
+            phone_number: customer.phone_number || "+31-20-555-0000",
+            delivery_notes:
+              [
+                "Ring the bell",
+                "Leave at door - night shift worker",
+                "Call when arrived",
+                "Buzzer code: 1234",
+                "Silent delivery please",
+                "Leave with security"
+              ]
+              |> Enum.at(rem(order_num, 6)),
+            inserted_at: order_time,
+            updated_at: order_time
+          }
+
+          # Add status timestamps based on order status
+          order_attrs =
+            case status do
+              "pending" ->
+                order_attrs
+
+              "confirmed" ->
+                order_attrs |> Map.put(:confirmed_at, order_time)
+
+              "preparing" ->
+                confirmed_time =
+                  DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -5 * 60, :second)
+                  |> DateTime.to_naive()
+                  |> NaiveDateTime.truncate(:second)
+
+                prep_time =
+                  DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -2 * 60, :second)
+                  |> DateTime.to_naive()
+                  |> NaiveDateTime.truncate(:second)
+
+                order_attrs
+                |> Map.put(:confirmed_at, confirmed_time)
+                |> Map.put(:preparing_at, prep_time)
+
+              "ready" ->
+                confirmed_time =
+                  DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -15 * 60, :second)
+                  |> DateTime.to_naive()
+                  |> NaiveDateTime.truncate(:second)
+
+                prep_time =
+                  DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -10 * 60, :second)
+                  |> DateTime.to_naive()
+                  |> NaiveDateTime.truncate(:second)
+
+                ready_time =
+                  DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -3 * 60, :second)
+                  |> DateTime.to_naive()
+                  |> NaiveDateTime.truncate(:second)
+
+                order_attrs
+                |> Map.put(:confirmed_at, confirmed_time)
+                |> Map.put(:preparing_at, prep_time)
+                |> Map.put(:ready_at, ready_time)
+
+              "out_for_delivery" ->
+                confirmed_time =
+                  DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -25 * 60, :second)
+                  |> DateTime.to_naive()
+                  |> NaiveDateTime.truncate(:second)
+
+                prep_time =
+                  DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -20 * 60, :second)
+                  |> DateTime.to_naive()
+                  |> NaiveDateTime.truncate(:second)
+
+                ready_time =
+                  DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -10 * 60, :second)
+                  |> DateTime.to_naive()
+                  |> NaiveDateTime.truncate(:second)
+
+                delivery_time =
+                  DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -5 * 60, :second)
+                  |> DateTime.to_naive()
+                  |> NaiveDateTime.truncate(:second)
+
+                courier = couriers |> Enum.random()
+
+                order_attrs
+                |> Map.put(:confirmed_at, confirmed_time)
+                |> Map.put(:preparing_at, prep_time)
+                |> Map.put(:ready_at, ready_time)
+                |> Map.put(:out_for_delivery_at, delivery_time)
+                |> Map.put(:courier_id, courier.id)
+                |> Map.put(:courier_assigned_at, ready_time)
+
+              "delivered" ->
+                confirmed_time =
+                  DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -35 * 60, :second)
+                  |> DateTime.to_naive()
+                  |> NaiveDateTime.truncate(:second)
+
+                prep_time =
+                  DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -30 * 60, :second)
+                  |> DateTime.to_naive()
+                  |> NaiveDateTime.truncate(:second)
+
+                ready_time =
+                  DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -20 * 60, :second)
+                  |> DateTime.to_naive()
+                  |> NaiveDateTime.truncate(:second)
+
+                delivery_time =
+                  DateTime.add(DateTime.from_naive!(order_time, "Etc/UTC"), -15 * 60, :second)
+                  |> DateTime.to_naive()
+                  |> NaiveDateTime.truncate(:second)
+
+                courier = couriers |> Enum.random()
+
+                order_attrs
+                |> Map.put(:confirmed_at, confirmed_time)
+                |> Map.put(:preparing_at, prep_time)
+                |> Map.put(:ready_at, ready_time)
+                |> Map.put(:out_for_delivery_at, delivery_time)
+                |> Map.put(:delivered_at, order_time)
+                |> Map.put(:courier_id, courier.id)
+                |> Map.put(:courier_assigned_at, ready_time)
+            end
+
+          # Create the order
+          {:ok, order} =
+            %Order{}
+            |> Order.changeset(order_attrs)
+            |> Repo.insert()
+
+          # Create order items
+          order_items =
+            selected_meals
+            |> Enum.map(fn meal ->
+              quantity = rem(order_num * String.to_integer(to_string(meal.id)), 3) + 1
+
+              %{
+                order_id: order.id,
+                meal_id: meal.id,
+                quantity: quantity,
+                inserted_at: NaiveDateTime.truncate(order_time, :second),
+                updated_at: NaiveDateTime.truncate(order_time, :second)
+              }
+            end)
+
+          if length(order_items) > 0 do
+            Repo.insert_all("order_items", order_items)
+          end
+
+          # Create payment (Night Owl has high success rate)
+          payment_status = if status in ["pending"], do: "pending", else: "completed"
+
+          {:ok, _payment} =
+            Repo.insert(%Payment{
+              order_id: order.id,
+              amount: total_price,
+              status: payment_status,
+              inserted_at: NaiveDateTime.truncate(order_time, :second),
+              updated_at: NaiveDateTime.truncate(order_time, :second)
+            })
+
+          order
+        end)
+        |> Enum.filter(& &1)
+
+      IO.puts("✅ Created #{length(night_owl_orders)} high-volume orders for Night Owl Express")
+
+      # Create additional reviews for Night Owl Express (targeting 50+ reviews)
+      delivered_night_owl_orders =
+        night_owl_orders
+        |> Enum.filter(fn order -> order.status == "delivered" end)
+
+      night_owl_reviews =
+        delivered_night_owl_orders
+        |> Enum.with_index()
+        # 50% review rate
+        |> Enum.filter(fn {_order, index} -> rem(index, 2) == 0 end)
+        |> Enum.map(fn {order, _index} ->
+          # Night Owl gets good ratings (24/7 convenience is appreciated)
+          rating =
+            case rem(order.id, 10) do
+              # 10% average
+              0 -> 3
+              # 20% good  
+              1..2 -> 4
+              # 70% excellent (high appreciation for 24/7 service)
+              _ -> 5
+            end
+
+          comment =
+            case rating do
+              3 ->
+                [
+                  "Good late-night option when nothing else is open.",
+                  "Decent food for 3AM delivery. Appreciated the service.",
+                  "Not gourmet but exactly what I needed after my night shift."
+                ]
+                |> Enum.at(rem(order.id, 3))
+
+              4 ->
+                [
+                  "Great late-night service! Fast delivery even at 2AM.",
+                  "Perfect for night shift workers. Hot food delivered quickly.",
+                  "Reliable 24/7 option. The night crew knows what they're doing.",
+                  "Exactly what you need for late-night cravings. Good quality."
+                ]
+                |> Enum.at(rem(order.id, 4))
+
+              5 ->
+                [
+                  "Amazing 24/7 service! They never let you down, any time of night.",
+                  "Perfect late-night delivery! Hot, fresh food at 3AM - incredible!",
+                  "Night Owl Express is a lifesaver for night workers. 5 stars!",
+                  "Best 24/7 delivery in Netherlands. Fast, hot, and always open!",
+                  "Incredible service at all hours. My go-to for late night meals.",
+                  "Outstanding quality even during night hours. Highly recommended!"
+                ]
+                |> Enum.at(rem(order.id, 6))
+            end
+
+          review_attrs = %{
+            rating: rating,
+            comment: comment,
+            user_id: order.customer_id,
+            restaurant_id: night_owl.id,
+            order_id: order.id
+          }
+
+          case Reviews.create_review(review_attrs) do
+            {:ok, review} -> review
+            {:error, _} -> nil
+          end
+        end)
+        |> Enum.filter(& &1)
+
+      IO.puts("✅ Created #{length(night_owl_reviews)} reviews for Night Owl Express")
+    else
+      IO.puts("⚠️ No menu items found for Night Owl Express - skipping order generation")
+    end
+  else
+    IO.puts("⚠️ Night Owl Express restaurant not found - skipping order generation")
+  end
 end
 
 # ============================================================================

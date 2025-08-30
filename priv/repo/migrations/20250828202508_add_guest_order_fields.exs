@@ -6,7 +6,7 @@ defmodule Eatfair.Repo.Migrations.AddGuestOrderFields do
       add :customer_email, :string
       add :customer_phone, :string
     end
-    
+
     # Note: SQLite doesn't support ALTER COLUMN, so we can't make customer_id nullable
     # For now, we'll handle this constraint in the application code
     # In a PostgreSQL environment, you would uncomment the following:

@@ -187,45 +187,50 @@ defmodule Eatfair.Orders do
   """
   def create_order(attrs \\ %{}) do
     # Generate tracking token for anonymous orders
-    attrs = if is_nil(attrs[:customer_id]) and is_nil(attrs[:tracking_token]) do
-      Map.put(attrs, :tracking_token, Order.generate_tracking_token())
-    else
-      attrs
-    end
-    
+    attrs =
+      if is_nil(attrs[:customer_id]) and is_nil(attrs[:tracking_token]) do
+        Map.put(attrs, :tracking_token, Order.generate_tracking_token())
+      else
+        attrs
+      end
+
     %Order{}
     |> Order.changeset(attrs)
     |> Repo.insert()
   end
-  
+
   @doc """
   Creates an anonymous order with a soft account.
-  
+
   This function creates a "soft account" (unconfirmed user) for the customer
   email and associates the order with it. This ensures all orders have a
   customer_id while still supporting the anonymous ordering flow.
   """
   def create_anonymous_order(attrs) when is_map(attrs) do
     customer_email = attrs[:customer_email] || attrs["customer_email"]
-    
+
     if customer_email do
       Repo.transaction(fn ->
         # Create or get existing soft account
         case Eatfair.Accounts.create_soft_account(customer_email) do
           {:ok, soft_user} ->
             # Create order with soft account user_id and tracking token
-            order_attrs = 
+            order_attrs =
               attrs
               |> Map.put(:customer_id, soft_user.id)
-              |> Map.put(:tracking_token, attrs[:tracking_token] || Order.generate_tracking_token())
+              |> Map.put(
+                :tracking_token,
+                attrs[:tracking_token] || Order.generate_tracking_token()
+              )
               |> Map.put(:email_status, "unverified")
-            
+
             case create_order(order_attrs) do
               {:ok, order} -> order
               {:error, changeset} -> Repo.rollback(changeset)
             end
-            
-          {:error, changeset} -> Repo.rollback(changeset)
+
+          {:error, changeset} ->
+            Repo.rollback(changeset)
         end
       end)
     else
@@ -262,8 +267,9 @@ defmodule Eatfair.Orders do
   """
   def change_order_details(attrs \\ %{}) do
     import Ecto.Changeset
-    
+
     data = %{}
+
     types = %{
       email: :string,
       delivery_address: :string,
@@ -271,14 +277,21 @@ defmodule Eatfair.Orders do
       delivery_time: :string,
       special_instructions: :string
     }
-    
+
     {data, types}
     |> cast(attrs, Map.keys(types))
     |> validate_required([:email, :delivery_address, :phone_number, :delivery_time])
-    |> validate_format(:email, ~r/^[^\s]+@[^\s]+\.[^\s]+$/, message: "must be a valid email address")
+    |> validate_format(:email, ~r/^[^\s]+@[^\s]+\.[^\s]+$/,
+      message: "must be a valid email address"
+    )
     |> validate_length(:phone_number, min: 8, max: 20, message: "must be a valid phone number")
-    |> validate_length(:delivery_address, min: 10, message: "must include complete address with street, city, and postal code")
-    |> validate_format(:phone_number, ~r/^[\+]?[0-9\s\-\(\)]+$/, message: "must be a valid phone number format")
+    |> validate_length(:delivery_address,
+      min: 10,
+      message: "must include complete address with street, city, and postal code"
+    )
+    |> validate_format(:phone_number, ~r/^[\+]?[0-9\s\-\(\)]+$/,
+      message: "must be a valid phone number format"
+    )
     |> validate_length(:special_instructions, max: 500, message: "cannot exceed 500 characters")
   end
 
@@ -525,45 +538,48 @@ defmodule Eatfair.Orders do
       out_for_delivery: Enum.filter(orders, &(&1.status == "out_for_delivery"))
     }
   end
-  
+
   # Email verification functions
-  
+
   @doc """
   Updates the email verification status for an order.
   """
-  def update_order_email_status(order_id, status) when status in ["unverified", "pending", "verified"] do
+  def update_order_email_status(order_id, status)
+      when status in ["unverified", "pending", "verified"] do
     now = DateTime.utc_now()
-    
+
     attrs = %{email_status: status}
     attrs = if status == "verified", do: Map.put(attrs, :email_verified_at, now), else: attrs
-    
+
     order = get_order!(order_id)
     result = update_order(order, attrs)
-    
+
     # Broadcast email verification status change
     case result do
       {:ok, updated_order} ->
         broadcast_email_verification(updated_order)
         result
-      error -> error
+
+      error ->
+        error
     end
   end
-  
+
   @doc """
   Gets an order by its tracking token (for anonymous tracking).
   """
   def get_order_by_tracking_token(nil), do: nil
-  
+
   def get_order_by_tracking_token(token) when is_binary(token) do
     Order
     |> where([o], o.tracking_token == ^token)
     |> preload([:restaurant, order_items: :meal])
     |> Repo.one()
   end
-  
+
   @doc """
   Gets orders by customer email (for anonymous orders and soft accounts).
-  
+
   This function finds orders both by:
   1. Direct customer_email field (legacy orders)
   2. Associated user email for soft accounts
@@ -576,21 +592,21 @@ defmodule Eatfair.Orders do
     |> order_by(desc: :inserted_at)
     |> Repo.all()
   end
-  
+
   @doc """
   Associates an anonymous order with a user account after account creation.
   """
   def associate_order_with_user(order_id, user_id) do
     order = get_order!(order_id)
-    
+
     attrs = %{
       customer_id: user_id,
       account_created_from_order: true
     }
-    
+
     update_order(order, attrs)
   end
-  
+
   @doc """
   Checks if an email address has any associated orders (for account creation).
   """
@@ -598,19 +614,19 @@ defmodule Eatfair.Orders do
     query = from o in Order, where: o.customer_email == ^email, limit: 1
     Repo.exists?(query)
   end
-  
+
   # Private helper functions for email verification
-  
+
   defp broadcast_email_verification(order) do
     email = Order.primary_email(order)
-    
+
     if email do
       Phoenix.PubSub.broadcast(
         Eatfair.PubSub,
         "email_verification:#{email}",
         {:email_verified, email}
       )
-      
+
       # Also broadcast to order-specific channel if tracking token exists
       if order.tracking_token do
         Phoenix.PubSub.broadcast(
@@ -621,33 +637,34 @@ defmodule Eatfair.Orders do
       end
     end
   end
-  
+
   # Order tracking audit trail functions
-  
+
   @doc """
   Creates a new order status event for audit trail tracking.
-  
+
   This function creates an immutable record of order status changes,
   maintaining a complete audit trail. It also handles automatic 
   status transitions and broadcasts real-time updates.
   """
   def create_order_status_event(attrs) do
     changeset = OrderStatusEvent.create_changeset(attrs)
-    
+
     case Repo.insert(changeset) do
       {:ok, event} ->
         # Broadcast real-time status update
         broadcast_status_event(event)
-        
+
         # Handle automatic status transitions if needed
         handle_automatic_transitions(event)
-        
+
         {:ok, event}
-      
-      error -> error
+
+      error ->
+        error
     end
   end
-  
+
   @doc """
   Gets the current status of an order by querying the most recent status event.
   """
@@ -658,7 +675,7 @@ defmodule Eatfair.Orders do
     |> limit(1)
     |> Repo.one()
   end
-  
+
   @doc """
   Gets the complete status history for an order, ordered chronologically.
   """
@@ -669,7 +686,7 @@ defmodule Eatfair.Orders do
     |> order_by([e], asc: e.occurred_at, asc: e.inserted_at)
     |> Repo.all()
   end
-  
+
   @doc """
   Gets order tracking data including current status and location if available.
   This is the main function for the customer order tracking interface.
@@ -678,42 +695,44 @@ defmodule Eatfair.Orders do
     with order when not is_nil(order) <- get_order_with_tracking(order_id) do
       current_status = get_current_order_status(order_id)
       status_history = get_order_status_history(order_id)
-      
+
       # If no status events exist, create initial tracking event for backward compatibility
-      {current_status, status_history} = 
+      {current_status, status_history} =
         if is_nil(current_status) and length(status_history) == 0 do
           # Initialize tracking for existing orders
-          {:ok, initial_event} = initialize_order_tracking(order_id, %{
-            total_amount: order.total_price,
-            delivery_address_id: nil,
-            requested_delivery_time: order.estimated_delivery_at
-          })
-          
+          {:ok, initial_event} =
+            initialize_order_tracking(order_id, %{
+              total_amount: order.total_price,
+              delivery_address_id: nil,
+              requested_delivery_time: order.estimated_delivery_at
+            })
+
           {initial_event, [initial_event]}
         else
           {current_status, status_history}
         end
-      
+
       tracking_data = %{
         order: order,
         current_status: current_status,
         status_history: status_history
       }
-      
+
       # Add location data if order is in transit
-      final_tracking_data = if current_status && current_status.status == "in_transit" do
-        location_update = get_latest_courier_location(order_id)
-        Map.put(tracking_data, :courier_location, location_update)
-      else
-        tracking_data
-      end
-      
+      final_tracking_data =
+        if current_status && current_status.status == "in_transit" do
+          location_update = get_latest_courier_location(order_id)
+          Map.put(tracking_data, :courier_location, location_update)
+        else
+          tracking_data
+        end
+
       {:ok, final_tracking_data}
     else
       nil -> {:error, :order_not_found}
     end
   end
-  
+
   @doc """
   Gets order tracking data by tracking token (for anonymous access).
   """
@@ -723,10 +742,10 @@ defmodule Eatfair.Orders do
       order -> get_order_tracking_data(order.id)
     end
   end
-  
+
   @doc """
   Transitions an order to a new status with audit trail.
-  
+
   This is the main function for status transitions in the new system.
   It creates an audit event and optionally updates the old status fields
   for backwards compatibility.
@@ -734,7 +753,7 @@ defmodule Eatfair.Orders do
   def transition_order_status(order_id, new_status, attrs \\ %{}) when is_integer(order_id) do
     attrs = Map.put(attrs, :order_id, order_id)
     attrs = Map.put(attrs, :status, new_status)
-    
+
     Repo.transaction(fn ->
       # Create the audit trail event
       case create_order_status_event(attrs) do
@@ -742,31 +761,32 @@ defmodule Eatfair.Orders do
           # For backwards compatibility, also update the order's status field
           order = get_order!(order_id)
           {:ok, updated_order} = update_order_legacy_status(order, new_status)
-          
+
           %{event: event, order: updated_order}
-        
-        {:error, changeset} -> 
+
+        {:error, changeset} ->
           Repo.rollback(changeset)
       end
     end)
   end
-  
+
   @doc """
   Creates a courier location update.
   """
   def create_courier_location_update(attrs) do
     changeset = CourierLocationUpdate.create_changeset(attrs)
-    
+
     case Repo.insert(changeset) do
       {:ok, update} ->
         # Broadcast location update to tracking interfaces
         broadcast_location_update(update)
         {:ok, update}
-      
-      error -> error
+
+      error ->
+        error
     end
   end
-  
+
   @doc """
   Gets the latest courier location for an order.
   """
@@ -778,7 +798,7 @@ defmodule Eatfair.Orders do
     |> limit(1)
     |> Repo.one()
   end
-  
+
   @doc """
   Gets courier location history for an order.
   """
@@ -789,13 +809,13 @@ defmodule Eatfair.Orders do
     |> order_by([u], asc: u.recorded_at)
     |> Repo.all()
   end
-  
+
   @doc """
   Initializes order tracking by creating the initial "order_placed" event.
   This should be called immediately after order creation.
   """
   def initialize_order_tracking(order_id, attrs \\ %{}) do
-    event_attrs = 
+    event_attrs =
       attrs
       |> Map.put(:order_id, order_id)
       |> Map.put(:status, "order_placed")
@@ -805,25 +825,25 @@ defmodule Eatfair.Orders do
         delivery_address_id: attrs[:delivery_address_id],
         requested_delivery_time: attrs[:requested_delivery_time]
       })
-    
+
     create_order_status_event(event_attrs)
   end
-  
+
   # Private helper functions for order tracking
-  
+
   defp get_order_with_tracking(order_id) do
     Order
     |> where([o], o.id == ^order_id)
     |> preload([:customer, :restaurant, order_items: :meal])
     |> Repo.one()
   end
-  
+
   defp update_order_legacy_status(order, new_status) do
     # Map new status names to old status names for backwards compatibility
     legacy_status = map_to_legacy_status(new_status)
     update_order_status(order, legacy_status)
   end
-  
+
   defp map_to_legacy_status("order_placed"), do: "pending"
   defp map_to_legacy_status("order_accepted"), do: "confirmed"
   defp map_to_legacy_status("cooking"), do: "preparing"
@@ -833,17 +853,17 @@ defmodule Eatfair.Orders do
   defp map_to_legacy_status("order_rejected"), do: "cancelled"
   defp map_to_legacy_status("delivery_failed"), do: "cancelled"
   defp map_to_legacy_status(status), do: status
-  
+
   defp broadcast_status_event(event) do
     order = get_order!(event.order_id)
-    
+
     # Broadcast to customer tracking
     Phoenix.PubSub.broadcast(
       Eatfair.PubSub,
       "order_tracking:#{order.id}",
       {:status_event_created, event}
     )
-    
+
     # Broadcast to token-based tracking for anonymous users
     if order.tracking_token do
       Phoenix.PubSub.broadcast(
@@ -853,16 +873,17 @@ defmodule Eatfair.Orders do
       )
     end
   end
-  
+
   defp broadcast_location_update(update) do
     Phoenix.PubSub.broadcast(
       Eatfair.PubSub,
       "order_tracking:#{update.order_id}",
       {:location_updated, update}
     )
-    
+
     # Also broadcast to token-based tracking
     order = get_order!(update.order_id)
+
     if order.tracking_token do
       Phoenix.PubSub.broadcast(
         Eatfair.PubSub,
@@ -871,18 +892,19 @@ defmodule Eatfair.Orders do
       )
     end
   end
-  
+
   defp handle_automatic_transitions(event) do
     # Handle automatic status transitions based on business logic
     case event.status do
       "order_accepted" ->
         # Automatically transition to cooking based on preparation timing
         maybe_auto_transition_to_cooking(event)
-      
-      _ -> :ok
+
+      _ ->
+        :ok
     end
   end
-  
+
   defp maybe_auto_transition_to_cooking(_event) do
     # This would implement automatic transition logic
     # For now, we'll leave it as a placeholder for future enhancement

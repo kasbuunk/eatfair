@@ -8,9 +8,12 @@
       >
         <.icon name="hero-arrow-left" class="w-4 h-4 mr-2" /> Back to restaurant
       </button>
-      
+
       <h1 class="text-3xl font-bold text-gray-900 mb-2">Order Details</h1>
-      <p class="text-gray-600">Provide your details to complete the order from <span class="font-semibold">{@restaurant.name}</span></p>
+      <p class="text-gray-600">
+        Provide your details to complete the order from
+        <span class="font-semibold">{@restaurant.name}</span>
+      </p>
     </div>
 
     <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
@@ -18,7 +21,7 @@
       <div class="lg:col-span-2">
         <div class="bg-white rounded-xl shadow-lg p-8">
           <h2 class="text-xl font-bold text-gray-900 mb-6">Essential Information</h2>
-          
+
           <.form
             for={@order_form}
             phx-submit="submit_order"
@@ -42,8 +45,8 @@
                 We'll send order confirmations and updates to this email
               </p>
             </div>
-
-            <!-- Delivery Address -->
+            
+<!-- Delivery Address -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">
                 Delivery Address *
@@ -59,8 +62,8 @@
                 Please provide a complete address including street number, city, and postal code
               </p>
             </div>
-
-            <!-- Phone Number -->
+            
+<!-- Phone Number -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">
                 Phone Number *
@@ -77,8 +80,8 @@
                 The restaurant or courier may call you for reasons related to your order
               </p>
             </div>
-
-            <!-- Delivery Time -->
+            
+<!-- Delivery Time -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">
                 Preferred Delivery Time *
@@ -86,18 +89,21 @@
                   <span class="text-xs font-normal text-gray-500">({@delivery_timezone})</span>
                 <% end %>
               </label>
-              
+
               <%= if assigns[:restaurant_closed_message] do %>
                 <div class="p-4 bg-amber-50 border border-amber-200 rounded-lg mb-4">
                   <div class="flex items-start">
-                    <.icon name="hero-clock" class="w-5 h-5 text-amber-600 mt-0.5 mr-3 flex-shrink-0" />
+                    <.icon
+                      name="hero-clock"
+                      class="w-5 h-5 text-amber-600 mt-0.5 mr-3 flex-shrink-0"
+                    />
                     <div>
                       <p class="text-sm font-medium text-amber-800">Restaurant Closed</p>
                       <p class="text-sm text-amber-700 mt-1">{@restaurant_closed_message}</p>
                     </div>
                   </div>
                 </div>
-                
+
                 <.input
                   field={@order_form[:delivery_time]}
                   type="select"
@@ -113,7 +119,7 @@
                   options={@delivery_time_options}
                   class="w-full"
                 />
-                
+
                 <div class="mt-2 space-y-1">
                   <p class="text-sm text-gray-500">
                     <.icon name="hero-clock" class="w-4 h-4 inline mr-1" />
@@ -128,8 +134,8 @@
                 </div>
               <% end %>
             </div>
-
-            <!-- Special Instructions (Optional) -->
+            
+<!-- Special Instructions (Optional) -->
             <div>
               <label class="block text-sm font-medium text-gray-700 mb-2">
                 Special Instructions (Optional)
@@ -145,33 +151,32 @@
                 Please include any dietary restrictions, delivery notes, or special requests
               </p>
             </div>
-
-            <!-- Submit Button -->
+            
+<!-- Submit Button -->
             <div class="pt-4">
               <.button
                 type="submit"
                 class="w-full py-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
               >
-                <.icon name="hero-arrow-right" class="w-5 h-5 mr-2" />
-                Continue to Review Order
+                <.icon name="hero-arrow-right" class="w-5 h-5 mr-2" /> Continue to Review Order
               </.button>
             </div>
           </.form>
         </div>
       </div>
-
-      <!-- Order Summary Sidebar -->
+      
+<!-- Order Summary Sidebar -->
       <div class="lg:col-span-1">
         <div class="bg-white rounded-xl shadow-lg p-6 sticky top-6">
           <h3 class="text-lg font-bold text-gray-900 mb-4">Order Summary</h3>
           
-          <!-- Restaurant Info -->
+<!-- Restaurant Info -->
           <div class="mb-6 pb-4 border-b border-gray-200">
             <h4 class="font-semibold text-gray-900">{@restaurant.name}</h4>
             <p class="text-sm text-gray-600">{@restaurant.address}</p>
           </div>
-
-          <!-- Cart Items -->
+          
+<!-- Cart Items -->
           <div class="space-y-3 mb-6">
             <%= for {meal_id, quantity} <- @cart do %>
               <% meal = find_meal(@restaurant, meal_id) %>
@@ -202,20 +207,23 @@
               <% end %>
             <% end %>
           </div>
-
-          <!-- Total -->
+          
+<!-- Total -->
           <div class="border-t border-gray-200 pt-4">
             <div class="flex items-center justify-between text-lg font-bold text-gray-900">
               <span>Total</span>
               <span class="text-indigo-600" data-order-total>{format_price(@cart_total)}</span>
             </div>
           </div>
-
-          <!-- Delivery Info -->
+          
+<!-- Delivery Info -->
           <%= if @formatted_location != "" do %>
             <div class="mt-6 p-3 bg-blue-50 rounded-lg">
               <div class="flex items-start">
-                <.icon name="hero-map-pin" class="w-4 h-4 text-blue-600 mt-0.5 mr-2 flex-shrink-0" />
+                <.icon
+                  name="hero-map-pin"
+                  class="w-4 h-4 text-blue-600 mt-0.5 mr-2 flex-shrink-0"
+                />
                 <div>
                   <p class="text-sm font-medium text-blue-900">Delivering to</p>
                   <p class="text-sm text-blue-700">{@formatted_location}</p>
@@ -223,14 +231,19 @@
               </div>
             </div>
           <% end %>
-
-          <!-- Security Notice -->
+          
+<!-- Security Notice -->
           <div class="mt-6 p-3 bg-gray-50 rounded-lg">
             <div class="flex items-start">
-              <.icon name="hero-shield-check" class="w-4 h-4 text-green-600 mt-0.5 mr-2 flex-shrink-0" />
+              <.icon
+                name="hero-shield-check"
+                class="w-4 h-4 text-green-600 mt-0.5 mr-2 flex-shrink-0"
+              />
               <div>
                 <p class="text-xs font-medium text-gray-900">Secure Ordering</p>
-                <p class="text-xs text-gray-600">Your information is protected and only used for this order</p>
+                <p class="text-xs text-gray-600">
+                  Your information is protected and only used for this order
+                </p>
               </div>
             </div>
           </div>

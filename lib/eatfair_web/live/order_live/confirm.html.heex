@@ -8,7 +8,7 @@
       >
         <.icon name="hero-arrow-left" class="w-4 h-4 mr-2" /> Back to details
       </button>
-      
+
       <h1 class="text-3xl font-bold text-gray-900 mb-2">Confirm Your Order</h1>
       <p class="text-gray-600">Please review your order details before proceeding to payment</p>
     </div>
@@ -44,8 +44,8 @@
             </div>
           </div>
         </div>
-
-        <!-- Order Items -->
+        
+<!-- Order Items -->
         <div class="bg-white rounded-xl shadow-lg p-6">
           <h2 class="text-xl font-bold text-gray-900 mb-4">Your Order</h2>
           <div class="space-y-4">
@@ -70,8 +70,8 @@
             <% end %>
           </div>
         </div>
-
-        <!-- Delivery Details -->
+        
+<!-- Delivery Details -->
         <div class="bg-white rounded-xl shadow-lg p-6">
           <h2 class="text-xl font-bold text-gray-900 mb-4">Delivery Details</h2>
           <div class="space-y-4">
@@ -114,7 +114,10 @@
 
             <%= if @order_details["special_instructions"] && @order_details["special_instructions"] != "" do %>
               <div class="flex items-start">
-                <.icon name="hero-chat-bubble-left-ellipsis" class="w-5 h-5 text-gray-400 mt-1 mr-3 flex-shrink-0" />
+                <.icon
+                  name="hero-chat-bubble-left-ellipsis"
+                  class="w-5 h-5 text-gray-400 mt-1 mr-3 flex-shrink-0"
+                />
                 <div>
                   <p class="font-medium text-gray-900">Special Instructions</p>
                   <p class="text-gray-600">{@order_details["special_instructions"]}</p>
@@ -124,13 +127,13 @@
           </div>
         </div>
       </div>
-
-      <!-- Order Summary & Actions -->
+      
+<!-- Order Summary & Actions -->
       <div class="lg:col-span-1">
         <div class="bg-white rounded-xl shadow-lg p-6 sticky top-6">
           <h3 class="text-lg font-bold text-gray-900 mb-4">Order Summary</h3>
           
-          <!-- Cart Total -->
+<!-- Cart Total -->
           <div class="border-t border-gray-200 pt-4 mb-6">
             <div class="flex items-center justify-between text-xl font-bold text-gray-900">
               <span>Total</span>
@@ -138,41 +141,47 @@
             </div>
             <p class="text-sm text-gray-500 mt-1">Including all taxes and fees</p>
           </div>
-
-          <!-- Action Buttons -->
+          
+<!-- Action Buttons -->
           <div class="space-y-3">
             <.button
               phx-click="confirm_order"
               class="w-full py-4 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 text-white font-bold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl"
             >
-              <.icon name="hero-credit-card" class="w-5 h-5 mr-2" />
-              Proceed to Payment
+              <.icon name="hero-credit-card" class="w-5 h-5 mr-2" /> Proceed to Payment
             </.button>
 
             <button
               phx-click="back_to_details"
               class="w-full py-3 bg-gray-100 hover:bg-gray-200 text-gray-700 font-medium rounded-lg transition-colors"
             >
-              <.icon name="hero-pencil" class="w-4 h-4 mr-2" />
-              Edit Details
+              <.icon name="hero-pencil" class="w-4 h-4 mr-2" /> Edit Details
             </button>
           </div>
-
-          <!-- Security Notice -->
+          
+<!-- Security Notice -->
           <div class="mt-6 p-3 bg-green-50 rounded-lg">
             <div class="flex items-start">
-              <.icon name="hero-shield-check" class="w-4 h-4 text-green-600 mt-0.5 mr-2 flex-shrink-0" />
+              <.icon
+                name="hero-shield-check"
+                class="w-4 h-4 text-green-600 mt-0.5 mr-2 flex-shrink-0"
+              />
               <div>
                 <p class="text-xs font-medium text-green-900">Secure Payment</p>
-                <p class="text-xs text-green-700">Your payment information is encrypted and secure</p>
+                <p class="text-xs text-green-700">
+                  Your payment information is encrypted and secure
+                </p>
               </div>
             </div>
           </div>
-
-          <!-- Order Policy -->
+          
+<!-- Order Policy -->
           <div class="mt-4 p-3 bg-gray-50 rounded-lg">
             <div class="flex items-start">
-              <.icon name="hero-information-circle" class="w-4 h-4 text-gray-600 mt-0.5 mr-2 flex-shrink-0" />
+              <.icon
+                name="hero-information-circle"
+                class="w-4 h-4 text-gray-600 mt-0.5 mr-2 flex-shrink-0"
+              />
               <div>
                 <p class="text-xs text-gray-600">
                   By proceeding, you agree to receive updates about your order via email and SMS

@@ -68,7 +68,7 @@ defmodule EatfairWeb.Live.Components.AddressAutoccompleteCrashTest do
         view
         |> element("input[type='text']")
         |> render_keydown(%{"key" => "h", "value" => ""})
-        
+
         # If we get here, the bug is actually fixed!
         flunk("Expected crash but component handled input gracefully - the bug might be fixed!")
       rescue
@@ -88,9 +88,11 @@ defmodule EatfairWeb.Live.Components.AddressAutoccompleteCrashTest do
         view
         |> element("input[type='text']")
         |> render_keydown(%{"key" => "Meta", "value" => "h"})
-        
+
         # If we get here, the bug is actually fixed!
-        flunk("Expected crash but component handled modifier keys gracefully - the bug might be fixed!")
+        flunk(
+          "Expected crash but component handled modifier keys gracefully - the bug might be fixed!"
+        )
       rescue
         # Expected crash - the bug still exists
         _error -> :ok
@@ -120,7 +122,8 @@ defmodule EatfairWeb.Live.Components.AddressAutoccompleteCrashTest do
           |> element("input[type='text']")
           |> render_keydown(%{"key" => key, "value" => key})
         rescue
-          _error -> :ok  # Ignore crashes for now - component needs to be fixed first
+          # Ignore crashes for now - component needs to be fixed first
+          _error -> :ok
         end
       end
 
@@ -131,7 +134,8 @@ defmodule EatfairWeb.Live.Components.AddressAutoccompleteCrashTest do
           |> element("input[type='text']")
           |> render_keydown(key_combo)
         rescue
-          _error -> :ok  # Ignore crashes for now - component needs to be fixed first
+          # Ignore crashes for now - component needs to be fixed first
+          _error -> :ok
         end
       end
     end
@@ -150,7 +154,8 @@ defmodule EatfairWeb.Live.Components.AddressAutoccompleteCrashTest do
           |> element("input[type='text']")
           |> render_keydown(%{"key" => key})
         rescue
-          _error -> :ok  # Some navigation keys might not be implemented yet
+          # Some navigation keys might not be implemented yet
+          _error -> :ok
         end
       end
     end
@@ -165,7 +170,8 @@ defmodule EatfairWeb.Live.Components.AddressAutoccompleteCrashTest do
         |> element("input[type='text']")
         |> render_focus()
       rescue
-        _error -> :ok  # Focus might not be implemented yet
+        # Focus might not be implemented yet
+        _error -> :ok
       end
 
       # Blur should work  
@@ -174,7 +180,8 @@ defmodule EatfairWeb.Live.Components.AddressAutoccompleteCrashTest do
         |> element("input[type='text']")
         |> render_blur()
       rescue
-        _error -> :ok  # Blur might not be implemented yet
+        # Blur might not be implemented yet
+        _error -> :ok
       end
     end
   end

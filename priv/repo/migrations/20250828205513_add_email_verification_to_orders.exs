@@ -4,9 +4,11 @@ defmodule Eatfair.Repo.Migrations.AddEmailVerificationToOrders do
   def change do
     # Add email verification fields to orders
     alter table(:orders) do
-      add :email_status, :string, default: "unverified" # unverified, pending, verified
+      # unverified, pending, verified
+      add :email_status, :string, default: "unverified"
       add :email_verified_at, :utc_datetime
-      add :tracking_token, :string # for anonymous tracking
+      # for anonymous tracking
+      add :tracking_token, :string
       add :account_created_from_order, :boolean, default: false
     end
 

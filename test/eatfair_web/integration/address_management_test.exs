@@ -1,5 +1,5 @@
 defmodule EatfairWeb.AddressManagementTest do
-  use EatfairWeb.ConnCase, async: true
+  use EatfairWeb.ConnCase, async: false
 
   import Phoenix.LiveViewTest
   import Eatfair.AccountsFixtures

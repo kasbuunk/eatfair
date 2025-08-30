@@ -24,7 +24,7 @@ defmodule Eatfair.Orders.Order do
     field :courier_assigned_at, :naive_datetime
     field :delivery_address, :string
     field :delivery_notes, :string
-    
+
     # Guest order fields (for streamlined ordering without user accounts)
     field :customer_email, :string
     field :customer_phone, :string
@@ -46,9 +46,10 @@ defmodule Eatfair.Orders.Order do
     field :is_delayed, :boolean, default: false
     field :delay_reason, :string
     field :special_instructions, :string
-    
+
     # Email verification fields
-    field :email_status, :string, default: "unverified"  # unverified, pending, verified
+    # unverified, pending, verified
+    field :email_status, :string, default: "unverified"
     field :email_verified_at, :utc_datetime
     field :tracking_token, :string
     field :account_created_from_order, :boolean, default: false
@@ -119,17 +120,27 @@ defmodule Eatfair.Orders.Order do
       customer_id != nil ->
         # Authenticated order - customer_id is sufficient
         changeset
-      
+
       customer_email != nil and customer_phone != nil ->
         # Guest order - validate email and phone
         changeset
         |> validate_required([:customer_email, :customer_phone])
-        |> validate_format(:customer_email, ~r/^[^\s]+@[^\s]+\.[^\s]+$/, message: "must be a valid email")
-        |> validate_length(:customer_phone, min: 8, max: 20, message: "must be a valid phone number")
-      
+        |> validate_format(:customer_email, ~r/^[^\s]+@[^\s]+\.[^\s]+$/,
+          message: "must be a valid email"
+        )
+        |> validate_length(:customer_phone,
+          min: 8,
+          max: 20,
+          message: "must be a valid phone number"
+        )
+
       true ->
         # Neither authenticated nor proper guest info
-        add_error(changeset, :customer_id, "must provide either customer account or email and phone for guest orders")
+        add_error(
+          changeset,
+          :customer_id,
+          "must provide either customer account or email and phone for guest orders"
+        )
     end
   end
 
@@ -180,26 +191,26 @@ defmodule Eatfair.Orders.Order do
         add_error(changeset, :status, "cannot transition from #{old_status} to #{new_status}")
     end
   end
-  
+
   @doc """
   Generates a secure tracking token for anonymous order tracking.
   """
   def generate_tracking_token do
     :crypto.strong_rand_bytes(16) |> Base.url_encode64(padding: false)
   end
-  
+
   @doc """
   Checks if the order email has been verified.
   """
   def email_verified?(%__MODULE__{email_status: "verified"}), do: true
   def email_verified?(%__MODULE__{}), do: false
-  
+
   @doc """
   Checks if the order is from an authenticated user.
   """
   def authenticated_order?(%__MODULE__{customer_id: nil}), do: false
   def authenticated_order?(%__MODULE__{}), do: true
-  
+
   @doc """
   Gets the primary email for this order (from customer or guest email).
   """

@@ -24,8 +24,19 @@ defmodule EatfairWeb.EnhancedLocationHandlingTest do
         })
 
       # Create a menu and some meals for testing cart functionality
-      _meal1 = meal_fixture(%{restaurant_id: restaurant.id, name: "Pasta Carbonara", price: Decimal.new("18.50")})
-      _meal2 = meal_fixture(%{restaurant_id: restaurant.id, name: "Grilled Salmon", price: Decimal.new("24.00")})
+      _meal1 =
+        meal_fixture(%{
+          restaurant_id: restaurant.id,
+          name: "Pasta Carbonara",
+          price: Decimal.new("18.50")
+        })
+
+      _meal2 =
+        meal_fixture(%{
+          restaurant_id: restaurant.id,
+          name: "Grilled Salmon",
+          price: Decimal.new("24.00")
+        })
 
       # Reload restaurant with menus and meals
       restaurant = Eatfair.Restaurants.get_restaurant!(restaurant.id)
@@ -50,7 +61,7 @@ defmodule EatfairWeb.EnhancedLocationHandlingTest do
       raw_address = "koekoeklaan 31 bussum"
 
       # Step 1 & 2: Navigate to discovery page with raw address (as if from homepage)
-      {:ok, discovery_view, discovery_html} = 
+      {:ok, discovery_view, discovery_html} =
         live(conn, ~p"/restaurants?location=#{raw_address}")
 
       # Verify restaurant is displayed in discovery (should deliver to Bussum)
@@ -58,7 +69,9 @@ defmodule EatfairWeb.EnhancedLocationHandlingTest do
       assert discovery_html =~ "Laren Fine Dining"
 
       # Step 3: Click on restaurant to navigate to detail page
-      discovery_view |> element("button", "View Menu") |> render_click()
+      discovery_view
+      |> element("button[phx-value-id='#{restaurant.id}']", "View Menu")
+      |> render_click()
 
       assert_redirect(
         discovery_view,
@@ -70,20 +83,21 @@ defmodule EatfairWeb.EnhancedLocationHandlingTest do
         live(conn, ~p"/restaurants/#{restaurant.id}?location=#{raw_address}")
 
       # Key assertions based on user feedback:
-      
+
       # 1. Should show formatted location, not raw user input
       assert restaurant_html =~ "📍 Delivery to"
       # Should show Google Maps formatted address, not "koekoeklaan 31 bussum"
       assert restaurant_html =~ "Koekoeklaan 31" or restaurant_html =~ "Bussum"
-      refute restaurant_html =~ "koekoeklaan 31 bussum" # Raw input should be formatted
+      # Raw input should be formatted
+      refute restaurant_html =~ "koekoeklaan 31 bussum"
 
       # 2. Should show that restaurant delivers to this location
       assert restaurant_html =~ "✅ Delivers to your location" or
-             restaurant_html =~ "Available for delivery"
+               restaurant_html =~ "Available for delivery"
 
       # 3. Should show estimated delivery time
       assert restaurant_html =~ "estimated delivery time" or
-             restaurant_html =~ "min"
+               restaurant_html =~ "min"
 
       # 4. Should have option to change delivery address
       assert has_element?(restaurant_view, "button", "Change Address")
@@ -91,7 +105,7 @@ defmodule EatfairWeb.EnhancedLocationHandlingTest do
       # 5. Meals should be selectable for the shopping cart
       first_add_to_cart_button = "[data-add-to-cart]:first-of-type"
       assert has_element?(restaurant_view, first_add_to_cart_button)
-      
+
       # Should NOT show delivery unavailable message
       refute restaurant_html =~ "❌ Delivery not available"
       refute restaurant_html =~ "Outside delivery range"
@@ -109,11 +123,15 @@ defmodule EatfairWeb.EnhancedLocationHandlingTest do
 
       # Should show formatted location
       assert restaurant_html =~ "📍 Delivery to"
-      assert restaurant_html =~ "Amsterdam" # Should show formatted address
+      # Should show formatted address
+      assert restaurant_html =~ "Amsterdam"
 
       # Should show delivery not available with clear messaging
       assert restaurant_html =~ "❌ Delivery not available"
-      assert restaurant_html =~ "This location is outside the restaurant&#39;s delivery range (5 km)"
+
+      assert restaurant_html =~
+               "This location is outside the restaurant&#39;s delivery range (5 km)"
+
       refute restaurant_html =~ "Available for delivery"
 
       # Should have option to find other restaurants
@@ -142,14 +160,14 @@ defmodule EatfairWeb.EnhancedLocationHandlingTest do
 
       # Should show address refinement form
       assert has_element?(restaurant_view, "#location-refinement-form")
-      
+
       # Should show form with Update button and Cancel button
       assert has_element?(restaurant_view, "button", "Update")
       assert has_element?(restaurant_view, "button", "Cancel")
-      
+
       # Click cancel to close the form
       restaurant_view |> element("button", "Cancel") |> render_click()
-      
+
       # Address refinement form should be closed
       refute has_element?(restaurant_view, "#location-refinement-form")
     end
@@ -185,7 +203,7 @@ defmodule EatfairWeb.EnhancedLocationHandlingTest do
 
       # Should show delivery not available (geocoding failed)
       assert restaurant_html =~ "❌ Delivery not available"
-      
+
       # Should still show option to change address
       assert has_element?(restaurant_view, "button", "Change Address")
     end
@@ -199,15 +217,16 @@ defmodule EatfairWeb.EnhancedLocationHandlingTest do
       conn = log_in_user(conn, customer)
 
       # Create an address for the user that's outside delivery range
-      _user_address = address_fixture(%{
-        user: customer,
-        name: "Home",
-        street_address: "Damrak 1",
-        city: "Amsterdam", 
-        postal_code: "1012 LG",
-        country: "Netherlands",
-        is_default: true
-      })
+      _user_address =
+        address_fixture(%{
+          user: customer,
+          name: "Home",
+          street_address: "Damrak 1",
+          city: "Amsterdam",
+          postal_code: "1012 LG",
+          country: "Netherlands",
+          is_default: true
+        })
 
       # Navigate with location parameter that IS within delivery range
       search_location = "Laren centrum"
@@ -217,8 +236,9 @@ defmodule EatfairWeb.EnhancedLocationHandlingTest do
 
       # Should show delivery available based on search location, NOT user's saved address
       assert restaurant_html =~ "✅ Delivers to your location"
-      assert restaurant_html =~ "Laren" # Should show searched location
-      
+      # Should show searched location
+      assert restaurant_html =~ "Laren"
+
       # Should NOT show Amsterdam (user's saved address)
       refute restaurant_html =~ "Amsterdam"
       refute restaurant_html =~ "Damrak"
@@ -240,7 +260,7 @@ defmodule EatfairWeb.EnhancedLocationHandlingTest do
 
       # Should show delivery status even without login
       assert restaurant_html =~ "✅ Delivers to your location" or
-             restaurant_html =~ "❌ Delivery not available"
+               restaurant_html =~ "❌ Delivery not available"
 
       # Should have address change functionality
       assert has_element?(restaurant_view, "button", "Change Address")
@@ -250,7 +270,7 @@ defmodule EatfairWeb.EnhancedLocationHandlingTest do
   describe "Location display and formatting" do
     setup do
       owner = user_fixture(%{role: :restaurant_owner})
-      
+
       restaurant =
         restaurant_fixture(%{
           name: "Test Restaurant",
@@ -274,15 +294,15 @@ defmodule EatfairWeb.EnhancedLocationHandlingTest do
         # Raw input -> Expected to see formatted version
         {"hilversum", "Hilversum"},
         {"1251 ab laren", "1251"},
-        {"bussum centrum", "Bussum"},
+        {"bussum centrum", "Bussum"}
       ]
 
       for {raw_input, expected_format} <- test_cases do
         {:ok, _view, html} = live(conn, ~p"/restaurants/#{restaurant.id}?location=#{raw_input}")
-        
+
         # Should show formatted version, not exact raw input
         assert html =~ expected_format
-        
+
         # Should show location section
         assert html =~ "📍 Delivery to"
       end
@@ -293,7 +313,7 @@ defmodule EatfairWeb.EnhancedLocationHandlingTest do
       restaurant: restaurant
     } do
       # Test delivery available case
-      {:ok, _view, available_html} = 
+      {:ok, _view, available_html} =
         live(conn, ~p"/restaurants/#{restaurant.id}?location=hilversum")
 
       assert available_html =~ "✅ Delivers to your location"
@@ -304,7 +324,9 @@ defmodule EatfairWeb.EnhancedLocationHandlingTest do
         live(conn, ~p"/restaurants/#{restaurant.id}?location=amsterdam")
 
       assert unavailable_html =~ "❌ Delivery not available"
-      assert unavailable_html =~ "This location is outside the restaurant&#39;s delivery range (8 km)"
+
+      assert unavailable_html =~
+               "This location is outside the restaurant&#39;s delivery range (8 km)"
     end
   end
 end

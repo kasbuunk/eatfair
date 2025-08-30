@@ -29,13 +29,13 @@ defmodule EatfairWeb.Router do
       live "/users/register", UserLive.Registration, :new
       live "/users/log-in", UserLive.Login, :new
       live "/users/log-in/:token", UserLive.Confirmation, :new
-      
+
       # Streamlined ordering flow - no authentication required
       live "/order/:restaurant_id/details", OrderLive.Details, :details
       live "/order/:restaurant_id/confirm", OrderLive.Confirm, :confirm
       live "/order/:restaurant_id/payment", OrderLive.Payment, :payment
       live "/order/success/:id", OrderLive.Success, :success
-      
+
       # Anonymous order tracking - accessible via email links
       live "/orders/:id/track", OrderTrackingLive, :anonymous_show
     end
@@ -126,7 +126,7 @@ defmodule EatfairWeb.Router do
 
     post "/users/log-in", UserSessionController, :create
     delete "/users/log-out", UserSessionController, :delete
-    
+
     # Email verification route - no authentication required
     get "/verify-email/:token", EmailVerificationController, :verify
   end

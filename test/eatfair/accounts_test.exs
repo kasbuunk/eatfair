@@ -4,6 +4,7 @@ defmodule Eatfair.AccountsTest do
   alias Eatfair.Accounts
 
   import Eatfair.AccountsFixtures
+  import Ecto.Query
   alias Eatfair.Accounts.{User, UserToken, EmailVerification}
   alias Eatfair.Orders
   alias Eatfair.Orders.Order
@@ -354,7 +355,12 @@ defmodule Eatfair.AccountsTest do
 
     test "raises when unconfirmed user has password set" do
       user = unconfirmed_user_fixture()
-      {1, nil} = Repo.update_all(User, set: [hashed_password: "hashed"])
+
+      {1, nil} =
+        Repo.update_all(from(u in User, where: u.id == ^user.id),
+          set: [hashed_password: "hashed"]
+        )
+
       {encoded_token, _hashed_token} = generate_user_magic_link_token(user)
 
       assert_raise RuntimeError, ~r/magic link log in is not allowed/, fn ->
@@ -400,16 +406,16 @@ defmodule Eatfair.AccountsTest do
   describe "send_verification_email/2" do
     test "creates email verification record and sends email" do
       email = "test@example.com"
-      
+
       assert {:ok, verification} = Accounts.send_verification_email(email)
-      
+
       # Verify record was created
       assert verification.email == email
       assert verification.token
       assert String.length(verification.token) == 43
       assert verification.expires_at
       refute verification.verified_at
-      
+
       # Verify it's in the database
       db_verification = Repo.get!(EmailVerification, verification.id)
       assert db_verification.email == email
@@ -417,32 +423,36 @@ defmodule Eatfair.AccountsTest do
 
     test "associates verification with order when provided" do
       # Create a restaurant owner first
-      owner = Repo.insert!(%Eatfair.Accounts.User{
-        email: "owner@restaurant.com",
-        confirmed_at: DateTime.utc_now() |> DateTime.truncate(:second)
-      })
-      
+      owner =
+        Repo.insert!(%Eatfair.Accounts.User{
+          email: "owner@restaurant.com",
+          confirmed_at: DateTime.utc_now() |> DateTime.truncate(:second)
+        })
+
       # Create a restaurant
-      restaurant = Repo.insert!(%Eatfair.Restaurants.Restaurant{
-        name: "Test Restaurant",
-        address: "Test Street 123, 1000 AB Amsterdam",
-        owner_id: owner.id
-      })
-      
+      restaurant =
+        Repo.insert!(%Eatfair.Restaurants.Restaurant{
+          name: "Test Restaurant",
+          address: "Test Street 123, 1000 AB Amsterdam",
+          owner_id: owner.id
+        })
+
       # Create an order
-      {:ok, order} = Orders.create_anonymous_order(%{
-        restaurant_id: restaurant.id,
-        customer_email: "test@example.com",
-        customer_phone: "+31 6 12345678",
-        delivery_address: "Delivery Street 456, 1000 AB Amsterdam",
-        total_price: Decimal.new("25.50")
-      })
-      
-      assert {:ok, verification} = Accounts.send_verification_email(order.customer_email, order: order)
-      
+      {:ok, order} =
+        Orders.create_anonymous_order(%{
+          restaurant_id: restaurant.id,
+          customer_email: "test@example.com",
+          customer_phone: "+31 6 12345678",
+          delivery_address: "Delivery Street 456, 1000 AB Amsterdam",
+          total_price: Decimal.new("25.50")
+        })
+
+      assert {:ok, verification} =
+               Accounts.send_verification_email(order.customer_email, order: order)
+
       assert verification.email == order.customer_email
       assert verification.order_id == order.id
-      
+
       # Verify order status was updated to pending
       updated_order = Orders.get_order!(order.id)
       assert updated_order.email_status == "pending"
@@ -450,21 +460,23 @@ defmodule Eatfair.AccountsTest do
 
     test "cleans up expired verifications for same email" do
       email = "test@example.com"
-      
+
       # Create an expired verification
-      expired_verification = Repo.insert!(%EmailVerification{
-        email: email,
-        token: EmailVerification.generate_token(),
-        expires_at: DateTime.add(DateTime.utc_now() |> DateTime.truncate(:second), -3600), # 1 hour ago
-        inserted_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
-        updated_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
-      })
-      
+      expired_verification =
+        Repo.insert!(%EmailVerification{
+          email: email,
+          token: EmailVerification.generate_token(),
+          # 1 hour ago
+          expires_at: DateTime.add(DateTime.utc_now() |> DateTime.truncate(:second), -3600),
+          inserted_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second),
+          updated_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+        })
+
       assert {:ok, new_verification} = Accounts.send_verification_email(email)
-      
+
       # Expired verification should be deleted
       refute Repo.get(EmailVerification, expired_verification.id)
-      
+
       # New verification should exist
       assert Repo.get(EmailVerification, new_verification.id)
     end
@@ -473,17 +485,21 @@ defmodule Eatfair.AccountsTest do
   describe "verify_email/1" do
     setup do
       email = "test@example.com"
-      {:ok, verification} = Accounts.create_email_verification(%{
-        email: email,
-        token: EmailVerification.generate_token(),
-        expires_at: DateTime.add(DateTime.utc_now(), 3600) # 1 hour from now
-      })
+
+      {:ok, verification} =
+        Accounts.create_email_verification(%{
+          email: email,
+          token: EmailVerification.generate_token(),
+          # 1 hour from now
+          expires_at: DateTime.add(DateTime.utc_now(), 3600)
+        })
+
       %{verification: verification, email: email}
     end
 
     test "verifies email with valid token", %{verification: verification} do
       assert {:ok, verified} = Accounts.verify_email(verification.token)
-      
+
       assert verified.id == verification.id
       assert verified.verified_at
       assert DateTime.compare(verified.verified_at, DateTime.utc_now()) in [:lt, :eq]
@@ -495,48 +511,54 @@ defmodule Eatfair.AccountsTest do
 
     test "returns error for expired token", %{verification: verification} do
       # Update to expired
-      Repo.update!(EmailVerification.changeset(verification, %{
-        expires_at: DateTime.add(DateTime.utc_now(), -3600) # 1 hour ago
-      }))
-      
+      Repo.update!(
+        EmailVerification.changeset(verification, %{
+          # 1 hour ago
+          expires_at: DateTime.add(DateTime.utc_now(), -3600)
+        })
+      )
+
       assert {:error, :expired} = Accounts.verify_email(verification.token)
     end
 
     test "returns error for already verified token", %{verification: verification} do
       # First verification should succeed
       assert {:ok, _} = Accounts.verify_email(verification.token)
-      
+
       # Second verification should fail
       assert {:error, :already_verified} = Accounts.verify_email(verification.token)
     end
 
     test "updates associated order email status when order exists", %{verification: verification} do
       # Create a restaurant owner first
-      owner = Repo.insert!(%Eatfair.Accounts.User{
-        email: "owner@restaurant.com",
-        confirmed_at: DateTime.utc_now() |> DateTime.truncate(:second)
-      })
-      
+      owner =
+        Repo.insert!(%Eatfair.Accounts.User{
+          email: "owner@restaurant.com",
+          confirmed_at: DateTime.utc_now() |> DateTime.truncate(:second)
+        })
+
       # Create a restaurant and order
-      restaurant = Repo.insert!(%Eatfair.Restaurants.Restaurant{
-        name: "Test Restaurant",
-        address: "Test Street 123, 1000 AB Amsterdam",
-        owner_id: owner.id
-      })
-      
-      {:ok, order} = Orders.create_anonymous_order(%{
-        restaurant_id: restaurant.id,
-        customer_email: verification.email,
-        customer_phone: "+31 6 12345678",
-        delivery_address: "Delivery Street 456, 1000 AB Amsterdam",
-        total_price: Decimal.new("25.50")
-      })
-      
+      restaurant =
+        Repo.insert!(%Eatfair.Restaurants.Restaurant{
+          name: "Test Restaurant",
+          address: "Test Street 123, 1000 AB Amsterdam",
+          owner_id: owner.id
+        })
+
+      {:ok, order} =
+        Orders.create_anonymous_order(%{
+          restaurant_id: restaurant.id,
+          customer_email: verification.email,
+          customer_phone: "+31 6 12345678",
+          delivery_address: "Delivery Street 456, 1000 AB Amsterdam",
+          total_price: Decimal.new("25.50")
+        })
+
       # Update verification to associate with order
       Repo.update!(EmailVerification.changeset(verification, %{order_id: order.id}))
-      
+
       assert {:ok, _} = Accounts.verify_email(verification.token)
-      
+
       # Check order status was updated
       updated_order = Orders.get_order!(order.id)
       assert updated_order.email_status == "verified"
@@ -547,51 +569,58 @@ defmodule Eatfair.AccountsTest do
   describe "create_account_from_order/2" do
     setup do
       # Create a restaurant owner first
-      owner = Repo.insert!(%Eatfair.Accounts.User{
-        email: "owner@restaurant.com",
-        confirmed_at: DateTime.utc_now() |> DateTime.truncate(:second)
-      })
-      
+      owner =
+        Repo.insert!(%Eatfair.Accounts.User{
+          email: "owner@restaurant.com",
+          confirmed_at: DateTime.utc_now() |> DateTime.truncate(:second)
+        })
+
       # Create a restaurant
-      restaurant = Repo.insert!(%Eatfair.Restaurants.Restaurant{
-        name: "Test Restaurant",
-        address: "Test Street 123, 1000 AB Amsterdam",
-        owner_id: owner.id
-      })
-      
+      restaurant =
+        Repo.insert!(%Eatfair.Restaurants.Restaurant{
+          name: "Test Restaurant",
+          address: "Test Street 123, 1000 AB Amsterdam",
+          owner_id: owner.id
+        })
+
       # Use unique email for each test run
       unique_email = unique_user_email()
-      
-      {:ok, order} = Orders.create_anonymous_order(%{
-        restaurant_id: restaurant.id,
-        customer_email: unique_email,
-        customer_phone: "+31 6 12345678",
-        delivery_address: "Delivery Street 456, 1000 AB Amsterdam",
-        total_price: Decimal.new("25.50")
-      })
-      
+
+      {:ok, order} =
+        Orders.create_anonymous_order(%{
+          restaurant_id: restaurant.id,
+          customer_email: unique_email,
+          customer_phone: "+31 6 12345678",
+          delivery_address: "Delivery Street 456, 1000 AB Amsterdam",
+          total_price: Decimal.new("25.50")
+        })
+
       %{order: order}
     end
 
     test "creates new user account from order", %{order: order} do
       assert {:ok, user, updated_order} = Accounts.create_account_from_order(order)
-      
+
       # Verify user was created correctly
       assert user.email == order.customer_email
       assert user.phone_number == order.customer_phone
-      assert user.confirmed_at # Should be auto-confirmed
-      
+      # Should be auto-confirmed
+      assert user.confirmed_at
+
       # Verify order was associated with user
       assert updated_order.customer_id == user.id
       assert updated_order.account_created_from_order
-      
+
       # Verify address was created
       addresses = Accounts.list_user_addresses(user.id)
       assert length(addresses) == 1
       address = hd(addresses)
-      assert address.street_address == "Delivery Street 456" # Parsed from order.delivery_address
-      assert address.city == "Amsterdam" # Parsed from order.delivery_address
-      assert address.postal_code == "1000 AB" # Parsed from order.delivery_address
+      # Parsed from order.delivery_address
+      assert address.street_address == "Delivery Street 456"
+      # Parsed from order.delivery_address
+      assert address.city == "Amsterdam"
+      # Parsed from order.delivery_address
+      assert address.postal_code == "1000 AB"
       assert address.is_default
     end
 
@@ -599,17 +628,22 @@ defmodule Eatfair.AccountsTest do
       # When the order was created, a soft account was already created
       # Get the existing soft account user
       existing_user = Accounts.get_user_by_email(order.customer_email)
-      assert existing_user # Should exist from order creation
-      assert is_nil(existing_user.phone_number) # Should be a soft account
-      assert is_nil(existing_user.confirmed_at) # Should be unconfirmed
-      
+      # Should exist from order creation
+      assert existing_user
+      # Should be a soft account
+      assert is_nil(existing_user.phone_number)
+      # Should be unconfirmed
+      assert is_nil(existing_user.confirmed_at)
+
       assert {:ok, user, updated_order} = Accounts.create_account_from_order(order)
-      
+
       # Should return the same user, now upgraded
       assert user.id == existing_user.id
-      assert user.phone_number == order.customer_phone # Should now have phone
-      assert user.confirmed_at # Should now be confirmed
-      
+      # Should now have phone
+      assert user.phone_number == order.customer_phone
+      # Should now be confirmed
+      assert user.confirmed_at
+
       # Order should be associated with existing user
       assert updated_order.customer_id == existing_user.id
       assert updated_order.account_created_from_order
@@ -617,9 +651,10 @@ defmodule Eatfair.AccountsTest do
 
     test "allows custom user parameters", %{order: order} do
       custom_params = %{name: "Custom Name"}
-      
-      assert {:ok, user, _updated_order} = Accounts.create_account_from_order(order, custom_params)
-      
+
+      assert {:ok, user, _updated_order} =
+               Accounts.create_account_from_order(order, custom_params)
+
       assert user.name == "Custom Name"
     end
   end
@@ -627,12 +662,14 @@ defmodule Eatfair.AccountsTest do
   describe "get_verification_by_token/1" do
     test "returns verification with valid token" do
       token = EmailVerification.generate_token()
-      {:ok, verification} = Accounts.create_email_verification(%{
-        email: "test@example.com",
-        token: token,
-        expires_at: DateTime.add(DateTime.utc_now(), 3600)
-      })
-      
+
+      {:ok, verification} =
+        Accounts.create_email_verification(%{
+          email: "test@example.com",
+          token: token,
+          expires_at: DateTime.add(DateTime.utc_now(), 3600)
+        })
+
       found_verification = Accounts.get_verification_by_token(token)
       assert found_verification.id == verification.id
       assert found_verification.email == verification.email
@@ -646,12 +683,13 @@ defmodule Eatfair.AccountsTest do
   describe "create_email_verification/1" do
     test "creates email verification with valid attributes" do
       expires_at = DateTime.add(DateTime.utc_now(), 3600) |> DateTime.truncate(:second)
+
       attrs = %{
         email: "test@example.com",
         token: EmailVerification.generate_token(),
         expires_at: expires_at
       }
-      
+
       assert {:ok, verification} = Accounts.create_email_verification(attrs)
       assert verification.email == attrs.email
       assert verification.token == attrs.token
@@ -660,41 +698,44 @@ defmodule Eatfair.AccountsTest do
 
     test "fails with invalid attributes" do
       assert {:error, changeset} = Accounts.create_email_verification(%{})
-      
+
       assert errors_on(changeset) == %{
-        email: ["can't be blank"],
-        token: ["can't be blank"],
-        expires_at: ["can't be blank"]
-      }
+               email: ["can't be blank"],
+               token: ["can't be blank"],
+               expires_at: ["can't be blank"]
+             }
     end
   end
 
   describe "list_email_verifications/1" do
     test "returns verifications for email address" do
       email = "test@example.com"
-      
+
       # Create multiple verifications for same email
-      {:ok, verification1} = Accounts.create_email_verification(%{
-        email: email,
-        token: EmailVerification.generate_token(),
-        expires_at: DateTime.add(DateTime.utc_now(), 3600)
-      })
-      
-      {:ok, verification2} = Accounts.create_email_verification(%{
-        email: email,
-        token: EmailVerification.generate_token(),
-        expires_at: DateTime.add(DateTime.utc_now(), 3600)
-      })
-      
+      {:ok, verification1} =
+        Accounts.create_email_verification(%{
+          email: email,
+          token: EmailVerification.generate_token(),
+          expires_at: DateTime.add(DateTime.utc_now(), 3600)
+        })
+
+      {:ok, verification2} =
+        Accounts.create_email_verification(%{
+          email: email,
+          token: EmailVerification.generate_token(),
+          expires_at: DateTime.add(DateTime.utc_now(), 3600)
+        })
+
       # Create verification for different email
-      {:ok, _other_verification} = Accounts.create_email_verification(%{
-        email: "other@example.com",
-        token: EmailVerification.generate_token(),
-        expires_at: DateTime.add(DateTime.utc_now(), 3600)
-      })
-      
+      {:ok, _other_verification} =
+        Accounts.create_email_verification(%{
+          email: "other@example.com",
+          token: EmailVerification.generate_token(),
+          expires_at: DateTime.add(DateTime.utc_now(), 3600)
+        })
+
       verifications = Accounts.list_email_verifications(email)
-      
+
       # Should only return verifications for the specified email
       assert length(verifications) == 2
       verification_ids = Enum.map(verifications, & &1.id)
@@ -704,7 +745,7 @@ defmodule Eatfair.AccountsTest do
 
     test "limits results to 10" do
       email = "test@example.com"
-      
+
       # Create 15 verifications
       for _i <- 1..15 do
         Accounts.create_email_verification(%{
@@ -713,7 +754,7 @@ defmodule Eatfair.AccountsTest do
           expires_at: DateTime.add(DateTime.utc_now(), 3600)
         })
       end
-      
+
       verifications = Accounts.list_email_verifications(email)
       assert length(verifications) == 10
     end

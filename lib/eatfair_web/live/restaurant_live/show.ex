@@ -102,14 +102,15 @@ defmodule EatfairWeb.RestaurantLive.Show do
     case Eatfair.LocationServices.geocode_address(location) do
       {:ok, %{latitude: lat, longitude: lon, formatted_address: formatted_address}} ->
         coordinates = %{latitude: lat, longitude: lon}
-        
-        delivery_available = Eatfair.GeoUtils.within_delivery_range?(
-          socket.assigns.restaurant.latitude,
-          socket.assigns.restaurant.longitude,
-          Decimal.new(Float.to_string(lat)),
-          Decimal.new(Float.to_string(lon)),
-          socket.assigns.restaurant.delivery_radius_km
-        )
+
+        delivery_available =
+          Eatfair.GeoUtils.within_delivery_range?(
+            socket.assigns.restaurant.latitude,
+            socket.assigns.restaurant.longitude,
+            Decimal.new(Float.to_string(lat)),
+            Decimal.new(Float.to_string(lon)),
+            socket.assigns.restaurant.delivery_radius_km
+          )
 
         socket
         |> assign(:location, location)
@@ -177,7 +178,9 @@ defmodule EatfairWeb.RestaurantLive.Show do
     restaurant_id = socket.assigns.restaurant.id
     location = socket.assigns.location || ""
 
-    order_details_url = ~p"/order/#{restaurant_id}/details?cart=#{cart_encoded}&location=#{location}"
+    order_details_url =
+      ~p"/order/#{restaurant_id}/details?cart=#{cart_encoded}&location=#{location}"
+
     {:noreply, push_navigate(socket, to: order_details_url)}
   end
 
@@ -244,38 +247,39 @@ defmodule EatfairWeb.RestaurantLive.Show do
   end
 
   def handle_event("toggle_location_refinement", _params, socket) do
-    {:noreply, assign(socket, :show_location_refinement, !socket.assigns.show_location_refinement)}
+    {:noreply,
+     assign(socket, :show_location_refinement, !socket.assigns.show_location_refinement)}
   end
 
   def handle_event("update_delivery_address", %{"location" => new_location}, socket) do
     # Re-apply location with the new address
     socket = apply_location(socket, new_location)
-    
+
     # Navigate to the same page with the new location parameter
     restaurant_id = socket.assigns.restaurant.id
     new_path = ~p"/restaurants/#{restaurant_id}?location=#{new_location}"
-    
+
     socket =
       socket
       |> assign(:show_location_refinement, false)
       |> push_patch(to: new_path)
-      
+
     {:noreply, socket}
   end
 
   def handle_event("address_selected", %{"address" => selected_address}, socket) do
     # Handle address selection from the autocomplete component
     socket = apply_location(socket, selected_address)
-    
+
     # Navigate to update the URL with the new location
     restaurant_id = socket.assigns.restaurant.id
     new_path = ~p"/restaurants/#{restaurant_id}?location=#{selected_address}"
-    
+
     socket =
       socket
       |> assign(:show_location_refinement, false)
       |> push_patch(to: new_path)
-      
+
     {:noreply, socket}
   end
 
@@ -325,6 +329,4 @@ defmodule EatfairWeb.RestaurantLive.Show do
     )
     |> Eatfair.Repo.exists?()
   end
-
-
 end

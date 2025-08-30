@@ -1,15 +1,15 @@
 defmodule Eatfair.Accounts.EmailVerification do
   @moduledoc """
   Schema for managing email verification tokens.
-  
+
   This schema handles the email verification process for both anonymous orders
   and user account creation, supporting the progressive email verification flow
   where users can verify their email at various stages of the order process.
   """
-  
+
   use Ecto.Schema
   import Ecto.Changeset
-  
+
   alias Eatfair.Accounts.User
   alias Eatfair.Orders.Order
 
@@ -18,10 +18,10 @@ defmodule Eatfair.Accounts.EmailVerification do
     field :token, :string
     field :verified_at, :utc_datetime
     field :expires_at, :utc_datetime
-    
+
     belongs_to :order, Order
     belongs_to :user, User
-    
+
     timestamps()
   end
 

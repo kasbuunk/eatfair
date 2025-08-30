@@ -7,8 +7,8 @@ defmodule EatfairWeb.OrderLive.Payment do
   @impl true
   def mount(%{"restaurant_id" => restaurant_id}, _session, socket) do
     restaurant = Restaurants.get_restaurant!(restaurant_id)
-    
-    socket = 
+
+    socket =
       socket
       |> assign(:restaurant, restaurant)
       |> assign(:cart, %{})
@@ -17,29 +17,31 @@ defmodule EatfairWeb.OrderLive.Payment do
       |> assign(:payment_method, "card")
       |> assign(:payment_processing, false)
       |> assign(:payment_error, nil)
-      
+
     {:ok, socket}
   end
 
-  @impl true 
+  @impl true
   def handle_params(params, _url, socket) do
-    socket = 
+    socket =
       socket
       |> apply_cart_data(params["cart"])
       |> apply_order_details(params["order_details"])
-      
+
     {:noreply, socket}
   end
 
   defp apply_cart_data(socket, nil), do: socket
+
   defp apply_cart_data(socket, cart_param) when is_binary(cart_param) do
     case decode_cart(cart_param) do
       {:ok, cart} ->
         cart_total = calculate_cart_total(cart, socket.assigns.restaurant)
+
         socket
         |> assign(:cart, cart)
         |> assign(:cart_total, cart_total)
-      
+
       {:error, _} ->
         socket
         |> put_flash(:error, "Invalid cart data")
@@ -48,11 +50,12 @@ defmodule EatfairWeb.OrderLive.Payment do
   end
 
   defp apply_order_details(socket, nil), do: socket
+
   defp apply_order_details(socket, order_details_param) when is_binary(order_details_param) do
     case decode_order_details(order_details_param) do
       {:ok, order_details} ->
         assign(socket, :order_details, order_details)
-      
+
       {:error, _} ->
         socket
         |> put_flash(:error, "Invalid order details")
@@ -71,7 +74,7 @@ defmodule EatfairWeb.OrderLive.Payment do
 
     # Simulate payment processing
     Process.send_after(self(), :complete_payment, 2000)
-    
+
     {:noreply, socket}
   end
 
@@ -80,15 +83,18 @@ defmodule EatfairWeb.OrderLive.Payment do
     cart_encoded = encode_cart(socket.assigns.cart)
     restaurant_id = socket.assigns.restaurant.id
     order_encoded = encode_order_params(socket.assigns.order_details)
-    
-    confirm_url = ~p"/order/#{restaurant_id}/confirm?cart=#{cart_encoded}&order_details=#{order_encoded}"
+
+    confirm_url =
+      ~p"/order/#{restaurant_id}/confirm?cart=#{cart_encoded}&order_details=#{order_encoded}"
+
     {:noreply, push_navigate(socket, to: confirm_url)}
   end
 
   @impl true
   def handle_info(:complete_payment, socket) do
     # Simulate payment processing result
-    payment_success = :rand.uniform() > 0.1  # 90% success rate for demo
+    # 90% success rate for demo
+    payment_success = :rand.uniform() > 0.1
 
     if payment_success do
       # Create order in database
@@ -98,42 +104,46 @@ defmodule EatfairWeb.OrderLive.Payment do
           payment_attrs = %{
             amount: socket.assigns.cart_total
           }
-          
+
           case Orders.process_payment(order.id, payment_attrs) do
             {:ok, _payment} ->
               # Navigate to success page
               success_url = ~p"/order/success/#{order.id}"
-              socket = 
+
+              socket =
                 socket
                 |> assign(:payment_processing, false)
                 |> push_navigate(to: success_url)
-              
+
               {:noreply, socket}
-            
+
             {:error, _reason} ->
-              socket = 
+              socket =
                 socket
                 |> assign(:payment_processing, false)
                 |> assign(:payment_error, "Payment processing failed. Please try again.")
-              
+
               {:noreply, socket}
           end
-        
+
         {:error, _changeset} ->
-          socket = 
+          socket =
             socket
             |> assign(:payment_processing, false)
             |> assign(:payment_error, "Failed to create order. Please try again.")
-          
+
           {:noreply, socket}
       end
     else
       # Simulate payment failure
-      socket = 
+      socket =
         socket
         |> assign(:payment_processing, false)
-        |> assign(:payment_error, "Payment failed. Please check your payment details and try again.")
-      
+        |> assign(
+          :payment_error,
+          "Payment failed. Please check your payment details and try again."
+        )
+
       {:noreply, socket}
     end
   end
@@ -146,12 +156,12 @@ defmodule EatfairWeb.OrderLive.Payment do
     cart_total = socket.assigns.cart_total
 
     # Check if user is authenticated or if this is a guest order
-    {customer_id, customer_email, customer_phone} = 
+    {customer_id, customer_email, customer_phone} =
       case socket.assigns[:current_scope] do
         %{user: %{id: user_id}} ->
           # Authenticated user - use their ID and store contact info for this order
           {user_id, order_details["email"], order_details["phone_number"]}
-        
+
         _ ->
           # Guest order - create or get guest customer for SQLite constraint
           guest_customer_id = get_or_create_guest_customer_id()
@@ -172,7 +182,7 @@ defmodule EatfairWeb.OrderLive.Payment do
     }
 
     # Prepare order items
-    items_attrs = 
+    items_attrs =
       Enum.map(cart, fn {meal_id, quantity} ->
         %{meal_id: meal_id, quantity: quantity}
       end)
@@ -185,19 +195,21 @@ defmodule EatfairWeb.OrderLive.Payment do
   # This is a workaround for SQLite's non-nullable constraint
   defp get_or_create_guest_customer_id do
     alias Eatfair.Accounts
-    
+
     case Accounts.get_user_by_email("guest@eatfair.internal") do
       nil ->
         # Create guest user if it doesn't exist
-        {:ok, guest_user} = Accounts.register_user(%{
-          email: "guest@eatfair.internal",
-          name: "Guest User",
-          password: "dummy_password_123",
-          phone_number: "+00-000-000-0000",
-          role: "customer"
-        })
+        {:ok, guest_user} =
+          Accounts.register_user(%{
+            email: "guest@eatfair.internal",
+            name: "Guest User",
+            password: "dummy_password_123",
+            phone_number: "+00-000-000-0000",
+            role: "customer"
+          })
+
         guest_user.id
-      
+
       guest_user ->
         guest_user.id
     end

@@ -14,10 +14,10 @@ defmodule EatfairWeb.OrderTrackingLive do
         else
           invalid_tracking_redirect(socket)
         end
-      
+
       {:error, :invalid_token} ->
         invalid_tracking_redirect(socket)
-      
+
       _error ->
         invalid_tracking_redirect(socket)
     end
@@ -27,11 +27,11 @@ defmodule EatfairWeb.OrderTrackingLive do
   def mount(%{"id" => order_id}, _session, socket) do
     # Mount single order tracking for authenticated users
     current_user = socket.assigns.current_scope.user
-    
+
     case Orders.get_order_tracking_data(String.to_integer(order_id)) do
       {:ok, tracking_data} ->
         order = tracking_data.order
-        
+
         # Verify customer owns this order
         if order.customer_id != current_user.id do
           socket =
@@ -43,7 +43,7 @@ defmodule EatfairWeb.OrderTrackingLive do
         else
           mount_order_tracking(socket, tracking_data, :authenticated)
         end
-      
+
       {:error, :order_not_found} ->
         socket =
           socket
@@ -51,7 +51,7 @@ defmodule EatfairWeb.OrderTrackingLive do
           |> redirect(to: ~p"/orders/track")
 
         {:ok, socket}
-      
+
       _error ->
         socket =
           socket
@@ -464,24 +464,25 @@ defmodule EatfairWeb.OrderTrackingLive do
         "Your order status has been updated."
     end
   end
-  
+
   # Helper functions for mounting order tracking
-  
+
   defp mount_order_tracking(socket, tracking_data, access_type) do
     order = tracking_data.order
     current_status = tracking_data.current_status
     status_history = tracking_data.status_history
-    
+
     # Subscribe to real-time updates based on access type
     case access_type do
       :authenticated ->
         PubSub.subscribe(Eatfair.PubSub, "order_tracking:#{order.id}")
+
       :token ->
         if order.tracking_token do
           PubSub.subscribe(Eatfair.PubSub, "order_tracking_token:#{order.tracking_token}")
         end
     end
-    
+
     socket =
       socket
       |> assign(:order, order)
@@ -491,16 +492,16 @@ defmodule EatfairWeb.OrderTrackingLive do
       |> assign(:estimated_delivery, Orders.calculate_estimated_delivery(order))
       |> assign(:access_type, access_type)
       |> assign(:page_title, "Track Order ##{order.id}")
-    
+
     {:ok, socket}
   end
-  
+
   defp invalid_tracking_redirect(socket) do
     socket =
       socket
       |> put_flash(:error, "Invalid tracking link. Please check your email for the correct link.")
       |> redirect(to: ~p"/")
-    
+
     {:ok, socket}
   end
 end
