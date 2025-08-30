@@ -44,6 +44,7 @@ defmodule Eatfair.Notifications do
   Creates notification event for order status change.
 
   This is the main integration point with the order tracking system.
+  Enhanced to support donation-aware delivery notifications.
   """
   def notify_order_status_change(order, old_status, new_status, context \\ %{}) do
     event_data =
@@ -56,6 +57,7 @@ defmodule Eatfair.Notifications do
         total_price: order.total_price
       }
       |> Map.merge(context)
+      |> maybe_add_donation_aware_data(order, new_status)
       |> sanitize_event_data()
 
     with {:ok, event} <-
@@ -156,6 +158,53 @@ defmodule Eatfair.Notifications do
   end
 
   defp sanitize_event_data(data), do: data
+
+  # Enhanced donation-aware notification data generation
+  defp maybe_add_donation_aware_data(event_data, order, "delivered") do
+    donation_amount = order.donation_amount || Decimal.new("0.00")
+    has_donation = Decimal.gt?(donation_amount, 0)
+    
+    base_donation_data = %{
+      "donation_amount" => Decimal.to_string(donation_amount),
+      "support_options" => ["social_sharing", "write_reviews"]
+    }
+    
+    donation_specific_data = 
+      if has_donation do
+        # Customer donated - thank them and encourage sharing
+        %{
+          "message_type" => "thank_you",
+          "message_tone" => "grateful",
+          "social_share_url" => generate_social_share_url(order),
+          "social_message" => "I just supported local food delivery through Eatfair!"
+        }
+      else
+        # No donation - kind request for support
+        %{
+          "message_type" => "support_request",
+          "message_tone" => "kind_request",
+          "donation_url" => generate_donation_url(order),
+          "donation_amounts" => ["1.00", "2.50", "5.00"],
+          "support_options" => ["social_sharing", "write_reviews", "recommend_platform"]
+        }
+      end
+    
+    event_data
+    |> Map.merge(base_donation_data)
+    |> Map.merge(donation_specific_data)
+  end
+  
+  defp maybe_add_donation_aware_data(event_data, _order, _status), do: event_data
+  
+  defp generate_social_share_url(order) do
+    # Generate a social sharing URL - in production this would be a real URL
+    "https://eatfair.com/share/order/#{order.id}"
+  end
+  
+  defp generate_donation_url(order) do
+    # Generate a donation URL - in production this would be a real donation flow
+    "https://eatfair.com/donate/restaurant/#{order.restaurant_id}"
+  end
 
   defp priority_for_status("confirmed"), do: "normal"
   defp priority_for_status("preparing"), do: "normal"

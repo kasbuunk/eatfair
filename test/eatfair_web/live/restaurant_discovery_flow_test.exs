@@ -76,8 +76,10 @@ defmodule EatfairWeb.RestaurantDiscoveryFlowTest do
       # Set wide operational hours to ensure restaurant is open now
       # Started 1 hour ago
       order_open = max(0, current_minute - 60)
-      # Closes in 2 hours
-      order_close = min(1440, current_minute + 120)
+      # Closes in 2 hours, but ensure we leave room for kitchen close time
+      order_close = min(1410, current_minute + 120)  # Max 23:30 to allow 30min gap
+      # Kitchen closes 30 minutes after orders, but max at 24:00 (1440)
+      kitchen_close = order_close + 30
 
       owner = Eatfair.AccountsFixtures.user_fixture()
 
@@ -90,7 +92,7 @@ defmodule EatfairWeb.RestaurantDiscoveryFlowTest do
           is_open: true,
           order_open_time: order_open,
           order_close_time: order_close,
-          kitchen_close_time: order_close + 30,
+          kitchen_close_time: kitchen_close,
           # Set to today's day so operating_days allows today  
           operating_days: :math.pow(2, Date.day_of_week(current_time) - 1) |> round(),
           timezone: "Europe/Amsterdam",
@@ -117,8 +119,10 @@ defmodule EatfairWeb.RestaurantDiscoveryFlowTest do
       # Set operational hours (would be open now)
       # Started 1 hour ago
       order_open = max(0, current_minute - 60)
-      # Closes in 2 hours
-      order_close = min(1440, current_minute + 120)
+      # Closes in 2 hours, but ensure we leave room for kitchen close time
+      order_close = min(1410, current_minute + 120)  # Max 23:30 to allow 30min gap
+      # Kitchen closes 30 minutes after orders
+      kitchen_close = order_close + 30
 
       owner = Eatfair.AccountsFixtures.user_fixture()
 
@@ -131,7 +135,7 @@ defmodule EatfairWeb.RestaurantDiscoveryFlowTest do
           is_open: true,
           order_open_time: order_open,
           order_close_time: order_close,
-          kitchen_close_time: order_close + 30,
+          kitchen_close_time: kitchen_close,
           operating_days: :math.pow(2, Date.day_of_week(current_time) - 1) |> round(),
           timezone: "Europe/Amsterdam",
           latitude: Decimal.new("52.3676"),
@@ -171,6 +175,8 @@ defmodule EatfairWeb.RestaurantDiscoveryFlowTest do
         end
 
       owner = Eatfair.AccountsFixtures.user_fixture()
+      # Kitchen closes 30 minutes after orders
+      kitchen_close = order_close + 30
 
       {:ok, restaurant} =
         Restaurants.create_restaurant(%{
@@ -181,7 +187,7 @@ defmodule EatfairWeb.RestaurantDiscoveryFlowTest do
           is_open: true,
           order_open_time: order_open,
           order_close_time: order_close,
-          kitchen_close_time: order_close + 30,
+          kitchen_close_time: kitchen_close,
           operating_days: :math.pow(2, Date.day_of_week(current_time) - 1) |> round(),
           timezone: "Europe/Amsterdam",
           latitude: Decimal.new("52.3676"),

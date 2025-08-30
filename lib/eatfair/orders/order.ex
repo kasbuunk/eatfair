@@ -50,6 +50,10 @@ defmodule Eatfair.Orders.Order do
     field :rejection_reason, :string
     field :special_instructions, :string
 
+    # Donation fields
+    field :donation_amount, :decimal, default: Decimal.new("0.00")
+    field :donation_currency, :string, default: "EUR"
+
     # Email verification fields
     # unverified, pending, verified
     field :email_status, :string, default: "unverified"
@@ -96,7 +100,9 @@ defmodule Eatfair.Orders.Order do
       :email_status,
       :email_verified_at,
       :tracking_token,
-      :account_created_from_order
+      :account_created_from_order,
+      :donation_amount,
+      :donation_currency
     ])
     |> validate_required([:restaurant_id, :delivery_address])
     |> validate_customer_info()
@@ -108,6 +114,7 @@ defmodule Eatfair.Orders.Order do
     |> validate_number(:total_price, greater_than_or_equal_to: 0)
     |> validate_number(:estimated_prep_time_minutes, greater_than: 0)
     |> validate_number(:actual_prep_time_minutes, greater_than: 0)
+    |> validate_number(:donation_amount, greater_than_or_equal_to: 0)
     |> foreign_key_constraint(:customer_id)
     |> foreign_key_constraint(:restaurant_id)
     |> foreign_key_constraint(:courier_id)

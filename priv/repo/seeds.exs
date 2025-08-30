@@ -799,151 +799,300 @@ restaurants_data = [
   }
 ]
 
-# Create restaurant owners for each restaurant
+# Create specific restaurant owners with deliberate names and emails
 IO.puts("👨‍🍳 Creating restaurant owners...")
 
-# Helper to generate realistic names by region
-generate_restaurant_owner = fn restaurant_data, index ->
-  case restaurant_data.country do
-    "Netherlands" ->
-      dutch_names = [
-        "Jan de Kok",
-        "Marie van der Berg",
-        "Pieter Janssen",
-        "Emma de Vries",
-        "Lukas Bakker",
-        "Sophie Hendriks",
-        "Marco Rossi",
-        "Wei Chen",
-        "Ahmed Hassan",
-        "Priya Patel"
-      ]
+restaurant_owners_data = [
+  # Amsterdam restaurant owners
+  %{
+    name: "Marco Rossi",
+    email: "marco@bellaitalia.com",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+31-20-555-1001",
+    restaurant_name: "Bella Italia Central"
+  },
+  %{
+    name: "Wei Chen",
+    email: "wei@goldenlotus.com",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+31-20-555-1002",
+    restaurant_name: "Golden Lotus Amsterdam"
+  },
+  %{
+    name: "Marie Dubois",
+    email: "marie@jordaanbistro.com",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+31-20-555-1003",
+    restaurant_name: "Jordaan Bistro"
+  },
+  %{
+    name: "Yuki Tanaka",
+    email: "yuki@sushitokyo.com",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+31-20-555-1004",
+    restaurant_name: "Sushi Tokyo East"
+  },
+  %{
+    name: "Emma de Vries",
+    email: "emma@healthybowl.nl",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+31-20-555-1005",
+    restaurant_name: "Healthy Bowl Co."
+  },
+  %{
+    name: "Jake Williams",
+    email: "jake@burgerpalace.com",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+31-20-555-1006",
+    restaurant_name: "Burger Palace Amsterdam"
+  },
+  %{
+    name: "Raj Patel",
+    email: "raj@spiceroute.com",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+31-20-555-1007",
+    restaurant_name: "Spice Route India"
+  },
+  %{
+    name: "Dimitris Papadopoulos",
+    email: "dimitris@meddreams.com",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+31-20-555-1008",
+    restaurant_name: "Mediterranean Dreams"
+  },
+  %{
+    name: "Siriporn Nakamura",
+    email: "siriporn@thaigarden.com",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+31-20-555-1009",
+    restaurant_name: "Thai Garden Amsterdam"
+  },
+  %{
+    name: "Giuseppe Romano",
+    email: "giuseppe@pizzanoord.nl",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+31-20-555-1010",
+    restaurant_name: "Pizza Noord"
+  },
+  # Utrecht restaurant owners
+  %{
+    name: "Priya Sharma",
+    email: "priya@spicegarden.nl",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+31-30-555-2001",
+    restaurant_name: "Spice Garden Utrecht"
+  },
+  %{
+    name: "Carlos Mendoza",
+    email: "carlos@utrechttaco.nl",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+31-30-555-2002",
+    restaurant_name: "Utrecht Taco Bar"
+  },
+  %{
+    name: "Sophie Hendriks",
+    email: "sophie@canalcafe.nl",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+31-30-555-2003",
+    restaurant_name: "Canal Cafe Utrecht"
+  },
+  # Het Gooi restaurant owners
+  %{
+    name: "Jean-Pierre Dubois",
+    email: "jeanpierre@larenfine.nl",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+31-35-555-3001",
+    restaurant_name: "Laren Fine Dining"
+  },
+  %{
+    name: "Lisa van Dijk",
+    email: "lisa@hilversumhealthy.nl",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+31-35-555-3002",
+    restaurant_name: "Hilversum Healthy"
+  },
+  # International restaurant owners
+  %{
+    name: "Hans Mueller",
+    email: "hans@berlincurrywurst.de",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+49-30-555-4001",
+    restaurant_name: "Berlin Currywurst"
+  },
+  %{
+    name: "Pierre Laurent",
+    email: "pierre@parisianccreperie.fr",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+33-1-555-4002",
+    restaurant_name: "Parisian Crêperie"
+  },
+  %{
+    name: "James Smith",
+    email: "james@londonfish.co.uk",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+44-20-555-4003",
+    restaurant_name: "London Fish & Chips"
+  },
+  %{
+    name: "Sarah Johnson",
+    email: "sarah@torontopoutine.ca",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+1-416-555-4004",
+    restaurant_name: "Toronto Poutinerie"
+  },
+  %{
+    name: "Michael Davis",
+    email: "michael@nycpizza.com",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+1-212-555-4005",
+    restaurant_name: "NYC Pizza Corner"
+  },
+  # Edge case restaurant owners
+  %{
+    name: "Unknown Owner",
+    email: "mystery@mysterykitchen.nl",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+31-20-555-5001",
+    restaurant_name: "Mystery Kitchen"
+  },
+  %{
+    name: "Boundary Manager",
+    email: "manager@boundarybistro.nl",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+31-20-555-5002",
+    restaurant_name: "Boundary Bistro"
+  },
+  %{
+    name: "Wide Delivery Owner",
+    email: "owner@widedelivery.nl",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+31-20-555-5003",
+    restaurant_name: "Wide Delivery Pizza"
+  },
+  %{
+    name: "Chef Michelin",
+    email: "chef@michelinstar.nl",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+31-20-555-5004",
+    restaurant_name: "Michelin Star Deluxe"
+  },
+  %{
+    name: "Quick Manager",
+    email: "manager@quickbite.nl",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+31-20-555-5005",
+    restaurant_name: "Quick Bite Express"
+  },
+  # THE KEY ONE: Night Owl Express owner
+  %{
+    name: "Night Owl Manager",
+    email: "owner@nightowl.nl",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+31-30-555-9999",
+    restaurant_name: "Night Owl Express NL"
+  },
+  %{
+    name: "Midnight Chef",
+    email: "chef@aftermidnight.nl",
+    password: "password123456",
+    role: "restaurant_owner",
+    phone_number: "+31-20-555-5007",
+    restaurant_name: "After Midnight Kitchen"
+  }
+]
 
-      %{
-        name: Enum.at(dutch_names, rem(index, length(dutch_names))),
-        email:
-          "owner#{index}@#{String.downcase(String.replace(restaurant_data.name, ~r/\s+/, ""))}.nl",
-        password: "password123456",
-        role: "restaurant_owner",
-        phone_number: "+31-20-555-#{String.pad_leading(to_string(1000 + index), 4, "0")}"
-      }
-
-    "Germany" ->
-      %{
-        name: "Hans Mueller",
-        email:
-          "owner#{index}@#{String.downcase(String.replace(restaurant_data.name, ~r/\s+/, ""))}.de",
-        password: "password123456",
-        role: "restaurant_owner",
-        phone_number: "+49-30-555-#{String.pad_leading(to_string(1000 + index), 4, "0")}"
-      }
-
-    "France" ->
-      %{
-        name: "Pierre Dubois",
-        email:
-          "owner#{index}@#{String.downcase(String.replace(restaurant_data.name, ~r/\s+/, ""))}.fr",
-        password: "password123456",
-        role: "restaurant_owner",
-        phone_number: "+33-1-555-#{String.pad_leading(to_string(1000 + index), 4, "0")}"
-      }
-
-    "United Kingdom" ->
-      %{
-        name: "James Smith",
-        email:
-          "owner#{index}@#{String.downcase(String.replace(restaurant_data.name, ~r/\s+/, ""))}.co.uk",
-        password: "password123456",
-        role: "restaurant_owner",
-        phone_number: "+44-20-555-#{String.pad_leading(to_string(1000 + index), 4, "0")}"
-      }
-
-    "Canada" ->
-      %{
-        name: "Sarah Johnson",
-        email:
-          "owner#{index}@#{String.downcase(String.replace(restaurant_data.name, ~r/\s+/, ""))}.ca",
-        password: "password123456",
-        role: "restaurant_owner",
-        phone_number: "+1-416-555-#{String.pad_leading(to_string(1000 + index), 4, "0")}"
-      }
-
-    "United States" ->
-      %{
-        name: "Michael Davis",
-        email:
-          "owner#{index}@#{String.downcase(String.replace(restaurant_data.name, ~r/\s+/, ""))}.com",
-        password: "password123456",
-        role: "restaurant_owner",
-        phone_number: "+1-212-555-#{String.pad_leading(to_string(1000 + index), 4, "0")}"
-      }
-
-    _ ->
-      %{
-        name: "Restaurant Owner #{index}",
-        email: "owner#{index}@restaurant.com",
-        password: "password123456",
-        role: "restaurant_owner",
-        phone_number: "+31-20-555-#{String.pad_leading(to_string(1000 + index), 4, "0")}"
-      }
-  end
-end
-
-restaurant_owners =
-  restaurants_data
-  |> Enum.with_index()
-  |> Enum.map(fn {restaurant_data, index} ->
-    generate_restaurant_owner.(restaurant_data, index)
-  end)
-
+# Create owners
 owners =
-  Enum.map(restaurant_owners, fn attrs ->
+  Enum.map(restaurant_owners_data, fn attrs ->
+    owner_attrs = Map.drop(attrs, [:restaurant_name])
     %User{}
-    |> User.registration_changeset(attrs)
+    |> User.registration_changeset(owner_attrs)
     |> Repo.insert!()
     |> User.confirm_changeset()
     |> Repo.update!()
   end)
 
-IO.puts("✅ Created #{length(owners)} restaurant owners")
+IO.puts("✅ Created #{length(owners)} restaurant owners with deliberate emails")
+
+# Create a lookup map from restaurant name to owner
+owner_lookup =
+  restaurant_owners_data
+  |> Enum.with_index()
+  |> Map.new(fn {owner_data, index} ->
+    {owner_data.restaurant_name, Enum.at(owners, index)}
+  end)
 
 # Create restaurants
 IO.puts("🏪 Creating restaurants...")
 
 restaurants =
   restaurants_data
-  |> Enum.with_index()
-  |> Enum.map(fn {%{cuisine_names: cuisine_names} = attrs, index} ->
-    attrs =
-      attrs
-      |> Map.delete(:cuisine_names)
-      |> Map.put(:owner_id, Enum.at(owners, index).id)
+  |> Enum.map(fn %{cuisine_names: cuisine_names} = attrs ->
+    # Find the owner for this restaurant
+    owner = Map.get(owner_lookup, attrs.name)
+    
+    if owner do
+      attrs =
+        attrs
+        |> Map.delete(:cuisine_names)
+        |> Map.put(:owner_id, owner.id)
 
-    {:ok, restaurant} = Restaurants.create_restaurant(attrs)
+      {:ok, restaurant} = Restaurants.create_restaurant(attrs)
 
-    # Associate with cuisines
-    restaurant_cuisines =
-      Enum.map(cuisine_names, fn name ->
-        cuisine = Enum.find(cuisines, fn c -> c.name == name end)
+      # Associate with cuisines
+      restaurant_cuisines =
+        Enum.map(cuisine_names, fn name ->
+          cuisine = Enum.find(cuisines, fn c -> c.name == name end)
 
-        if cuisine do
-          %{
-            restaurant_id: restaurant.id,
-            cuisine_id: cuisine.id,
-            inserted_at: DateTime.utc_now(),
-            updated_at: DateTime.utc_now()
-          }
-        end
-      end)
-      # Remove nils
-      |> Enum.filter(& &1)
+          if cuisine do
+            %{
+              restaurant_id: restaurant.id,
+              cuisine_id: cuisine.id,
+              inserted_at: DateTime.utc_now(),
+              updated_at: DateTime.utc_now()
+            }
+          end
+        end)
+        # Remove nils
+        |> Enum.filter(& &1)
 
-    if length(restaurant_cuisines) > 0 do
-      Repo.insert_all("restaurant_cuisines", restaurant_cuisines)
+      if length(restaurant_cuisines) > 0 do
+        Repo.insert_all("restaurant_cuisines", restaurant_cuisines)
+      end
+
+      restaurant
+    else
+      IO.puts("⚠️ No owner found for restaurant: #{attrs.name}")
+      nil
     end
-
-    restaurant
   end)
+  |> Enum.filter(& &1)
 
 IO.puts("✅ Created #{length(restaurants)} restaurants")
 
@@ -3377,7 +3526,10 @@ if Mix.env() == :dev do
 
       IO.puts("   ✅ Created #{length(created_orders)} tracking test orders for #{name}:")
       Enum.each(created_orders, fn {status, order} ->
-        IO.puts("      • Order ##{order.id}: #{status} (#{order.restaurant.name})")
+        # Get restaurant name from our test_restaurants list instead of accessing unloaded association
+        restaurant = Enum.find(test_restaurants, fn r -> r.id == order.restaurant_id end)
+        restaurant_name = if restaurant, do: restaurant.name, else: "Unknown Restaurant"
+        IO.puts("      • Order ##{order.id}: #{status} (#{restaurant_name})")
       end)
     else
       IO.puts("   ⚠️ User #{email} not found - skipping tracking orders")

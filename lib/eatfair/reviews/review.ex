@@ -5,6 +5,7 @@ defmodule Eatfair.Reviews.Review do
   alias Eatfair.Accounts.User
   alias Eatfair.Restaurants.Restaurant
   alias Eatfair.Orders.Order
+  alias Eatfair.Reviews.ReviewImage
 
   schema "reviews" do
     field :rating, :integer
@@ -13,6 +14,7 @@ defmodule Eatfair.Reviews.Review do
     belongs_to :user, User
     belongs_to :restaurant, Restaurant
     belongs_to :order, Order
+    has_many :images, ReviewImage, preload_order: [asc: :position]
 
     timestamps(type: :utc_datetime)
   end
