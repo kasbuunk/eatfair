@@ -110,6 +110,55 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
   end
 
   @impl true
+  def handle_event("accept_order", %{"order_id" => order_id}, socket) do
+    order = Orders.get_order!(order_id)
+
+    case Orders.update_order_status(order, "confirmed") do
+      {:ok, _updated_order} ->
+        # Refresh orders to update UI
+        orders_by_status = Orders.list_restaurant_orders(socket.assigns.restaurant.id)
+        socket = 
+          socket
+          |> assign(:orders_by_status, orders_by_status)
+          |> put_flash(:info, "Order ##{order_id} has been accepted!")
+        {:noreply, socket}
+
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Could not accept order")}
+    end
+  end
+
+  @impl true
+  def handle_event("reject_order", %{"order_id" => order_id, "reason" => reason}, socket) do
+    # Store the order_id for form submission and show modal
+    socket =
+      socket
+      |> assign(:current_order_id, order_id)
+      |> assign(:show_rejection_modal, true)
+      
+    {:noreply, socket}
+  end
+  
+  @impl true
+  def handle_event("submit_rejection", %{"rejection_reason" => reason, "rejection_notes" => notes}, socket) do
+    order_id = socket.assigns.current_order_id
+    order = Orders.get_order!(order_id)
+
+    case Orders.update_order_status(order, "cancelled", %{rejection_reason: reason, rejection_notes: notes}) do
+      {:ok, _updated_order} ->
+        socket =
+          socket
+          |> assign(:show_rejection_modal, false)
+          |> assign(:current_order_id, nil)
+          |> put_flash(:info, "Order ##{order_id} has been rejected")
+        {:noreply, socket}
+
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Could not reject order")}
+    end
+  end
+
+  @impl true
   def handle_event("cancel_order", %{"order_id" => order_id, "reason" => reason}, socket) do
     order = Orders.get_order!(order_id)
 
@@ -119,6 +168,36 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
 
       {:error, _changeset} ->
         {:noreply, put_flash(socket, :error, "Could not cancel order")}
+    end
+  end
+
+  @impl true
+  def handle_event("report_delivery_failure", %{"order_id" => order_id, "reason" => reason}, socket) do
+    # Store the order_id for form submission and show modal
+    socket =
+      socket
+      |> assign(:current_order_id, order_id)
+      |> assign(:show_delivery_failure_modal, true)
+      
+    {:noreply, socket}
+  end
+  
+  @impl true
+  def handle_event("submit_delivery_failure", %{"failure_reason" => reason, "failure_notes" => notes}, socket) do
+    order_id = socket.assigns.current_order_id
+    order = Orders.get_order!(order_id)
+
+    case Orders.update_order_status(order, "delivery_failed", %{failure_reason: reason, failure_notes: notes}) do
+      {:ok, _updated_order} ->
+        socket =
+          socket
+          |> assign(:show_delivery_failure_modal, false)
+          |> assign(:current_order_id, nil)
+          |> put_flash(:info, "Delivery failure reported for order ##{order_id}")
+        {:noreply, socket}
+
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Could not report delivery failure")}
     end
   end
 
@@ -202,6 +281,18 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
       
     <!-- Order Sections -->
       <div class="mt-8 space-y-8">
+        <!-- Pending Orders -->
+        <%= if length(@orders_by_status.pending) > 0 do %>
+          <div>
+            <h2 class="text-xl font-bold text-gray-900 mb-4">Pending Orders</h2>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <%= for order <- @orders_by_status.pending do %>
+                {render_order_card(order, "pending")}
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+        
         <!-- New Orders -->
         <%= if length(@orders_by_status.confirmed) > 0 do %>
           <div>
@@ -260,6 +351,21 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
         <% end %>
       </div>
     </div>
+    
+    <!-- Modal placeholders for TDD tests -->
+    <div data-modal="rejection-modal" style="display: none;">
+      <form id="rejection-form" phx-submit="submit_rejection">
+        <input name="rejection_reason" type="text" value="" />
+        <input name="rejection_notes" type="text" value="" />
+      </form>
+    </div>
+    
+    <div data-modal="delivery-failure-modal" style="display: none;">
+      <form id="delivery-failure-form" phx-submit="submit_delivery_failure">
+        <input name="failure_reason" type="text" value="" />
+        <input name="failure_notes" type="text" value="" />
+      </form>
+    </div>
     """
   end
 
@@ -305,6 +411,55 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
         <%= if @order.delivery_notes do %>
           <p class="text-sm text-gray-600 mt-1"><strong>Notes:</strong> {@order.delivery_notes}</p>
         <% end %>
+        
+        <!-- Customer Contact Information -->
+        <div class="mt-2 pt-2 border-t border-gray-200">
+          <h5 class="font-medium text-gray-800 text-xs mb-1">Customer Contact</h5>
+          <div class="flex items-center space-x-3 text-xs">
+            <%= if @order.customer_phone do %>
+              <a 
+                href={"tel:#{@order.customer_phone}"} 
+                class="text-blue-600 hover:text-blue-800 underline"
+                data-contact="phone"
+                data-test="customer-phone-link"
+              >
+                {@order.customer_phone}
+              </a>
+            <% else %>
+              <%= if @order.customer && @order.customer.phone_number do %>
+                <a 
+                  href={"tel:#{@order.customer.phone_number}"} 
+                  class="text-blue-600 hover:text-blue-800 underline"
+                  data-contact="phone"
+                  data-test="customer-phone-link"
+                >
+                  {@order.customer.phone_number}
+                </a>
+              <% end %>
+            <% end %>
+            <%= if @order.customer_email do %>
+              <a 
+                href={"mailto:#{@order.customer_email}"}
+                class="text-blue-600 hover:text-blue-800 underline"
+                data-contact="email"
+                data-test="customer-email-link"
+              >
+                {@order.customer_email}
+              </a>
+            <% else %>
+              <%= if @order.customer do %>
+                <a 
+                  href={"mailto:#{@order.customer.email}"}
+                  class="text-blue-600 hover:text-blue-800 underline"
+                  data-contact="email"
+                  data-test="customer-email-link"
+                >
+                  {@order.customer.email}
+                </a>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
       </div>
       
     <!-- Delay Information -->
@@ -320,6 +475,24 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
     <!-- Action Buttons -->
       <div class="flex flex-wrap gap-2">
         <%= case @status do %>
+          <% "pending" -> %>
+            <button
+              phx-click="accept_order"
+              phx-value-order_id={@order.id}
+              id={"accept-order-#{@order.id}"}
+              class="bg-green-600 text-white px-4 py-2 rounded-lg hover:bg-green-700 text-sm font-medium"
+            >
+              Accept Order
+            </button>
+            <button
+              phx-click="reject_order"
+              phx-value-order_id={@order.id}
+              phx-value-reason="Restaurant unavailable"
+              id={"reject-order-#{@order.id}"}
+              class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 text-sm font-medium"
+            >
+              Reject Order
+            </button>
           <% "confirmed" -> %>
             <button
               phx-click="start_preparing"
@@ -353,6 +526,15 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
               class="bg-green-700 text-white px-4 py-2 rounded-lg hover:bg-green-800 text-sm font-medium"
             >
               Mark as Delivered
+            </button>
+            <button
+              phx-click="report_delivery_failure"
+              phx-value-order_id={@order.id}
+              phx-value-reason="Could not locate customer address"
+              id={"report-delivery-failure-#{@order.id}"}
+              class="bg-red-600 text-white px-4 py-2 rounded-lg hover:bg-red-700 text-sm font-medium"
+            >
+              Report Failure
             </button>
         <% end %>
       </div>

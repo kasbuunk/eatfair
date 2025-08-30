@@ -414,7 +414,7 @@ defmodule Eatfair.Orders do
           updated_order,
           old_status,
           new_status,
-          Map.take(attrs, [:delay_reason, :estimated_delivery_at])
+          Map.take(attrs, [:delay_reason, :estimated_delivery_at, :rejection_reason, :rejection_notes, :failure_reason, :failure_notes])
         )
 
         # Broadcast real-time update
@@ -433,9 +433,9 @@ defmodule Eatfair.Orders do
   def list_restaurant_orders(restaurant_id) do
     Order
     |> where([o], o.restaurant_id == ^restaurant_id)
-    |> where([o], o.status in ["confirmed", "preparing", "ready", "out_for_delivery"])
+    |> where([o], o.status in ["pending", "confirmed", "preparing", "ready", "out_for_delivery"])
     |> preload([:customer, order_items: :meal])
-    |> order_by([o], asc: :confirmed_at, asc: :inserted_at)
+    |> order_by([o], asc: :inserted_at)
     |> Repo.all()
     |> group_orders_by_status()
   end
@@ -520,6 +520,8 @@ defmodule Eatfair.Orders do
       "out_for_delivery" -> Map.put(attrs, :out_for_delivery_at, timestamp)
       "delivered" -> Map.put(attrs, :delivered_at, timestamp)
       "cancelled" -> Map.put(attrs, :cancelled_at, timestamp)
+      "rejected" -> attrs  # No specific timestamp for rejected, use general timestamps
+      "delivery_failed" -> attrs  # No specific timestamp for delivery_failed, use general timestamps
       _ -> attrs
     end
   end
@@ -551,6 +553,7 @@ defmodule Eatfair.Orders do
 
   defp group_orders_by_status(orders) do
     %{
+      pending: Enum.filter(orders, &(&1.status == "pending")),
       confirmed: Enum.filter(orders, &(&1.status == "confirmed")),
       preparing: Enum.filter(orders, &(&1.status == "preparing")),
       ready: Enum.filter(orders, &(&1.status == "ready")),

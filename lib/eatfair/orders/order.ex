@@ -15,7 +15,9 @@ defmodule Eatfair.Orders.Order do
     "ready",
     "out_for_delivery",
     "delivered",
-    "cancelled"
+    "cancelled",
+    "rejected",
+    "delivery_failed"
   ]
 
   schema "orders" do
@@ -45,6 +47,7 @@ defmodule Eatfair.Orders.Order do
     # Special circumstances
     field :is_delayed, :boolean, default: false
     field :delay_reason, :string
+    field :rejection_reason, :string
     field :special_instructions, :string
 
     # Email verification fields
@@ -157,6 +160,7 @@ defmodule Eatfair.Orders.Order do
       :cancelled_at,
       :is_delayed,
       :delay_reason,
+      :rejection_reason,
       :actual_prep_time_minutes
     ])
     |> validate_inclusion(:status, @valid_statuses)
@@ -175,6 +179,9 @@ defmodule Eatfair.Orders.Order do
       {"confirmed", "pending"} ->
         changeset
 
+      {"rejected", "pending"} ->
+        changeset
+
       {"preparing", "confirmed"} ->
         changeset
 
@@ -185,6 +192,9 @@ defmodule Eatfair.Orders.Order do
         changeset
 
       {"delivered", "out_for_delivery"} ->
+        changeset
+
+      {"delivery_failed", "out_for_delivery"} ->
         changeset
 
       {new_status, old_status} ->

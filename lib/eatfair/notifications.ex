@@ -163,5 +163,7 @@ defmodule Eatfair.Notifications do
   defp priority_for_status("out_for_delivery"), do: "high"
   defp priority_for_status("delivered"), do: "normal"
   defp priority_for_status("cancelled"), do: "high"
+  defp priority_for_status("rejected"), do: "high"
+  defp priority_for_status("delivery_failed"), do: "high"
   defp priority_for_status(_), do: "low"
 end
