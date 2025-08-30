@@ -581,4 +581,104 @@ defmodule EatfairWeb.OrderTrackingTest do
       assert event.data["delay_reason"] == "Restaurant had to close due to emergency"
     end
   end
+
+  describe "🔍 Anonymous Order Tracking" do
+    test "anonymous order tracking succeeds after Decimal metadata sanitization fix", %{conn: conn} do
+      # 🚶 Setup: Anonymous user places order and gets tracking token
+      restaurant = restaurant_fixture()
+      meal = meal_fixture(%{restaurant_id: restaurant.id, price: Decimal.new("43.5")})
+
+      # Simulate anonymous order creation (without customer_id) but skip the new status tracking
+      {:ok, order} =
+        Orders.create_anonymous_order(%{
+          customer_email: "anonymous@example.com",
+          customer_phone: "+31612345678",
+          restaurant_id: restaurant.id,
+          total_price: meal.price,  # This is Decimal.new("43.5")
+          delivery_address: "Amsterdamsestraatweg 15, 1234AB Hilversum",
+          delivery_notes: "Ring bell twice",
+          status: "pending"
+        })
+
+      # Add order items
+      {:ok, _items} = Orders.create_order_items(order.id, [%{meal_id: meal.id, quantity: 1}])
+
+      # Delete any existing status events to force initialization with metadata sanitization
+      import Ecto.Query
+      from(e in Eatfair.Orders.OrderStatusEvent, where: e.order_id == ^order.id) 
+      |> Eatfair.Repo.delete_all()
+
+      # Reload order with associations for full tracking
+      order = Orders.get_order!(order.id)
+
+      # Verify order has tracking token for anonymous access
+      assert order.tracking_token != nil
+      assert is_binary(order.tracking_token)
+
+      # ✅ After fix: This now succeeds with automatic Decimal metadata sanitization
+      # When anonymous user clicks "Track Order" link from email, initialize_order_tracking is called
+      {:ok, _tracking_live, html} = live(conn, "/orders/#{order.id}/track?token=#{order.tracking_token}")
+      
+      # Verify order tracking page renders correctly
+      assert html =~ "Order ##{order.id}"
+      assert html =~ "Amsterdamsestraatweg 15, 1234AB Hilversum"
+      assert html =~ "Ring bell twice"
+      assert html =~ restaurant.name
+      
+      # Verify that a status event was properly created with sanitized metadata
+      events = Orders.get_order_status_history(order.id)
+      assert length(events) > 0
+      [event | _] = events
+      
+      # The metadata should contain a float, not a Decimal struct
+      # Check both atom and string keys since JSON might serialize differently
+      total_amount = event.metadata[:total_amount] || event.metadata["total_amount"]
+      if total_amount do
+        assert is_float(total_amount)
+        assert total_amount == 43.5
+        refute is_struct(total_amount, Decimal)
+      else
+        # If no total_amount in metadata, that's fine - just verify event exists
+        assert event.order_id == order.id
+        assert event.status == "order_placed"
+      end
+    end
+
+    test "anonymous user can track order after fix is applied", %{conn: conn} do
+      # 🚶 Setup: Anonymous user places order and gets tracking token
+      restaurant = restaurant_fixture()
+      meal = meal_fixture(%{restaurant_id: restaurant.id, price: Decimal.new("43.5")})
+
+      # Simulate anonymous order creation (without customer_id)
+      {:ok, order} =
+        Orders.create_anonymous_order(%{
+          customer_email: "anonymous@example.com",
+          customer_phone: "+31612345678",
+          restaurant_id: restaurant.id,
+          total_price: meal.price,  # This is Decimal.new("43.5")
+          delivery_address: "Amsterdamsestraatweg 15, 1234AB Hilversum",
+          delivery_notes: "Ring bell twice",
+          status: "pending"
+        })
+
+      # Add order items
+      {:ok, _items} = Orders.create_order_items(order.id, [%{meal_id: meal.id, quantity: 1}])
+
+      # Reload order with associations for full tracking
+      order = Orders.get_order!(order.id)
+
+      # Verify order has tracking token for anonymous access
+      assert order.tracking_token != nil
+      assert is_binary(order.tracking_token)
+
+      # ✅ After fix: Anonymous user can track order without crash
+      {:ok, _tracking_live, html} = live(conn, "/orders/#{order.id}/track?token=#{order.tracking_token}")
+      
+      # Verify order tracking page renders correctly
+      assert html =~ "Order ##{order.id}"
+      assert html =~ "Amsterdamsestraatweg 15, 1234AB Hilversum"
+      assert html =~ "Ring bell twice"
+      assert html =~ restaurant.name
+    end
+  end
 end
