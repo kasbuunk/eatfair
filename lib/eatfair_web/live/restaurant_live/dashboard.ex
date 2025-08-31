@@ -10,6 +10,7 @@ defmodule EatfairWeb.RestaurantLive.Dashboard do
   use EatfairWeb, :live_view
 
   alias Eatfair.Restaurants
+  alias Eatfair.Orders
 
   @impl true
   def mount(_params, _session, socket) do
@@ -22,10 +23,16 @@ defmodule EatfairWeb.RestaurantLive.Dashboard do
 
       restaurant ->
         # Restaurant owner - show dashboard
+        # Load order counts for at-a-glance order management
+        pending_count = Orders.count_pending_confirmations(restaurant.id)
+        active_count = Orders.count_active_orders(restaurant.id)
+        
         socket =
           socket
           |> assign(:restaurant, restaurant)
           |> assign(:page_title, "#{restaurant.name} - Dashboard")
+          |> assign(:pending_count, pending_count)
+          |> assign(:active_count, active_count)
 
         {:ok, socket}
     end

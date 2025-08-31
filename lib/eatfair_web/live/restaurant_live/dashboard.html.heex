@@ -26,6 +26,20 @@
       
 <!-- Status Toggle -->
       <div class="flex items-center space-x-4">
+        <.link
+          href={~p"/restaurant/orders"}
+          data-test="quick-orders-link"
+          class="inline-flex items-center px-3 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors"
+          title="Quick access to order management"
+        >
+          <.icon name="hero-clipboard-document-list" class="w-4 h-4 mr-1" />
+          Orders
+          <%= if assigns[:pending_count] && @pending_count > 0 do %>
+            <span class="ml-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
+              {@pending_count}
+            </span>
+          <% end %>
+        </.link>
         <%= if @restaurant.is_open do %>
           <div class="flex items-center" data-test="restaurant-status-open">
             <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
@@ -100,6 +114,128 @@
         </div>
       </div>
     </div>
+  </div>
+  
+<!-- Order Overview Section -->
+  <div class="bg-white shadow-lg rounded-lg border border-gray-200 p-6 mb-8" data-test="order-overview-section">
+    <div class="flex items-center justify-between mb-6">
+      <div class="flex items-center">
+        <.icon name="hero-clipboard-document-list" class="w-8 h-8 text-indigo-500 mr-3" />
+        <div>
+          <h2 class="text-xl font-semibold text-gray-900">Order Management</h2>
+          <p class="text-gray-600">Real-time order status and management</p>
+        </div>
+      </div>
+      <.link
+        href={~p"/restaurant/orders"}
+        data-test="manage-orders-link"
+        class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors font-medium"
+      >
+        <.icon name="hero-arrow-right" class="w-4 h-4 ml-2" /> Manage Orders
+      </.link>
+    </div>
+
+    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <!-- Pending Confirmations -->
+      <div class={[
+        "rounded-lg p-4 border-2", 
+        if @pending_count > 0, do: "bg-red-50 border-red-200", else: "bg-gray-50 border-gray-200"
+      ]}>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <.icon 
+              name="hero-exclamation-triangle" 
+              class={[
+                "w-6 h-6 mr-3",
+                if @pending_count > 0, do: "text-red-500", else: "text-gray-400"
+              ]} 
+            />
+            <div>
+              <p class={[
+                "text-2xl font-bold",
+                if @pending_count > 0, do: "text-red-700", else: "text-gray-500"
+              ]}>
+                {@pending_count}
+              </p>
+              <p class={[
+                "text-sm font-medium",
+                if @pending_count > 0, do: "text-red-600", else: "text-gray-500"
+              ]}>
+                Pending Confirmations
+              </p>
+            </div>
+          </div>
+          <%= if @pending_count > 0 do %>
+            <div class="bg-red-100 text-red-800 text-xs font-semibold px-2 py-1 rounded-full">
+              Needs Action
+            </div>
+          <% end %>
+        </div>
+        <%= if @pending_count > 0 do %>
+          <p class="text-red-700 text-xs mt-2">
+            Orders waiting for your confirmation
+          </p>
+        <% else %>
+          <p class="text-gray-500 text-xs mt-2">
+            No orders pending confirmation
+          </p>
+        <% end %>
+      </div>
+
+      <!-- Active Orders -->
+      <div class={[
+        "rounded-lg p-4 border-2", 
+        if @active_count > 0, do: "bg-blue-50 border-blue-200", else: "bg-gray-50 border-gray-200"
+      ]}>
+        <div class="flex items-center justify-between">
+          <div class="flex items-center">
+            <.icon 
+              name="hero-cog-6-tooth" 
+              class={[
+                "w-6 h-6 mr-3",
+                if @active_count > 0, do: "text-blue-500", else: "text-gray-400"
+              ]} 
+            />
+            <div>
+              <p class={[
+                "text-2xl font-bold",
+                if @active_count > 0, do: "text-blue-700", else: "text-gray-500"
+              ]}>
+                {@active_count}
+              </p>
+              <p class={[
+                "text-sm font-medium",
+                if @active_count > 0, do: "text-blue-600", else: "text-gray-500"
+              ]}>
+                Active Orders
+              </p>
+            </div>
+          </div>
+          <%= if @active_count > 0 do %>
+            <div class="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded-full">
+              In Progress
+            </div>
+          <% end %>
+        </div>
+        <%= if @active_count > 0 do %>
+          <p class="text-blue-700 text-xs mt-2">
+            Orders being prepared or delivered
+          </p>
+        <% else %>
+          <p class="text-gray-500 text-xs mt-2">
+            No orders currently being processed
+          </p>
+        <% end %>
+      </div>
+    </div>
+
+    <%= if @pending_count > 0 or @active_count > 0 do %>
+      <div class="mt-4 text-center">
+        <p class="text-gray-600 text-sm">
+          💡 <strong>Quick access:</strong> Manage all orders from one place with real-time updates
+        </p>
+      </div>
+    <% end %>
   </div>
   
 <!-- Main Action Cards -->
