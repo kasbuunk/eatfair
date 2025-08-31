@@ -8,7 +8,7 @@ defmodule Eatfair.Repo.Migrations.CreateTermsAcceptances do
       add :terms_version, :string, size: 20, null: false, default: "v1.0"
       add :ip_address, :string
       add :user_agent, :text
-      
+
       timestamps(type: :utc_datetime)
     end
 

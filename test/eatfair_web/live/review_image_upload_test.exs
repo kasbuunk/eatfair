@@ -16,13 +16,14 @@ defmodule EatfairWeb.ReviewImageUploadTest do
     meal = meal_fixture(%{restaurant_id: restaurant.id})
 
     # Create delivered order so customer can review
-    {:ok, order} = Orders.create_order(%{
-      customer_id: customer.id,
-      restaurant_id: restaurant.id,
-      status: "delivered",
-      total_price: Decimal.new("25.00"),
-      delivery_address: "Review Test Address"
-    })
+    {:ok, order} =
+      Orders.create_order(%{
+        customer_id: customer.id,
+        restaurant_id: restaurant.id,
+        status: "delivered",
+        total_price: Decimal.new("25.00"),
+        delivery_address: "Review Test Address"
+      })
 
     %{customer: customer, restaurant: restaurant, meal: meal, order: order}
   end
@@ -43,13 +44,14 @@ defmodule EatfairWeb.ReviewImageUploadTest do
       assert html =~ "Write a Review"
 
       # 📝 Click to open review form
-      html = restaurant_live
-        |> element("button", "Write a Review") 
+      html =
+        restaurant_live
+        |> element("button", "Write a Review")
         |> render_click()
 
       # ✅ Should see review form with image upload
       assert html =~ "Share your experience"
-      assert html =~ "Upload photos" 
+      assert html =~ "Upload photos"
       assert html =~ "live-file-input"
       assert html =~ "Accept up to 3 images"
 
@@ -68,7 +70,7 @@ defmodule EatfairWeb.ReviewImageUploadTest do
         |> file_input("#review-form", :review_images, [
           %{
             last_modified: System.system_time(:millisecond),
-            name: "delicious_food.jpg", 
+            name: "delicious_food.jpg",
             content: create_test_image_binary(),
             size: 150_000,
             type: "image/jpeg"
@@ -76,7 +78,7 @@ defmodule EatfairWeb.ReviewImageUploadTest do
           %{
             last_modified: System.system_time(:millisecond),
             name: "restaurant_ambiance.png",
-            content: create_test_image_binary(), 
+            content: create_test_image_binary(),
             size: 200_000,
             type: "image/png"
           }
@@ -115,7 +117,7 @@ defmodule EatfairWeb.ReviewImageUploadTest do
 
     test "files exceeding size limit show validation errors", %{
       conn: conn,
-      customer: customer, 
+      customer: customer,
       restaurant: restaurant
     } do
       _conn = log_in_user(conn, customer)
@@ -126,7 +128,8 @@ defmodule EatfairWeb.ReviewImageUploadTest do
       |> render_click()
 
       # 📏 Try to upload file > 5MB (will fail until validation implemented)
-      large_file_content = :crypto.strong_rand_bytes(6_000_000)  # 6MB
+      # 6MB
+      large_file_content = :crypto.strong_rand_bytes(6_000_000)
 
       assert_raise RuntimeError, ~r/upload.*not.*configured/, fn ->
         restaurant_live
@@ -201,21 +204,23 @@ defmodule EatfairWeb.ReviewImageUploadTest do
       restaurant: restaurant
     } do
       # Mobile-specific test
-      mobile_conn = conn 
+      mobile_conn =
+        conn
         |> put_req_header("user-agent", "Mozilla/5.0 (iPhone; CPU iPhone OS 14_0 like Mac OS X)")
 
       conn = log_in_user(mobile_conn, customer)
       {:ok, restaurant_live, _html} = live(conn, ~p"/restaurants/#{restaurant.id}")
 
       # Mobile should have appropriate upload interface
-      html = restaurant_live
-      |> element("button", "Write a Review")
-      |> render_click()
+      html =
+        restaurant_live
+        |> element("button", "Write a Review")
+        |> render_click()
 
       # Should have mobile-friendly file input
       # (Will fail until mobile-responsive upload UI implemented)
       assert html =~ "live-file-input"
-      
+
       # Mobile uploads often from camera, should handle orientation
       # This will be implemented in the compression pipeline
     end
@@ -225,14 +230,14 @@ defmodule EatfairWeb.ReviewImageUploadTest do
     test "uploaded images are scanned for security threats" do
       # Test that malicious files are detected and rejected
       # This validation happens in FileUpload.validate_upload/1
-      
+
       malicious_content = create_malicious_file_content()
-      
+
       # This will fail until security scanning is implemented
       assert_raise UndefinedFunctionError, fn ->
         Eatfair.FileUpload.validate_upload(%Phoenix.LiveView.UploadEntry{
           client_name: "innocent_image.jpg",
-          client_type: "image/jpeg", 
+          client_type: "image/jpeg",
           client_size: byte_size(malicious_content),
           ref: "test_ref",
           uuid: "test_uuid"
@@ -246,7 +251,7 @@ defmodule EatfairWeb.ReviewImageUploadTest do
       # Test compression pipeline
       original_image = create_test_image_binary()
       _original_size = byte_size(original_image)
-      
+
       # This will fail until compression is implemented
       assert_raise UndefinedFunctionError, fn ->
         Eatfair.FileUpload.compress_image(original_image, %{
@@ -260,7 +265,7 @@ defmodule EatfairWeb.ReviewImageUploadTest do
     end
   end
 
-  describe "🎨 User Experience" do  
+  describe "🎨 User Experience" do
     test "image preview shows thumbnails before submission", %{
       conn: conn,
       customer: customer,
@@ -285,7 +290,7 @@ defmodule EatfairWeb.ReviewImageUploadTest do
             type: "image/jpeg"
           }
         ])
-        
+
         # Should show thumbnail preview
         # render(restaurant_live) should contain image preview
       end
@@ -294,7 +299,8 @@ defmodule EatfairWeb.ReviewImageUploadTest do
     test "users can remove images before submission" do
       # Test remove functionality in upload interface
       # Will be implemented as part of live_file_input component
-      assert true  # Placeholder until implementation
+      # Placeholder until implementation
+      assert true
     end
   end
 
@@ -303,9 +309,13 @@ defmodule EatfairWeb.ReviewImageUploadTest do
   defp create_test_image_binary do
     # Create minimal valid JPEG binary for testing
     # JPEG file signature + minimal data
+    # End of JPEG
     <<255, 216, 255, 224, 0, 16, 74, 70, 73, 70, 0, 1, 1, 1, 0, 72, 0, 72, 0, 0>> <>
-    <<255, 219, 0, 67, 0, 8, 6, 6, 7, 6, 5, 8, 7, 7, 7, 9, 9, 8, 10, 12, 20, 13, 12, 11, 11, 12, 25, 18, 19, 15, 20, 29, 26, 31, 30, 29, 26, 28, 28, 32, 36, 46, 39, 32, 34, 44, 35, 28, 28, 40, 55, 41, 44, 48, 49, 52, 52, 52, 31, 39, 57, 61, 56, 50, 60, 46, 51, 52, 50>> <>
-    <<255, 217>>  # End of JPEG
+      <<255, 219, 0, 67, 0, 8, 6, 6, 7, 6, 5, 8, 7, 7, 7, 9, 9, 8, 10, 12, 20, 13, 12, 11, 11, 12,
+        25, 18, 19, 15, 20, 29, 26, 31, 30, 29, 26, 28, 28, 32, 36, 46, 39, 32, 34, 44, 35, 28,
+        28, 40, 55, 41, 44, 48, 49, 52, 52, 52, 31, 39, 57, 61, 56, 50, 60, 46, 51, 52,
+        50>> <>
+      <<255, 217>>
   end
 
   defp create_malicious_file_content do

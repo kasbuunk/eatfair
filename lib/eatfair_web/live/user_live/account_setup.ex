@@ -24,9 +24,11 @@ defmodule EatfairWeb.UserLive.AccountSetup do
     else
       # Get delivery address from order if available
       {delivery_address, invoice_address} = get_addresses_from_order(post_verify_order_id)
-      
+
       # Create changesets for user and addresses
-      user_changeset = Accounts.change_user_password(user, %{name: user.name || ""}, hash_password: false)
+      user_changeset =
+        Accounts.change_user_password(user, %{name: user.name || ""}, hash_password: false)
+
       delivery_changeset = Accounts.change_address(%Accounts.Address{}, delivery_address)
       invoice_changeset = Accounts.change_address(%Accounts.Address{}, invoice_address)
 
@@ -51,7 +53,7 @@ defmodule EatfairWeb.UserLive.AccountSetup do
     invoice_params = params["invoice"] || %{}
     # Handle checkbox: with hidden input, "false" means unchecked, "true" means checked
     same_as_delivery = params["same_as_delivery"] == "true"
-    
+
     # Create validation changesets
     user_form =
       socket.assigns.current_scope.user
@@ -67,7 +69,7 @@ defmodule EatfairWeb.UserLive.AccountSetup do
 
     # If same as delivery, copy delivery params to invoice
     final_invoice_params = if same_as_delivery, do: delivery_params, else: invoice_params
-    
+
     invoice_form =
       %Accounts.Address{}
       |> Accounts.change_address(final_invoice_params)
@@ -101,16 +103,24 @@ defmodule EatfairWeb.UserLive.AccountSetup do
          socket
          |> put_flash(:error, "You must accept the Terms and Conditions to continue.")
          |> assign(:terms_accepted, false)}
-      
+
       String.trim(user_params["name"] || "") == "" ->
         {:noreply,
          socket
          |> put_flash(:error, "Name is required.")
          |> assign(:terms_accepted, terms_accepted)}
-      
+
       true ->
         # Process the account setup
-        process_account_setup(socket, user, user_params, delivery_params, invoice_params, same_as_delivery, marketing_opt_in)
+        process_account_setup(
+          socket,
+          user,
+          user_params,
+          delivery_params,
+          invoice_params,
+          same_as_delivery,
+          marketing_opt_in
+        )
     end
   end
 
@@ -155,56 +165,68 @@ defmodule EatfairWeb.UserLive.AccountSetup do
   end
 
   # Process complete account setup with user name, addresses, and optional password
-  defp process_account_setup(socket, user, user_params, delivery_params, invoice_params, same_as_delivery, _marketing_opt_in) do
+  defp process_account_setup(
+         socket,
+         user,
+         user_params,
+         delivery_params,
+         invoice_params,
+         same_as_delivery,
+         _marketing_opt_in
+       ) do
     # Start with user profile update (name is always required)
-    profile_update_result = 
+    profile_update_result =
       user
       |> Accounts.User.update_profile_changeset(%{name: String.trim(user_params["name"])})
       |> Eatfair.Repo.update()
-    
+
     case profile_update_result do
       {:ok, updated_user} ->
         # Update password if provided
-        password_result = if String.trim(user_params["password"] || "") != "" do
-          Accounts.update_user_password(updated_user, user_params)
-        else
-          {:ok, {updated_user, []}}
-        end
-        
+        password_result =
+          if String.trim(user_params["password"] || "") != "" do
+            Accounts.update_user_password(updated_user, user_params)
+          else
+            {:ok, {updated_user, []}}
+          end
+
         case password_result do
           {:ok, {final_user, _tokens}} ->
             # Create addresses
-            address_result = Accounts.upsert_user_addresses(
-              final_user, 
-              delivery_params, 
-              invoice_params, 
-              same_as_delivery
-            )
-            
+            address_result =
+              Accounts.upsert_user_addresses(
+                final_user,
+                delivery_params,
+                invoice_params,
+                same_as_delivery
+              )
+
             case address_result do
               {:ok, {_delivery_addr, _invoice_addr}} ->
                 # TODO: Store marketing opt-in preference when persistence implemented
-                
-                redirect_path = determine_redirect_path(final_user.id, socket.assigns.post_verify_order_id)
-                
+
+                redirect_path =
+                  determine_redirect_path(final_user.id, socket.assigns.post_verify_order_id)
+
                 {:noreply,
                  socket
                  |> put_flash(:info, "Account setup completed successfully!")
                  |> push_navigate(to: redirect_path)}
-              
+
               {:error, reason} ->
-                error_msg = case reason do
-                  {:delivery_error, _changeset} -> "Invalid delivery address information."
-                  {:invoice_error, _changeset} -> "Invalid invoice address information."
-                  _ -> "Could not save address information."
-                end
-                
+                error_msg =
+                  case reason do
+                    {:delivery_error, _changeset} -> "Invalid delivery address information."
+                    {:invoice_error, _changeset} -> "Invalid invoice address information."
+                    _ -> "Could not save address information."
+                  end
+
                 {:noreply,
                  socket
                  |> put_flash(:error, error_msg)
                  |> assign(:terms_accepted, true)}
             end
-          
+
           {:error, changeset} ->
             {:noreply,
              socket
@@ -212,7 +234,7 @@ defmodule EatfairWeb.UserLive.AccountSetup do
              |> assign(:terms_accepted, true)
              |> put_flash(:error, "Password requirements not met.")}
         end
-      
+
       {:error, changeset} ->
         {:noreply,
          socket
@@ -221,43 +243,43 @@ defmodule EatfairWeb.UserLive.AccountSetup do
          |> put_flash(:error, "Please provide a valid name.")}
     end
   end
-  
+
   # Get delivery address from the associated order
   defp get_addresses_from_order(post_verify_order_id) do
     case post_verify_order_id do
-      nil -> 
+      nil ->
         # No order context, return empty address forms
         {%{}, %{}}
-      
+
       order_id ->
         try do
           order = Orders.get_order!(order_id)
           # Parse the delivery address from order
           {street, city, postal_code} = parse_order_delivery_address(order.delivery_address)
-          
+
           delivery_address = %{
             street_address: street,
             city: city,
             postal_code: postal_code,
             country: "Netherlands"
           }
-          
+
           # Invoice address defaults to same as delivery
           invoice_address = delivery_address
-          
+
           {delivery_address, invoice_address}
         rescue
-          _ -> 
+          _ ->
             # If order not found, return empty forms
             {%{}, %{}}
         end
     end
   end
-  
+
   # Use the new AddressParser utility for smart address parsing
   defp parse_order_delivery_address(delivery_address) when is_binary(delivery_address) do
     Eatfair.AddressParser.parse_delivery_address(delivery_address)
   end
-  
+
   defp parse_order_delivery_address(_), do: {"", "", ""}
 end

@@ -101,7 +101,6 @@ defmodule EatfairWeb.Router do
       live "/restaurant/onboard", RestaurantLive.Onboarding, :new
     end
 
-
     # Admin routes - requires admin role
     live_session :require_admin,
       on_mount: [{EatfairWeb.UserAuth, :require_admin}] do

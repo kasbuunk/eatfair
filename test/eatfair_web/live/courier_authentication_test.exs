@@ -28,13 +28,13 @@ defmodule EatfairWeb.CourierAuthenticationTest do
       # Should not be able to access restaurant dashboard (requires restaurant ownership)
       conn_restaurant = get(conn, ~p"/restaurant/dashboard")
       assert redirected_to(conn_restaurant) =~ "/restaurant/onboard"
-      
+
       # Should not be able to access admin dashboard (requires admin role)
       conn_admin = get(conn, ~p"/admin/dashboard")
       assert redirected_to(conn_admin) == "/"
 
       # Should be able to access restaurant onboarding (available to all authenticated users)
-      conn_onboard = get(conn, ~p"/restaurant/onboard") 
+      conn_onboard = get(conn, ~p"/restaurant/onboard")
       assert html_response(conn_onboard, 200)
     end
 
@@ -50,7 +50,7 @@ defmodule EatfairWeb.CourierAuthenticationTest do
 
       # Customer should be redirected to courier login when accessing courier dashboard
       conn_customer = log_in_user(conn, customer)
-      conn_customer = get(conn_customer, ~p"/courier/dashboard") 
+      conn_customer = get(conn_customer, ~p"/courier/dashboard")
       assert redirected_to(conn_customer) =~ "/courier/login"
     end
 
@@ -87,7 +87,7 @@ defmodule EatfairWeb.CourierAuthenticationTest do
       conn = log_in_user(conn, courier)
 
       {:ok, _dashboard_live, html} = live(conn, "/courier/dashboard")
-      
+
       # Should show courier-specific content
       assert html =~ "Courier Dashboard"
       assert html =~ "Available Deliveries"

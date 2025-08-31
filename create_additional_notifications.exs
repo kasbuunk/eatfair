@@ -13,7 +13,7 @@ case Accounts.get_user_by_email(night_owl_email) do
 
   owner ->
     IO.puts("🦉 Found Night Owl owner: #{owner.name}")
-    
+
     # Create additional notification types to showcase full range
     additional_notifications = [
       %{
@@ -34,7 +34,8 @@ case Accounts.get_user_by_email(night_owl_email) do
         priority: "low",
         data: %{
           "title" => "Weekend Special Available",
-          "message" => "Your weekend discount promotion is now active! Customers can enjoy 15% off orders above €30.",
+          "message" =>
+            "Your weekend discount promotion is now active! Customers can enjoy 15% off orders above €30.",
           "promo_code" => "WEEKEND15",
           "valid_until" => "2024-08-25 23:59:59",
           "action_url" => "/restaurant/promotions"
@@ -45,15 +46,20 @@ case Accounts.get_user_by_email(night_owl_email) do
         priority: "low",
         data: %{
           "title" => "EatFair Monthly Newsletter",
-          "message" => "Check out this month's platform updates and new features for restaurant partners.",
+          "message" =>
+            "Check out this month's platform updates and new features for restaurant partners.",
           "newsletter_url" => "/newsletter/august-2024",
-          "featured_topics" => ["New analytics dashboard", "Improved delivery tracking", "Customer loyalty features"]
+          "featured_topics" => [
+            "New analytics dashboard",
+            "Improved delivery tracking",
+            "Customer loyalty features"
+          ]
         }
       }
     ]
-    
+
     IO.puts("📬 Creating #{length(additional_notifications)} additional notifications...")
-    
+
     Enum.with_index(additional_notifications, 1)
     |> Enum.each(fn {notification_data, index} ->
       notification_attrs = %{
@@ -63,16 +69,19 @@ case Accounts.get_user_by_email(night_owl_email) do
         data: notification_data.data,
         status: "pending"
       }
-      
+
       case Notifications.create_event(notification_attrs) do
         {:ok, event} ->
           IO.puts("✅ Created #{notification_data.event_type} notification (ID: #{event.id})")
-          
+
         {:error, changeset} ->
           IO.puts("❌ Failed to create notification: #{inspect(changeset.errors)}")
       end
     end)
-    
+
     IO.puts("🎉 Additional sample notifications created!")
-    IO.puts("🔔 Night Owl owner should now see #{length(additional_notifications) + 5} total notifications")
+
+    IO.puts(
+      "🔔 Night Owl owner should now see #{length(additional_notifications) + 5} total notifications"
+    )
 end

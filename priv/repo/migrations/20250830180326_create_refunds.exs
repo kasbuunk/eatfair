@@ -13,10 +13,10 @@ defmodule Eatfair.Repo.Migrations.CreateRefunds do
       add :processor_notes, :text
       add :external_refund_id, :string
       add :created_by_id, references(:users, on_delete: :nothing)
-      
+
       timestamps()
     end
-    
+
     create index(:refunds, [:order_id])
     create index(:refunds, [:customer_id])
     create index(:refunds, [:status])

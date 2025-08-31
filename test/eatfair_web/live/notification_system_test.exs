@@ -15,16 +15,17 @@ defmodule EatfairWeb.NotificationSystemTest do
       restaurant = restaurant_fixture(%{owner_id: restaurant_owner.id})
       meal = meal_fixture(%{restaurant_id: restaurant.id})
 
-      {:ok, order} = Orders.create_order_with_items(
-        %{
-          customer_id: customer.id,
-          restaurant_id: restaurant.id,
-          total_price: meal.price,
-          delivery_address: "123 Notification Test St",
-          status: "pending"
-        },
-        [%{meal_id: meal.id, quantity: 1}]
-      )
+      {:ok, order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "123 Notification Test St",
+            status: "pending"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
 
       conn = log_in_user(conn, restaurant_owner)
 
@@ -33,7 +34,7 @@ defmodule EatfairWeb.NotificationSystemTest do
 
       # Should see notification display component
       assert has_element?(management_live, "[data-testid='notification-center']")
-      
+
       # Should initially have no notifications displayed
       refute html =~ "notification-item"
 
@@ -42,7 +43,7 @@ defmodule EatfairWeb.NotificationSystemTest do
 
       # Wait for live view to process real-time notification
       :timer.sleep(50)
-      
+
       # Should now see notification appear
       html = render(management_live)
       assert html =~ "Order ##{order.id}"
@@ -58,18 +59,19 @@ defmodule EatfairWeb.NotificationSystemTest do
       _meal = meal_fixture(%{restaurant_id: restaurant.id})
 
       # Create notification event manually to test UI
-      {:ok, _event} = Notifications.create_event(%{
-        event_type: "order_status_changed",
-        recipient_id: restaurant_owner.id,
-        priority: "high",
-        data: %{
-          order_id: 999,
-          restaurant_name: restaurant.name,
-          old_status: "pending",
-          new_status: "cancelled",
-          rejection_reason: "out_of_stock"
-        }
-      })
+      {:ok, _event} =
+        Notifications.create_event(%{
+          event_type: "order_status_changed",
+          recipient_id: restaurant_owner.id,
+          priority: "high",
+          data: %{
+            order_id: 999,
+            restaurant_name: restaurant.name,
+            old_status: "pending",
+            new_status: "cancelled",
+            rejection_reason: "out_of_stock"
+          }
+        })
 
       conn = log_in_user(conn, restaurant_owner)
       {:ok, management_live, html} = live(conn, "/restaurant/orders")
@@ -95,29 +97,31 @@ defmodule EatfairWeb.NotificationSystemTest do
       restaurant = restaurant_fixture(%{owner_id: restaurant_owner.id})
 
       # Create high priority notification
-      {:ok, _high_event} = Notifications.create_event(%{
-        event_type: "order_status_changed",
-        recipient_id: restaurant_owner.id,
-        priority: "high",
-        data: %{
-          order_id: 1,
-          restaurant_name: restaurant.name,
-          new_status: "cancelled",
-          rejection_reason: "emergency_closure"
-        }
-      })
+      {:ok, _high_event} =
+        Notifications.create_event(%{
+          event_type: "order_status_changed",
+          recipient_id: restaurant_owner.id,
+          priority: "high",
+          data: %{
+            order_id: 1,
+            restaurant_name: restaurant.name,
+            new_status: "cancelled",
+            rejection_reason: "emergency_closure"
+          }
+        })
 
       # Create normal priority notification  
-      {:ok, _normal_event} = Notifications.create_event(%{
-        event_type: "order_status_changed",
-        recipient_id: restaurant_owner.id,
-        priority: "normal", 
-        data: %{
-          order_id: 2,
-          restaurant_name: restaurant.name,
-          new_status: "confirmed"
-        }
-      })
+      {:ok, _normal_event} =
+        Notifications.create_event(%{
+          event_type: "order_status_changed",
+          recipient_id: restaurant_owner.id,
+          priority: "normal",
+          data: %{
+            order_id: 2,
+            restaurant_name: restaurant.name,
+            new_status: "confirmed"
+          }
+        })
 
       conn = log_in_user(conn, restaurant_owner)
       {:ok, management_live, html} = live(conn, "/restaurant/orders")
@@ -125,7 +129,7 @@ defmodule EatfairWeb.NotificationSystemTest do
       # Should see both notifications with different styling
       assert html =~ "Order #1"
       assert html =~ "Order #2"
-      
+
       # High priority notification should have urgent styling
       assert has_element?(management_live, "[data-priority='high']")
       assert has_element?(management_live, "[data-priority='normal']")
@@ -136,45 +140,49 @@ defmodule EatfairWeb.NotificationSystemTest do
       _restaurant = restaurant_fixture(%{owner_id: restaurant_owner.id})
 
       # Create multiple notifications
-      {:ok, _event1} = Notifications.create_event(%{
-        event_type: "order_status_changed",
-        recipient_id: restaurant_owner.id,
-        priority: "normal",
-        data: %{order_id: 1, new_status: "confirmed"}
-      })
+      {:ok, _event1} =
+        Notifications.create_event(%{
+          event_type: "order_status_changed",
+          recipient_id: restaurant_owner.id,
+          priority: "normal",
+          data: %{order_id: 1, new_status: "confirmed"}
+        })
 
-      {:ok, _event2} = Notifications.create_event(%{
-        event_type: "order_status_changed", 
-        recipient_id: restaurant_owner.id,
-        priority: "high",
-        data: %{order_id: 2, new_status: "cancelled"}
-      })
+      {:ok, _event2} =
+        Notifications.create_event(%{
+          event_type: "order_status_changed",
+          recipient_id: restaurant_owner.id,
+          priority: "high",
+          data: %{order_id: 2, new_status: "cancelled"}
+        })
 
       conn = log_in_user(conn, restaurant_owner)
       {:ok, management_live, html} = live(conn, "/restaurant/orders")
 
       # Should show unread count badge
       assert html =~ "notification-count"
-      assert html =~ "2" # Two unread notifications
+      # Two unread notifications
+      assert html =~ "2"
       assert has_element?(management_live, "[data-testid='notification-count']")
     end
 
     test "notifications auto-hide after a delay for non-critical events", %{conn: conn} do
       restaurant_owner = user_fixture()
-      customer = user_fixture()  
+      customer = user_fixture()
       restaurant = restaurant_fixture(%{owner_id: restaurant_owner.id})
       meal = meal_fixture(%{restaurant_id: restaurant.id})
 
-      {:ok, order} = Orders.create_order_with_items(
-        %{
-          customer_id: customer.id,
-          restaurant_id: restaurant.id,
-          total_price: meal.price,
-          delivery_address: "Auto Hide Test Address",
-          status: "preparing"
-        },
-        [%{meal_id: meal.id, quantity: 1}]
-      )
+      {:ok, order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Auto Hide Test Address",
+            status: "preparing"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
 
       conn = log_in_user(conn, restaurant_owner)
       {:ok, management_live, _html} = live(conn, "/restaurant/orders")

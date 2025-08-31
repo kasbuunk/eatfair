@@ -50,7 +50,7 @@ defmodule EatfairWeb.UserAuth do
     user_token && Accounts.delete_user_session_token(user_token)
 
     # Determine redirect path based on current user role
-    redirect_path = 
+    redirect_path =
       case conn.assigns[:current_scope] do
         %{user: %{role: "courier"}} -> ~p"/courier/login"
         _ -> ~p"/"
@@ -133,7 +133,7 @@ defmodule EatfairWeb.UserAuth do
       _ -> do_renew_session(conn)
     end
   end
-  
+
   defp renew_session(conn, _user), do: do_renew_session(conn)
 
   # This function renews the session ID and erases the whole
@@ -292,7 +292,10 @@ defmodule EatfairWeb.UserAuth do
       %{user: _} ->
         socket =
           socket
-          |> Phoenix.LiveView.put_flash(:error, "Access denied. You must be a courier to access this page.")
+          |> Phoenix.LiveView.put_flash(
+            :error,
+            "Access denied. You must be a courier to access this page."
+          )
           |> Phoenix.LiveView.redirect(to: ~p"/courier/login")
 
         {:halt, socket}

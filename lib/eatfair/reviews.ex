@@ -35,6 +35,16 @@ defmodule Eatfair.Reviews do
   end
 
   @doc """
+  Creates a review with associated images.
+  """
+  def create_review_with_images(attrs) do
+    # This is a placeholder. You'll need to implement the actual logic
+    # for handling image associations here, likely by calling create_review
+    # and then processing and linking images.
+    create_review(attrs)
+  end
+
+  @doc """
   Updates a review.
   """
   def update_review(%Review{} = review, attrs) do

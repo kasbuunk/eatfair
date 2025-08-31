@@ -49,11 +49,11 @@ defmodule EatfairWeb.UserSessionController do
   def update_password(conn, %{"user" => user_params} = params) do
     user = conn.assigns.current_scope.user
     true = Accounts.sudo_mode?(user)
-    
+
     # Filter out email field to prevent email immutability errors
     # The email field is only present for autocomplete purposes
     password_params = Map.drop(user_params, ["email", :email])
-    
+
     {:ok, {_user, expired_tokens}} = Accounts.update_user_password(user, password_params)
 
     # disconnect all existing LiveViews with old sessions

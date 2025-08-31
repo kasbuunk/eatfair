@@ -20,7 +20,7 @@ defmodule EatfairWeb.CourierLive.Dashboard do
             🚚 Courier Dashboard
           </h1>
           <p class="mt-2 text-sm text-gray-600">
-            Welcome, <%= @current_scope.user.name %>!
+            Welcome, {@current_scope.user.name}!
           </p>
         </div>
 
@@ -47,8 +47,8 @@ defmodule EatfairWeb.CourierLive.Dashboard do
               </div>
             </div>
           </div>
-
-          <!-- In Transit Card -->
+          
+    <!-- In Transit Card -->
           <div class="bg-white overflow-hidden shadow rounded-lg">
             <div class="p-5">
               <div class="flex items-center">
@@ -70,8 +70,8 @@ defmodule EatfairWeb.CourierLive.Dashboard do
               </div>
             </div>
           </div>
-
-          <!-- Completed Today Card -->
+          
+    <!-- Completed Today Card -->
           <div class="bg-white overflow-hidden shadow rounded-lg">
             <div class="p-5">
               <div class="flex items-center">
@@ -94,8 +94,8 @@ defmodule EatfairWeb.CourierLive.Dashboard do
             </div>
           </div>
         </div>
-
-        <!-- Available Deliveries Section -->
+        
+    <!-- Available Deliveries Section -->
         <div class="mt-8">
           <h2 class="text-lg font-medium text-gray-900 mb-4">Available Deliveries</h2>
           <div class="bg-white shadow overflow-hidden sm:rounded-md">

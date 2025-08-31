@@ -19,16 +19,19 @@ Enum.each(owners, fn {email, expected_name} ->
   case Accounts.get_user_by_email(email) do
     nil ->
       IO.puts("❌ #{email} - User not found")
-      
+
     user ->
       name_match = user.name == expected_name
       confirmed = !is_nil(user.confirmed_at)
       has_password = !is_nil(user.hashed_password)
       password_valid = Eatfair.Accounts.User.valid_password?(user, password)
       auth_works = !is_nil(Accounts.get_user_by_email_and_password(email, password))
-      
-      status = if name_match and confirmed and has_password and password_valid and auth_works, do: "✅", else: "⚠️"
-      
+
+      status =
+        if name_match and confirmed and has_password and password_valid and auth_works,
+          do: "✅",
+          else: "⚠️"
+
       IO.puts("#{status} #{email} (#{user.role})")
       IO.puts("   Name: #{user.name} #{if name_match, do: "✅", else: "❌"}")
       IO.puts("   Confirmed: #{confirmed} #{if confirmed, do: "✅", else: "❌"}")

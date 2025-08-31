@@ -47,6 +47,7 @@ defmodule EatfairWeb.LocationPersistenceTest do
       # 2. Navigate to restaurant detail page via "View Menu" button for the available restaurant
       # Use ID 26 which is the restaurant that actually appears in the discovery page
       restaurant_id = 26
+
       _html =
         discovery_view
         |> element("button[phx-value-id='#{restaurant_id}']", "View Menu")
@@ -120,6 +121,7 @@ defmodule EatfairWeb.LocationPersistenceTest do
 
       # Navigate to restaurant detail
       restaurant_id = 26
+
       _html =
         discovery_view
         |> element("button[phx-value-id='#{restaurant_id}']", "View Menu")
@@ -166,6 +168,7 @@ defmodule EatfairWeb.LocationPersistenceTest do
 
       # 3. Click on a restaurant to view details
       restaurant_id = 26
+
       discovery_view
       |> element("button[phx-value-id='#{restaurant_id}']", "View Menu")
       |> render_click()

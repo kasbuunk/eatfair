@@ -137,9 +137,10 @@ defmodule EatfairWeb.AccountSetupFlowTest do
 
       # Should NOT contain misleading "continue anonymously" text 
       refute html =~ "continue anonymously"
-      
+
       # Should contain new, clearer messaging
-      assert html =~ "Secure your account or continue without a password — both give you full access"
+      assert html =~
+               "Secure your account or continue without a password — both give you full access"
     end
 
     test "visual separator clearly denotes two equivalent flows", %{conn: conn} do
@@ -160,8 +161,9 @@ defmodule EatfairWeb.AccountSetupFlowTest do
       view
       |> form("#account_setup_form",
         user: %{
-          name: "",  # Empty name should fail validation
-          password: "validpassword123", 
+          # Empty name should fail validation
+          name: "",
+          password: "validpassword123",
           password_confirmation: "validpassword123"
         },
         terms_accepted: "true"
@@ -178,11 +180,14 @@ defmodule EatfairWeb.AccountSetupFlowTest do
 
       # Should have delivery address fieldset
       assert html =~ "Delivery Address"
-      
+
       # Should have address input fields prefilled from order
-      assert html =~ "Test Address 123"  # Street from order.delivery_address
-      assert html =~ "1012 AB"          # Postal code from order.delivery_address 
-      assert html =~ "Amsterdam"        # City from order.delivery_address
+      # Street from order.delivery_address
+      assert html =~ "Test Address 123"
+      # Postal code from order.delivery_address 
+      assert html =~ "1012 AB"
+      # City from order.delivery_address
+      assert html =~ "Amsterdam"
     end
 
     test "invoice address same-as-delivery checkbox controls field visibility", %{conn: conn} do
@@ -191,16 +196,16 @@ defmodule EatfairWeb.AccountSetupFlowTest do
       # Should have "Same as delivery" checkbox (default checked)
       assert html =~ "same_as_delivery"
       assert html =~ "checked"
-      
+
       # Invoice address fields should initially be hidden/disabled
       # When unchecked, should show separate invoice address fields
-      
+
       view
       |> form("#account_setup_form", same_as_delivery: "false")
       |> render_change()
-      
+
       html = render(view)
-      
+
       # Should now show invoice address fieldset
       assert html =~ "Invoice Address"
       assert html =~ "invoice_street_address"
@@ -214,9 +219,10 @@ defmodule EatfairWeb.AccountSetupFlowTest do
       # Count occurrences of terms_accepted to ensure it's not duplicated
       terms_count = (html |> String.split("name=\"terms_accepted\"") |> length()) - 1
       assert terms_count == 1
-      
+
       # Should be positioned above both CTA buttons, not duplicated below
-      refute html =~ ~r/Complete.*Setup.*By continuing you agree/s  # No terms after buttons
+      # No terms after buttons
+      refute html =~ ~r/Complete.*Setup.*By continuing you agree/s
 
       # Both flows should be blocked without terms acceptance
       view
@@ -231,7 +237,10 @@ defmodule EatfairWeb.AccountSetupFlowTest do
       assert html =~ "must accept" || html =~ "Terms and Conditions"
     end
 
-    test "both flows persist user data and redirect to order tracking", %{conn: conn, order: order} do
+    test "both flows persist user data and redirect to order tracking", %{
+      conn: conn,
+      order: order
+    } do
       {:ok, view, _html} = live(conn, "/users/account-setup")
 
       # Test password flow
@@ -239,7 +248,7 @@ defmodule EatfairWeb.AccountSetupFlowTest do
       |> form("#account_setup_form",
         user: %{
           name: "John Doe",
-          password: "securepassword123", 
+          password: "securepassword123",
           password_confirmation: "securepassword123"
         },
         marketing_opt_in: "true",
@@ -249,14 +258,17 @@ defmodule EatfairWeb.AccountSetupFlowTest do
 
       # Should redirect to order tracking
       assert_redirected(view, ~p"/orders/#{order.id}/track?token=#{order.tracking_token}")
-      
+
       # Should persist user name and marketing preference
       user = Accounts.get_user_by_email("ux_test@example.com")
       assert user.name == "John Doe"
       # TODO: Assert marketing opt-in when persistence implemented
     end
 
-    test "passwordless flow also persists data and creates valid account", %{conn: conn, order: order} do
+    test "passwordless flow also persists data and creates valid account", %{
+      conn: conn,
+      order: order
+    } do
       {:ok, view, _html} = live(conn, "/users/account-setup")
 
       # Fill required name field, leave password empty
@@ -273,25 +285,30 @@ defmodule EatfairWeb.AccountSetupFlowTest do
 
       # Should redirect to order tracking (not remain on form)
       assert_redirected(view, ~p"/orders/#{order.id}/track?token=#{order.tracking_token}")
-      
+
       # Should persist user name even without password
       user = Accounts.get_user_by_email("ux_test@example.com")
       assert user.name == "Jane Smith"
-      assert is_nil(user.hashed_password) # Confirmed no password was set
+      # Confirmed no password was set
+      assert is_nil(user.hashed_password)
     end
-  
+
     # Legacy UX tests (updated for new copy) - will fail until implementation
     test "button labels are clear and distinguish flows", %{conn: conn} do
       {:ok, _view, html} = live(conn, "/users/account-setup")
 
       # Updated expected copy (will fail until implemented)
-      assert html =~ "Complete Setup with Password"    # New copy
-      assert html =~ "Complete Setup without Password" # New copy
+      # New copy
+      assert html =~ "Complete Setup with Password"
+      # New copy
+      assert html =~ "Complete Setup without Password"
 
       # Should not have old language
       refute html =~ "Skip for now"
-      refute html =~ "Complete Account Setup"  # Generic old copy
-      refute html =~ "Agree and continue without password" # Old copy
+      # Generic old copy
+      refute html =~ "Complete Account Setup"
+      # Old copy
+      refute html =~ "Agree and continue without password"
     end
   end
 end

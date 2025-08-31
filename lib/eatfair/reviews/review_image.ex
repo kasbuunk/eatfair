@@ -13,7 +13,8 @@ defmodule Eatfair.Reviews.ReviewImage do
 
   @max_images_per_review 3
   @allowed_mime_types ["image/jpeg", "image/png", "image/webp"]
-  @max_file_size 5_000_000  # 5MB
+  # 5MB
+  @max_file_size 5_000_000
 
   schema "review_images" do
     field :image_path, :string
@@ -79,6 +80,7 @@ defmodule Eatfair.Reviews.ReviewImage do
     else
       size_mb = Float.round(entry.client_size / 1_000_000, 1)
       max_mb = Float.round(@max_file_size / 1_000_000, 1)
+
       add_error(
         changeset,
         :file_size,

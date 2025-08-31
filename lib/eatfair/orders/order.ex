@@ -61,6 +61,12 @@ defmodule Eatfair.Orders.Order do
     field :tracking_token, :string
     field :account_created_from_order, :boolean, default: false
 
+    # Customer desired ETA and proposal workflow
+    field :desired_delivery_at, :naive_datetime
+    field :eta_accepted, :boolean, default: false
+    field :proposed_eta, :naive_datetime
+    field :eta_pending, :boolean, default: false
+
     belongs_to :customer, User
     belongs_to :restaurant, Restaurant
     # For future courier assignment
@@ -102,7 +108,11 @@ defmodule Eatfair.Orders.Order do
       :tracking_token,
       :account_created_from_order,
       :donation_amount,
-      :donation_currency
+      :donation_currency,
+      :desired_delivery_at,
+      :eta_accepted,
+      :proposed_eta,
+      :eta_pending
     ])
     |> validate_required([:restaurant_id, :delivery_address])
     |> validate_customer_info()
@@ -115,6 +125,7 @@ defmodule Eatfair.Orders.Order do
     |> validate_number(:estimated_prep_time_minutes, greater_than: 0)
     |> validate_number(:actual_prep_time_minutes, greater_than: 0)
     |> validate_number(:donation_amount, greater_than_or_equal_to: 0)
+    |> validate_desired_delivery_time()
     |> foreign_key_constraint(:customer_id)
     |> foreign_key_constraint(:restaurant_id)
     |> foreign_key_constraint(:courier_id)
@@ -151,6 +162,36 @@ defmodule Eatfair.Orders.Order do
           :customer_id,
           "must provide either customer account or email and phone for guest orders"
         )
+    end
+  end
+
+  # Custom validation for desired delivery time
+  defp validate_desired_delivery_time(changeset) do
+    case get_field(changeset, :desired_delivery_at) do
+      nil ->
+        # Desired delivery time is optional
+        changeset
+
+      desired_time ->
+        now = NaiveDateTime.utc_now()
+        # 30 minutes from now
+        min_time = NaiveDateTime.add(now, 30 * 60)
+        # 3 days from now
+        max_time = NaiveDateTime.add(now, 3 * 24 * 60 * 60)
+
+        cond do
+          NaiveDateTime.compare(desired_time, now) != :gt ->
+            add_error(changeset, :desired_delivery_at, "must be in the future")
+
+          NaiveDateTime.compare(desired_time, min_time) == :lt ->
+            add_error(changeset, :desired_delivery_at, "must be at least 30 minutes from now")
+
+          NaiveDateTime.compare(desired_time, max_time) == :gt ->
+            add_error(changeset, :desired_delivery_at, "cannot be more than 3 days in advance")
+
+          true ->
+            changeset
+        end
     end
   end
 

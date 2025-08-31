@@ -51,7 +51,9 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
       orders_by_status = Orders.list_restaurant_orders(socket.assigns.restaurant.id)
 
       # Create notification for status change
-      notification = create_notification_for_status_change(updated_order, old_status, updated_order.status)
+      notification =
+        create_notification_for_status_change(updated_order, old_status, updated_order.status)
+
       current_notifications = [notification | socket.assigns.notifications]
       unread_count = socket.assigns.unread_count + 1
 
@@ -171,10 +173,12 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
       {:ok, _updated_order} ->
         # Refresh orders to update UI
         orders_by_status = Orders.list_restaurant_orders(socket.assigns.restaurant.id)
-        socket = 
+
+        socket =
           socket
           |> assign(:orders_by_status, orders_by_status)
           |> put_flash(:info, "Order ##{order_id} has been accepted!")
+
         {:noreply, socket}
 
       {:error, _changeset} ->
@@ -189,22 +193,30 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
       socket
       |> assign(:current_order_id, order_id)
       |> assign(:show_rejection_modal, true)
-      
+
     {:noreply, socket}
   end
-  
+
   @impl true
-  def handle_event("submit_rejection", %{"rejection_reason" => reason, "rejection_notes" => notes}, socket) do
+  def handle_event(
+        "submit_rejection",
+        %{"rejection_reason" => reason, "rejection_notes" => notes},
+        socket
+      ) do
     order_id = socket.assigns.current_order_id
     order = Orders.get_order!(order_id)
 
-    case Orders.update_order_status(order, "cancelled", %{rejection_reason: reason, rejection_notes: notes}) do
+    case Orders.update_order_status(order, "cancelled", %{
+           rejection_reason: reason,
+           rejection_notes: notes
+         }) do
       {:ok, _updated_order} ->
         socket =
           socket
           |> assign(:show_rejection_modal, false)
           |> assign(:current_order_id, nil)
           |> put_flash(:info, "Order ##{order_id} has been rejected")
+
         {:noreply, socket}
 
       {:error, _changeset} ->
@@ -226,28 +238,40 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
   end
 
   @impl true
-  def handle_event("report_delivery_failure", %{"order_id" => order_id, "reason" => _reason}, socket) do
+  def handle_event(
+        "report_delivery_failure",
+        %{"order_id" => order_id, "reason" => _reason},
+        socket
+      ) do
     # Store the order_id for form submission and show modal
     socket =
       socket
       |> assign(:current_order_id, order_id)
       |> assign(:show_delivery_failure_modal, true)
-      
+
     {:noreply, socket}
   end
-  
+
   @impl true
-  def handle_event("submit_delivery_failure", %{"failure_reason" => reason, "failure_notes" => notes}, socket) do
+  def handle_event(
+        "submit_delivery_failure",
+        %{"failure_reason" => reason, "failure_notes" => notes},
+        socket
+      ) do
     order_id = socket.assigns.current_order_id
     order = Orders.get_order!(order_id)
 
-    case Orders.update_order_status(order, "delivery_failed", %{failure_reason: reason, failure_notes: notes}) do
+    case Orders.update_order_status(order, "delivery_failed", %{
+           failure_reason: reason,
+           failure_notes: notes
+         }) do
       {:ok, _updated_order} ->
         socket =
           socket
           |> assign(:show_delivery_failure_modal, false)
           |> assign(:current_order_id, nil)
           |> put_flash(:info, "Delivery failure reported for order ##{order_id}")
+
         {:noreply, socket}
 
       {:error, _changeset} ->
@@ -323,18 +347,18 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
         <:subtitle>Manage all incoming orders and update their status in real-time</:subtitle>
         <:actions>
           <div class="relative">
-            <button 
+            <button
               phx-click="toggle_notification_center"
               class="p-2 rounded-full hover:bg-gray-100 relative"
               aria-label="Notifications"
             >
               <.icon name="hero-bell" class="h-6 w-6 text-gray-700" />
               <%= if @unread_count > 0 do %>
-                <span 
+                <span
                   class="absolute top-0 right-0 -mt-1 -mr-1 px-2 py-1 text-xs font-bold rounded-full bg-red-500 text-white notification-count"
                   data-testid="notification-count"
                 >
-                  <%= @unread_count %>
+                  {@unread_count}
                 </span>
               <% end %>
             </button>
@@ -342,21 +366,21 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
         </:actions>
       </.header>
       
-      <!-- Notification Center (Always visible for TDD tests) -->
-      <div 
+    <!-- Notification Center (Always visible for TDD tests) -->
+      <div
         data-testid="notification-center"
         class="fixed top-4 right-4 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto"
       >
         <div class="p-3 border-b border-gray-200 flex justify-between items-center">
           <h3 class="font-semibold text-gray-800">Notifications</h3>
-          <button 
+          <button
             phx-click="mark_all_notifications_read"
             class="text-xs text-blue-600 hover:text-blue-800"
           >
             Mark all as read
           </button>
         </div>
-        
+
         <div id="notifications-list">
           <%= if Enum.empty?(@notifications) do %>
             <div class="p-4 text-center text-gray-500">
@@ -364,7 +388,7 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
             </div>
           <% else %>
             <%= for notification <- @notifications do %>
-              <div 
+              <div
                 id={"notification-#{notification.id}"}
                 data-testid="notification-item"
                 data-priority={if(notification.priority == :critical, do: "high", else: "normal")}
@@ -375,7 +399,7 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
                   if(notification.priority == :critical, do: "border-l-4 border-l-red-500", else: "")
                 ]}
               >
-                <button 
+                <button
                   phx-click="dismiss_notification"
                   phx-value-id={notification.id}
                   data-testid="dismiss-notification"
@@ -384,16 +408,16 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
                 >
                   <.icon name="hero-x-mark" class="h-4 w-4" />
                 </button>
-                
+
                 <div class="pr-5">
                   <p class={[
-                    "font-medium", 
+                    "font-medium",
                     if(notification.priority == :critical, do: "text-red-700", else: "text-gray-800")
                   ]}>
-                    <%= notification.title %>
+                    {notification.title}
                   </p>
-                  <p class="text-sm text-gray-600 mt-1"><%= notification.message %></p>
-                  <p class="text-xs text-gray-400 mt-1"><%= format_time_ago(notification.timestamp) %></p>
+                  <p class="text-sm text-gray-600 mt-1">{notification.message}</p>
+                  <p class="text-xs text-gray-400 mt-1">{format_time_ago(notification.timestamp)}</p>
                 </div>
               </div>
             <% end %>
@@ -460,7 +484,7 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
           </div>
         <% end %>
         
-        <!-- New Orders -->
+    <!-- New Orders -->
         <%= if length(@orders_by_status.confirmed) > 0 do %>
           <div>
             <h2 class="text-xl font-bold text-gray-900 mb-4">New Orders</h2>
@@ -518,7 +542,7 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
         <% end %>
       </div>
     </div>
-    
+
     <!-- Modal placeholders for TDD tests -->
     <div data-modal="rejection-modal" style="display: none;">
       <form id="rejection-form" phx-submit="submit_rejection">
@@ -526,7 +550,7 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
         <input name="rejection_notes" type="text" value="" />
       </form>
     </div>
-    
+
     <div data-modal="delivery-failure-modal" style="display: none;">
       <form id="delivery-failure-form" phx-submit="submit_delivery_failure">
         <input name="failure_reason" type="text" value="" />
@@ -579,13 +603,13 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
           <p class="text-sm text-gray-600 mt-1"><strong>Notes:</strong> {@order.delivery_notes}</p>
         <% end %>
         
-        <!-- Customer Contact Information -->
+    <!-- Customer Contact Information -->
         <div class="mt-2 pt-2 border-t border-gray-200">
           <h5 class="font-medium text-gray-800 text-xs mb-1">Customer Contact</h5>
           <div class="flex items-center space-x-3 text-xs">
             <%= if @order.customer_phone do %>
-              <a 
-                href={"tel:#{@order.customer_phone}"} 
+              <a
+                href={"tel:#{@order.customer_phone}"}
                 class="text-blue-600 hover:text-blue-800 underline"
                 data-contact="phone"
                 data-test="customer-phone-link"
@@ -594,8 +618,8 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
               </a>
             <% else %>
               <%= if @order.customer && @order.customer.phone_number do %>
-                <a 
-                  href={"tel:#{@order.customer.phone_number}"} 
+                <a
+                  href={"tel:#{@order.customer.phone_number}"}
                   class="text-blue-600 hover:text-blue-800 underline"
                   data-contact="phone"
                   data-test="customer-phone-link"
@@ -605,7 +629,7 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
               <% end %>
             <% end %>
             <%= if @order.customer_email do %>
-              <a 
+              <a
                 href={"mailto:#{@order.customer_email}"}
                 class="text-blue-600 hover:text-blue-800 underline"
                 data-contact="email"
@@ -615,7 +639,7 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
               </a>
             <% else %>
               <%= if @order.customer do %>
-                <a 
+                <a
                   href={"mailto:#{@order.customer.email}"}
                   class="text-blue-600 hover:text-blue-800 underline"
                   data-contact="email"
@@ -730,53 +754,39 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
   defp create_notification_for_status_change(order, old_status, new_status) do
     # Generate unique ID for notification
     notification_id = :crypto.strong_rand_bytes(8) |> Base.encode16()
-    
-    {title, message, priority} = case {old_status, new_status} do
-      {_, "pending"} ->
-        {"New Order Received", 
-         "Order ##{order.id} has been placed and requires your attention.", 
-         :critical}
-      
-      {"pending", "confirmed"} ->
-        {"Order Confirmed", 
-         "Order ##{order.id} status changed to confirmed", 
-         :normal}
-      
-      {"confirmed", "preparing"} ->
-        {"Order In Progress", 
-         "Order ##{order.id} is now being prepared.", 
-         :normal}
-      
-      {"preparing", "ready"} ->
-        {"Order Ready", 
-         "Order ##{order.id} is ready for delivery.", 
-         :normal}
-      
-      {"ready", "out_for_delivery"} ->
-        {"Order Out for Delivery", 
-         "Order ##{order.id} has been sent for delivery.", 
-         :normal}
-      
-      {"out_for_delivery", "delivered"} ->
-        {"Order Delivered", 
-         "Order ##{order.id} has been successfully delivered.", 
-         :normal}
-      
-      {_, "cancelled"} ->
-        {"Order Cancelled", 
-         "Order ##{order.id} has been cancelled.", 
-         :critical}
-      
-      {_, "delivery_failed"} ->
-        {"Delivery Failed", 
-         "Order ##{order.id} delivery failed and requires attention.", 
-         :critical}
-      
-      _ ->
-        {"Order Updated", 
-         "Order ##{order.id} status changed from #{old_status} to #{new_status}.", 
-         :normal}
-    end
+
+    {title, message, priority} =
+      case {old_status, new_status} do
+        {_, "pending"} ->
+          {"New Order Received",
+           "Order ##{order.id} has been placed and requires your attention.", :critical}
+
+        {"pending", "confirmed"} ->
+          {"Order Confirmed", "Order ##{order.id} status changed to confirmed", :normal}
+
+        {"confirmed", "preparing"} ->
+          {"Order In Progress", "Order ##{order.id} is now being prepared.", :normal}
+
+        {"preparing", "ready"} ->
+          {"Order Ready", "Order ##{order.id} is ready for delivery.", :normal}
+
+        {"ready", "out_for_delivery"} ->
+          {"Order Out for Delivery", "Order ##{order.id} has been sent for delivery.", :normal}
+
+        {"out_for_delivery", "delivered"} ->
+          {"Order Delivered", "Order ##{order.id} has been successfully delivered.", :normal}
+
+        {_, "cancelled"} ->
+          {"Order Cancelled", "Order ##{order.id} has been cancelled.", :critical}
+
+        {_, "delivery_failed"} ->
+          {"Delivery Failed", "Order ##{order.id} delivery failed and requires attention.",
+           :critical}
+
+        _ ->
+          {"Order Updated",
+           "Order ##{order.id} status changed from #{old_status} to #{new_status}.", :normal}
+      end
 
     %{
       id: notification_id,
@@ -793,41 +803,41 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
     # Convert notification event (from DB) to our notification format
     # Use database ID as string for consistency
     notification_id = "event_#{event.id}"
-    
+
     # Extract order info and create appropriate title/message
     order_id = event.data["order_id"]
     new_status = event.data["new_status"] || event.data[:new_status]
     _old_status = event.data["old_status"] || event.data[:old_status]
-    
-    {title, message} = case event.event_type do
-      "order_status_changed" ->
-        if new_status do
-          {"Order Status Changed", 
-           "Order ##{order_id} status changed to #{new_status}"}
-        else
-          {"Order Updated", 
-           "Order ##{order_id} has been updated"}
-        end
-      
-      _ ->
-        {"Notification", 
-         "Order ##{order_id} - #{event.event_type}"}
-    end
-    
+
+    {title, message} =
+      case event.event_type do
+        "order_status_changed" ->
+          if new_status do
+            {"Order Status Changed", "Order ##{order_id} status changed to #{new_status}"}
+          else
+            {"Order Updated", "Order ##{order_id} has been updated"}
+          end
+
+        _ ->
+          {"Notification", "Order ##{order_id} - #{event.event_type}"}
+      end
+
     # Convert priority from string to atom
-    priority = case event.priority do
-      "high" -> :critical
-      "urgent" -> :critical
-      _ -> :normal
-    end
-    
+    priority =
+      case event.priority do
+        "high" -> :critical
+        "urgent" -> :critical
+        _ -> :normal
+      end
+
     %{
       id: notification_id,
       title: title,
       message: message,
       priority: priority,
       timestamp: event.inserted_at,
-      read: event.status != "pending", # Mark as read if not pending
+      # Mark as read if not pending
+      read: event.status != "pending",
       order_id: order_id
     }
   end

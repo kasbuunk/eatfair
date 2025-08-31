@@ -264,7 +264,10 @@ defmodule EatfairWeb.RestaurantLive.DashboardTest do
       %{user: user, restaurant: restaurant}
     end
 
-    test "dashboard shows order counts correctly with no orders", %{user: user, restaurant: _restaurant} do
+    test "dashboard shows order counts correctly with no orders", %{
+      user: user,
+      restaurant: _restaurant
+    } do
       conn = log_in_user(build_conn(), user)
       {:ok, dashboard_live, html} = live(conn, "/restaurant/dashboard")
 
@@ -274,8 +277,10 @@ defmodule EatfairWeb.RestaurantLive.DashboardTest do
       assert html =~ "Real-time order status"
 
       # Zero counts shown when no orders exist
-      assert html =~ "0" # pending count
-      assert html =~ "0" # active count
+      # pending count
+      assert html =~ "0"
+      # active count
+      assert html =~ "0"
       assert html =~ "No orders pending confirmation"
       assert html =~ "No orders currently being processed"
 
@@ -284,109 +289,123 @@ defmodule EatfairWeb.RestaurantLive.DashboardTest do
       assert has_element?(dashboard_live, "[data-test='quick-orders-link']", "Orders")
     end
 
-    test "dashboard shows correct pending and active order counts", %{user: user, restaurant: restaurant} do
+    test "dashboard shows correct pending and active order counts", %{
+      user: user,
+      restaurant: restaurant
+    } do
       # Create orders with various statuses to test counting logic
       customer1 = user_fixture()
-      customer2 = user_fixture() 
+      customer2 = user_fixture()
       customer3 = user_fixture()
       meal = meal_fixture(%{restaurant_id: restaurant.id})
 
       # Create 2 pending orders (should show up as pending_count)
-      {:ok, _pending1} = Eatfair.Orders.create_order_with_items(
-        %{
-          customer_id: customer1.id,
-          restaurant_id: restaurant.id,
-          total_price: meal.price,
-          delivery_address: "Pending Address 1",
-          status: "pending"
-        },
-        [%{meal_id: meal.id, quantity: 1}]
-      )
+      {:ok, _pending1} =
+        Eatfair.Orders.create_order_with_items(
+          %{
+            customer_id: customer1.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Pending Address 1",
+            status: "pending"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
 
-      {:ok, _pending2} = Eatfair.Orders.create_order_with_items(
-        %{
-          customer_id: customer2.id,
-          restaurant_id: restaurant.id,
-          total_price: meal.price,
-          delivery_address: "Pending Address 2",
-          status: "pending"
-        },
-        [%{meal_id: meal.id, quantity: 1}]
-      )
+      {:ok, _pending2} =
+        Eatfair.Orders.create_order_with_items(
+          %{
+            customer_id: customer2.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Pending Address 2",
+            status: "pending"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
 
       # Create 3 active orders (confirmed, preparing, ready = should show up as active_count)
-      {:ok, _confirmed} = Eatfair.Orders.create_order_with_items(
-        %{
-          customer_id: customer1.id,
-          restaurant_id: restaurant.id,
-          total_price: meal.price,
-          delivery_address: "Active Address 1",
-          status: "confirmed"
-        },
-        [%{meal_id: meal.id, quantity: 1}]
-      )
+      {:ok, _confirmed} =
+        Eatfair.Orders.create_order_with_items(
+          %{
+            customer_id: customer1.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Active Address 1",
+            status: "confirmed"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
 
-      {:ok, _preparing} = Eatfair.Orders.create_order_with_items(
-        %{
-          customer_id: customer2.id,
-          restaurant_id: restaurant.id,
-          total_price: meal.price,
-          delivery_address: "Active Address 2",
-          status: "preparing"
-        },
-        [%{meal_id: meal.id, quantity: 1}]
-      )
+      {:ok, _preparing} =
+        Eatfair.Orders.create_order_with_items(
+          %{
+            customer_id: customer2.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Active Address 2",
+            status: "preparing"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
 
-      {:ok, _ready} = Eatfair.Orders.create_order_with_items(
-        %{
-          customer_id: customer3.id,
-          restaurant_id: restaurant.id,
-          total_price: meal.price,
-          delivery_address: "Active Address 3",
-          status: "ready"
-        },
-        [%{meal_id: meal.id, quantity: 1}]
-      )
+      {:ok, _ready} =
+        Eatfair.Orders.create_order_with_items(
+          %{
+            customer_id: customer3.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Active Address 3",
+            status: "ready"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
 
       # Create orders that should NOT count (delivered, cancelled)
-      {:ok, _delivered} = Eatfair.Orders.create_order_with_items(
-        %{
-          customer_id: customer1.id,
-          restaurant_id: restaurant.id,
-          total_price: meal.price,
-          delivery_address: "Delivered Address",
-          status: "delivered"
-        },
-        [%{meal_id: meal.id, quantity: 1}]
-      )
+      {:ok, _delivered} =
+        Eatfair.Orders.create_order_with_items(
+          %{
+            customer_id: customer1.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Delivered Address",
+            status: "delivered"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
 
-      {:ok, _cancelled} = Eatfair.Orders.create_order_with_items(
-        %{
-          customer_id: customer2.id,
-          restaurant_id: restaurant.id,
-          total_price: meal.price,
-          delivery_address: "Cancelled Address",
-          status: "cancelled"
-        },
-        [%{meal_id: meal.id, quantity: 1}]
-      )
+      {:ok, _cancelled} =
+        Eatfair.Orders.create_order_with_items(
+          %{
+            customer_id: customer2.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Cancelled Address",
+            status: "cancelled"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
 
       conn = log_in_user(build_conn(), user)
-      {:ok, _dashboard_live, html} = live(conn, "/restaurant/dashboard")
+{:ok, dashboard_live, html} = live(conn, "/restaurant/dashboard")
 
       # Verify correct counts are displayed
       # Check pending count: should be 2
-      assert html =~ "2" # pending count in main overview
+      # pending count in main overview
+      assert html =~ "2"
       assert html =~ "Orders waiting for your confirmation"
-      assert html =~ "Needs Action" # badge for pending orders > 0
-      
-      # Check active count: should be 3 (confirmed + preparing + ready)
-      assert html =~ "3" # active count in main overview
-      assert html =~ "Orders being prepared or delivered"
-      assert html =~ "In Progress" # badge for active orders > 0
+      # badge for pending orders > 0
+      assert html =~ "Needs Action"
 
-      # Quick access link should show pending count badge
-      assert html =~ "<span class=\"ml-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full\">\n              2"
+      # Check active count: should be 3 (confirmed + preparing + ready)
+      # active count in main overview
+      assert html =~ "3"
+      assert html =~ "Orders being prepared or delivered"
+      # badge for active orders > 0
+      assert html =~ "In Progress"
+
+      # Quick access link should show pending count badge (whitespace-tolerant check)
+      assert has_element?(dashboard_live, "[data-test='quick-orders-link'] span", "2")
     end
 
     test "dashboard navigation links work correctly", %{user: user, restaurant: _restaurant} do
@@ -413,7 +432,7 @@ defmodule EatfairWeb.RestaurantLive.DashboardTest do
 
       # Test quick access link navigation
       {:ok, dashboard_live2, _html} = live(conn, "/restaurant/dashboard")
-      
+
       quick_orders_result =
         dashboard_live2
         |> element("[data-test='quick-orders-link']")
@@ -440,51 +459,61 @@ defmodule EatfairWeb.RestaurantLive.DashboardTest do
       {:ok, _dashboard_live, html} = live(conn, "/restaurant/dashboard")
 
       # Should have gray styling when counts are 0
-      assert html =~ "bg-gray-50 border-gray-200" # gray background for zero counts
-      assert html =~ "text-gray-500" # gray text for zero counts
+      # gray background for zero counts
+      assert html =~ "bg-gray-50 border-gray-200"
+      # gray text for zero counts
+      assert html =~ "text-gray-500"
 
       # Add a pending order
-      {:ok, _pending} = Eatfair.Orders.create_order_with_items(
-        %{
-          customer_id: customer.id,
-          restaurant_id: restaurant.id,
-          total_price: meal.price,
-          delivery_address: "Test Pending Address",
-          status: "pending"
-        },
-        [%{meal_id: meal.id, quantity: 1}]
-      )
+      {:ok, _pending} =
+        Eatfair.Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Test Pending Address",
+            status: "pending"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
 
       # Reload dashboard
       {:ok, _dashboard_live2, html2} = live(conn, "/restaurant/dashboard")
 
       # Should now have red styling for pending orders
-      assert html2 =~ "bg-red-50 border-red-200" # red background for pending > 0
-      assert html2 =~ "text-red-700" # red text for pending > 0
-      assert html2 =~ "Needs Action" # action badge
+      # red background for pending > 0
+      assert html2 =~ "bg-red-50 border-red-200"
+      # red text for pending > 0
+      assert html2 =~ "text-red-700"
+      # action badge
+      assert html2 =~ "Needs Action"
 
       # Add an active order
-      {:ok, _confirmed} = Eatfair.Orders.create_order_with_items(
-        %{
-          customer_id: customer.id,
-          restaurant_id: restaurant.id,
-          total_price: meal.price,
-          delivery_address: "Test Active Address",
-          status: "confirmed"
-        },
-        [%{meal_id: meal.id, quantity: 1}]
-      )
+      {:ok, _confirmed} =
+        Eatfair.Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Test Active Address",
+            status: "confirmed"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
 
       # Reload dashboard
       {:ok, _dashboard_live3, html3} = live(conn, "/restaurant/dashboard")
 
       # Should now have blue styling for active orders
-      assert html3 =~ "bg-blue-50 border-blue-200" # blue background for active > 0
-      assert html3 =~ "text-blue-700" # blue text for active > 0
-      assert html3 =~ "In Progress" # progress badge
+      # blue background for active > 0
+      assert html3 =~ "bg-blue-50 border-blue-200"
+      # blue text for active > 0
+      assert html3 =~ "text-blue-700"
+      # progress badge
+      assert html3 =~ "In Progress"
     end
   end
-  
+
   describe "🔄 Live Updates: Real-time Dashboard Experience" do
     setup do
       # Create restaurant owner with existing restaurant
@@ -509,102 +538,124 @@ defmodule EatfairWeb.RestaurantLive.DashboardTest do
       %{user: user, restaurant: restaurant}
     end
 
-    test "dashboard subscribes to PubSub and updates counts on order status changes", %{user: user, restaurant: restaurant} do
+    test "dashboard subscribes to PubSub and updates counts on order status changes", %{
+      user: user,
+      restaurant: restaurant
+    } do
       customer = user_fixture()
       meal = meal_fixture(%{restaurant_id: restaurant.id})
-      
+
       conn = log_in_user(build_conn(), user)
       {:ok, dashboard_live, html} = live(conn, "/restaurant/dashboard")
-      
+
       # Initial state: zero counts
-      assert html =~ "0" # pending count
-      assert html =~ "0" # active count
+      # pending count
+      assert html =~ "0"
+      # active count
+      assert html =~ "0"
       assert has_element?(dashboard_live, "[data-test='connection-status']", "Live")
-      
+
       # Create a new pending order - should trigger live update
-      {:ok, order} = Orders.create_order_with_items(
-        %{
-          customer_id: customer.id,
-          restaurant_id: restaurant.id,
-          total_price: meal.price,
-          delivery_address: "Live Update Address",
-          status: "pending"
-        },
-        [%{meal_id: meal.id, quantity: 1}]
-      )
-      
+      {:ok, order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Live Update Address",
+            status: "pending"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
+
       # Simulate the PubSub broadcast that would happen in production
       send(dashboard_live.pid, {:order_status_updated, order, nil})
-      
+
       # Dashboard should update to show 1 pending order
       html = render(dashboard_live)
-      assert html =~ "1" # pending count should now be 1
+      # pending count should now be 1
+      assert html =~ "1"
       assert html =~ "Orders waiting for your confirmation"
       assert html =~ "Needs Action"
-      
+
       # Update order to confirmed - should move from pending to active
       {:ok, updated_order} = Orders.update_order_status(order, "confirmed")
       send(dashboard_live.pid, {:order_status_updated, updated_order, "pending"})
-      
+
       # Dashboard should now show 0 pending, 1 active
       html = render(dashboard_live)
-      assert html =~ "0" # pending count back to 0
-      assert html =~ "1" # active count now 1
+      # pending count back to 0
+      assert html =~ "0"
+      # active count now 1
+      assert html =~ "1"
       assert html =~ "In Progress"
     end
-    
-    test "connection status indicator shows connection state", %{user: user, restaurant: _restaurant} do
+
+    test "connection status indicator shows connection state", %{
+      user: user,
+      restaurant: _restaurant
+    } do
       conn = log_in_user(build_conn(), user)
       {:ok, dashboard_live, html} = live(conn, "/restaurant/dashboard")
-      
+
       # Initially connected
       assert has_element?(dashboard_live, "[data-test='connection-status']", "Live")
-      assert html =~ "bg-green-500" # green dot for connected
-      assert html =~ "text-green-600" # green text for connected
-      
+      # green dot for connected
+      assert html =~ "bg-green-500"
+      # green text for connected
+      assert html =~ "text-green-600"
+
       # Simulate connection loss
       send(dashboard_live.pid, {:connection_status, :disconnected})
-      
+
       html = render(dashboard_live)
       assert html =~ "Offline"
-      assert html =~ "bg-red-500" # red dot for disconnected
-      assert html =~ "text-red-600" # red text for disconnected
-      
+      # red dot for disconnected
+      assert html =~ "bg-red-500"
+      # red text for disconnected
+      assert html =~ "text-red-600"
+
       # Simulate reconnection
       send(dashboard_live.pid, {:connection_status, :connected})
-      
+
       html = render(dashboard_live)
       assert html =~ "Live"
-      assert html =~ "bg-green-500" # green dot for connected again
+      # green dot for connected again
+      assert html =~ "bg-green-500"
     end
-    
-    test "last updated timestamp updates when order counts change", %{user: user, restaurant: restaurant} do
+
+    test "last updated timestamp updates when order counts change", %{
+      user: user,
+      restaurant: restaurant
+    } do
       customer = user_fixture()
       meal = meal_fixture(%{restaurant_id: restaurant.id})
-      
+
       conn = log_in_user(build_conn(), user)
       {:ok, dashboard_live, html} = live(conn, "/restaurant/dashboard")
-      
+
       # Check initial timestamp (should be 0s ago)
       assert html =~ "Updated 0s ago"
-      
+
       # Wait a moment and create an order
-      :timer.sleep(1100) # Just over a second
-      
-      {:ok, order} = Orders.create_order_with_items(
-        %{
-          customer_id: customer.id,
-          restaurant_id: restaurant.id,
-          total_price: meal.price,
-          delivery_address: "Timestamp Test Address",
-          status: "pending"
-        },
-        [%{meal_id: meal.id, quantity: 1}]
-      )
-      
+      # Just over a second
+      :timer.sleep(1100)
+
+      {:ok, order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Timestamp Test Address",
+            status: "pending"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
+
       # Trigger update
       send(dashboard_live.pid, {:order_status_updated, order, nil})
-      
+
       # Timestamp should update to 0s ago (fresh update)
       html = render(dashboard_live)
       assert html =~ "Updated 0s ago"

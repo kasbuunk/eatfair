@@ -7,7 +7,7 @@ defmodule Eatfair.Repo.Migrations.AddMarketingPreferencesToUserNotificationPrefe
       add :marketing_opted_in_at, :utc_datetime
       add :marketing_opted_out_at, :utc_datetime
     end
-    
+
     create index(:user_notification_preferences, [:marketing_opt_in])
   end
 end

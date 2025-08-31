@@ -6,7 +6,16 @@ defmodule Eatfair.Accounts do
   import Ecto.Query, warn: false
   alias Eatfair.Repo
 
-  alias Eatfair.Accounts.{User, UserToken, UserNotifier, Address, EmailVerification, TermsAcceptance, UserNotificationPreference}
+  alias Eatfair.Accounts.{
+    User,
+    UserToken,
+    UserNotifier,
+    Address,
+    EmailVerification,
+    TermsAcceptance,
+    UserNotificationPreference
+  }
+
   alias Eatfair.Orders
 
   ## Database getters
@@ -247,9 +256,9 @@ defmodule Eatfair.Accounts do
   Updates the user password.
 
   Returns a tuple with the updated user, as well as a list of expired tokens.
-  
+
   ## Security Note
-  
+
   This function enforces email immutability by rejecting any attempts to update
   the email field alongside password changes. Email updates must be done through
   the dedicated email verification flow.
@@ -270,10 +279,11 @@ defmodule Eatfair.Accounts do
     # Enforce email immutability - reject if email field is present
     if Map.has_key?(attrs, :email) || Map.has_key?(attrs, "email") do
       # Create a changeset with email immutability error
-      changeset = user
-      |> User.password_changeset(attrs)
-      |> Ecto.Changeset.add_error(:email, "cannot be changed through password update")
-      
+      changeset =
+        user
+        |> User.password_changeset(attrs)
+        |> Ecto.Changeset.add_error(:email, "cannot be changed through password update")
+
       {:error, changeset}
     else
       user
@@ -602,30 +612,37 @@ defmodule Eatfair.Accounts do
   def upsert_user_addresses(user, delivery_attrs, invoice_attrs \\ nil, same_as_delivery \\ true) do
     Repo.transaction(fn ->
       # Create delivery address as default
-      delivery_result = create_address(Map.merge(delivery_attrs, %{
-        "user_id" => user.id,
-        "name" => "Delivery Address",
-        "is_default" => true
-      }))
+      delivery_result =
+        create_address(
+          Map.merge(delivery_attrs, %{
+            "user_id" => user.id,
+            "name" => "Delivery Address",
+            "is_default" => true
+          })
+        )
 
       case delivery_result do
         {:ok, delivery_address} ->
           # Create invoice address if different from delivery
-          invoice_result = if same_as_delivery do
-            # Use delivery address as invoice address (don't create duplicate)
-            {:ok, delivery_address}
-          else
-            # Create separate invoice address
-            create_address(Map.merge(invoice_attrs || %{}, %{
-              "user_id" => user.id,
-              "name" => "Invoice Address",
-              "is_default" => false
-            }))
-          end
+          invoice_result =
+            if same_as_delivery do
+              # Use delivery address as invoice address (don't create duplicate)
+              {:ok, delivery_address}
+            else
+              # Create separate invoice address
+              create_address(
+                Map.merge(invoice_attrs || %{}, %{
+                  "user_id" => user.id,
+                  "name" => "Invoice Address",
+                  "is_default" => false
+                })
+              )
+            end
 
           case invoice_result do
             {:ok, invoice_address} ->
               {delivery_address, invoice_address}
+
             {:error, changeset} ->
               Repo.rollback({:invoice_error, changeset})
           end
@@ -844,10 +861,10 @@ defmodule Eatfair.Accounts do
   defp maybe_create_account_for_order(verification) do
     # Only create/upgrade account if:
     # 1. Verification has an associated order
-    
+
     if verification.order_id do
       existing_user = get_user_by_email(verification.email)
-      
+
       # Create or upgrade account if:
       # - No user exists, OR
       # - User exists but is unconfirmed (soft account)
@@ -915,9 +932,9 @@ defmodule Eatfair.Accounts do
   @doc """
   Updates marketing preferences for a user.
   Creates/updates user notification preferences with marketing opt-in timestamp.
-  
+
   ## Examples
-  
+
       iex> update_marketing_preferences(user, true)
       {:ok, %UserNotificationPreference{}}
   """
@@ -928,7 +945,7 @@ defmodule Eatfair.Accounts do
       marketing_emails: opted_in,
       marketing_opt_in_at: if(opted_in, do: DateTime.utc_now(), else: nil)
     }
-    
+
     # Upsert preferences
     case Repo.get_by(UserNotificationPreference, user_id: user.id) do
       nil ->
@@ -936,7 +953,7 @@ defmodule Eatfair.Accounts do
         %UserNotificationPreference{}
         |> UserNotificationPreference.changeset(attrs)
         |> Repo.insert()
-        
+
       existing_prefs ->
         # Update existing preferences
         existing_prefs
@@ -950,9 +967,9 @@ defmodule Eatfair.Accounts do
   @doc """
   Records a terms and conditions acceptance for a user.
   Creates an immutable audit record for legal compliance.
-  
+
   ## Examples
-  
+
       iex> record_terms_acceptance(user, %{ip_address: "127.0.0.1", user_agent: "Browser"})
       {:ok, %TermsAcceptance{}}
   """
@@ -961,11 +978,11 @@ defmodule Eatfair.Accounts do
       user_id: user.id,
       terms_version: "v1.0"
     }
-    
+
     TermsAcceptance.create_changeset(attrs, metadata)
     |> Repo.insert()
   end
-  
+
   @doc """
   Gets the terms acceptance history for a user.
   Returns all terms acceptances ordered by most recent first.
@@ -976,7 +993,7 @@ defmodule Eatfair.Accounts do
     |> order_by([t], desc: t.accepted_at)
     |> Repo.all()
   end
-  
+
   @doc """
   Checks if a user has accepted the current terms and conditions.
   """

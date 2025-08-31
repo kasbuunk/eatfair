@@ -12,6 +12,7 @@ defmodule Eatfair.Orders do
   alias Eatfair.Orders.OrderStatusEvent
   alias Eatfair.Orders.CourierLocationUpdate
   alias Eatfair.Refunds
+  alias Eatfair.Notifications
 
   @doc """
   Counts orders based on optional filters for admin dashboard metrics.
@@ -174,15 +175,15 @@ defmodule Eatfair.Orders do
 
   @doc """
   Counts pending orders for a restaurant that need confirmation.
-  
+
   Returns the number of orders with status "pending" for the given restaurant.
   Used by restaurant dashboard to show at-a-glance order confirmation needs.
-  
+
   ## Examples
-  
+
       iex> count_pending_confirmations(restaurant_id)
       3
-  
+
   """
   def count_pending_confirmations(restaurant_id) do
     count_restaurant_orders_by_status(restaurant_id, "pending")
@@ -190,19 +191,24 @@ defmodule Eatfair.Orders do
 
   @doc """
   Counts active orders for a restaurant (confirmed through out_for_delivery).
-  
+
   Returns the number of orders that are currently being processed by the restaurant.
   Includes statuses: "confirmed", "preparing", "ready", "out_for_delivery".
   Excludes: "pending", "delivered", "cancelled".
-  
+
   ## Examples
-  
+
       iex> count_active_orders(restaurant_id)
       12
-  
+
   """
   def count_active_orders(restaurant_id) do
-    count_restaurant_orders_by_status(restaurant_id, ["confirmed", "preparing", "ready", "out_for_delivery"])
+    count_restaurant_orders_by_status(restaurant_id, [
+      "confirmed",
+      "preparing",
+      "ready",
+      "out_for_delivery"
+    ])
   end
 
   @doc """
@@ -448,7 +454,14 @@ defmodule Eatfair.Orders do
           updated_order,
           old_status,
           new_status,
-          Map.take(attrs, [:delay_reason, :estimated_delivery_at, :rejection_reason, :rejection_notes, :failure_reason, :failure_notes])
+          Map.take(attrs, [
+            :delay_reason,
+            :estimated_delivery_at,
+            :rejection_reason,
+            :rejection_notes,
+            :failure_reason,
+            :failure_notes
+          ])
         )
 
         # Create refund if order is rejected or delivery failed
@@ -574,8 +587,10 @@ defmodule Eatfair.Orders do
       "out_for_delivery" -> Map.put(attrs, :out_for_delivery_at, timestamp)
       "delivered" -> Map.put(attrs, :delivered_at, timestamp)
       "cancelled" -> Map.put(attrs, :cancelled_at, timestamp)
-      "rejected" -> attrs  # No specific timestamp for rejected, use general timestamps
-      "delivery_failed" -> attrs  # No specific timestamp for delivery_failed, use general timestamps
+      # No specific timestamp for rejected, use general timestamps
+      "rejected" -> attrs
+      # No specific timestamp for delivery_failed, use general timestamps
+      "delivery_failed" -> attrs
       _ -> attrs
     end
   end
@@ -1020,52 +1035,188 @@ defmodule Eatfair.Orders do
       "cancelled" ->
         # Order was rejected - create a refund
         reason_details = build_refund_reason_details("order_rejected", attrs)
-        
+
         case Refunds.create_refund_for_order(order, %{
-          reason: "order_rejected",
-          reason_details: reason_details
-        }) do
+               reason: "order_rejected",
+               reason_details: reason_details
+             }) do
           {:ok, _refund} -> :ok
-          {:error, _changeset} -> :ok  # Log error but don't fail the order update
+          # Log error but don't fail the order update
+          {:error, _changeset} -> :ok
         end
-        
+
       "delivery_failed" ->
         # Delivery failed - create a refund
         reason_details = build_refund_reason_details("delivery_failed", attrs)
-        
+
         case Refunds.create_refund_for_order(order, %{
-          reason: "delivery_failed", 
-          reason_details: reason_details
-        }) do
+               reason: "delivery_failed",
+               reason_details: reason_details
+             }) do
           {:ok, _refund} -> :ok
-          {:error, _changeset} -> :ok  # Log error but don't fail the order update
+          # Log error but don't fail the order update
+          {:error, _changeset} -> :ok
         end
-        
-      _ -> :ok
+
+      _ ->
+        :ok
     end
   end
-  
+
   defp build_refund_reason_details("order_rejected", attrs) do
     rejection_reason = attrs[:rejection_reason] || "order_rejected"
     rejection_notes = attrs[:rejection_notes]
-    
+
     details = "Order rejected - #{rejection_reason}"
+
     if rejection_notes do
       details <> ": #{rejection_notes}"
     else
       details
     end
   end
-  
+
   defp build_refund_reason_details("delivery_failed", attrs) do
     failure_reason = attrs[:failure_reason] || "delivery_failed"
     failure_notes = attrs[:failure_notes]
-    
+
     details = "Delivery failed - #{failure_reason}"
+
     if failure_notes do
       details <> ": #{failure_notes}"
     else
       details
     end
   end
+
+  @doc """
+  Accepts the customer's desired ETA for an order.
+  Marks eta_accepted as true and clears any pending proposals.
+  """
+  def accept_desired_eta(%Order{} = order) do
+    order
+    |> Order.changeset(%{
+      eta_accepted: true,
+      eta_pending: false,
+      proposed_eta: nil
+    })
+    |> Repo.update()
+    |> case do
+      {:ok, updated_order} ->
+        # Preload associations for notifications
+        updated_order = updated_order |> Repo.preload([:restaurant, :customer])
+        # Create notification event
+        create_eta_notification(updated_order, "eta_accepted")
+        {:ok, updated_order}
+
+      error ->
+        error
+    end
+  end
+
+  @doc """
+  Proposes an alternative ETA for an order.
+  Sets eta_pending to true and stores the proposed time.
+  """
+  def propose_alternative_eta(%Order{} = order, proposed_time) do
+    order
+    |> Order.changeset(%{
+      eta_accepted: false,
+      eta_pending: true,
+      proposed_eta: proposed_time
+    })
+    |> Repo.update()
+    |> case do
+      {:ok, updated_order} ->
+        # Preload associations for notifications  
+        updated_order = updated_order |> Repo.preload([:restaurant, :customer])
+        # Create notification event
+        create_eta_notification(updated_order, "eta_proposed")
+        {:ok, updated_order}
+
+      error ->
+        error
+    end
+  end
+
+  @doc """
+  Accepts a restaurant's proposed ETA.
+  Updates the desired_delivery_at to the proposed time and marks as accepted.
+  """
+  def accept_proposed_eta(%Order{} = order) do
+    case order.proposed_eta do
+      nil ->
+        {:error, "No proposed ETA to accept"}
+
+      proposed_time ->
+        order
+        |> Order.changeset(%{
+          desired_delivery_at: proposed_time,
+          eta_accepted: true,
+          eta_pending: false,
+          proposed_eta: nil
+        })
+        |> Repo.update()
+        |> case do
+          {:ok, updated_order} ->
+            # Create notification event
+            create_eta_notification(updated_order, "eta_accepted_by_customer")
+            {:ok, updated_order}
+
+          error ->
+            error
+        end
+    end
+  end
+
+  # Helper function to create ETA-related notifications
+  defp create_eta_notification(order, event_type) do
+    case event_type do
+      "eta_accepted" ->
+        Notifications.create_event(%{
+          event_type: "eta_accepted",
+          recipient_id: order.customer_id,
+          priority: "normal",
+          data: %{
+            order_id: order.id,
+            restaurant_name: order.restaurant.name,
+            message: "Your desired delivery time has been confirmed!"
+          }
+        })
+
+      "eta_proposed" ->
+        Notifications.create_event(%{
+          event_type: "eta_proposed",
+          recipient_id: order.customer_id,
+          priority: "high",
+          data: %{
+            order_id: order.id,
+            restaurant_name: order.restaurant.name,
+            proposed_eta: order.proposed_eta,
+            message: "The restaurant has proposed a different delivery time"
+          }
+        })
+
+      "eta_accepted_by_customer" ->
+        # Notify restaurant that customer accepted their proposal
+        Notifications.create_event(%{
+          event_type: "eta_accepted_by_customer",
+          recipient_id: order.restaurant.owner_id,
+          priority: "normal",
+          data: %{
+            order_id: order.id,
+            customer_email: primary_email(order),
+            message: "Customer accepted your proposed delivery time"
+          }
+        })
+    end
+  rescue
+    # Don't fail the order update if notification creation fails
+    _error -> :ok
+  end
+
+  # Helper to get primary email from order
+  defp primary_email(%Order{customer_id: nil, customer_email: email}), do: email
+  defp primary_email(%Order{customer: %{email: email}}), do: email
+  defp primary_email(_), do: nil
 end

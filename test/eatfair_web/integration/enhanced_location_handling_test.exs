@@ -70,6 +70,7 @@ defmodule EatfairWeb.EnhancedLocationHandlingTest do
 
       # Step 3: Click on restaurant to navigate to detail page - use the actual restaurant that appears
       restaurant_id = 26
+
       discovery_view
       |> element("button[phx-value-id='#{restaurant_id}']", "View Menu")
       |> render_click()

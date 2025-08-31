@@ -138,7 +138,7 @@ defmodule EatfairWeb.Live.AddressAutocompleteIntegrationTest do
 
       # Debug: Check if the cuisine checkbox is enabled first
       html = render(view)
-      
+
       # Check if the cuisine input is disabled (count == 0 means no restaurants with this cuisine)
       if html =~ ~r/input[^>]*phx-value-cuisine_id="#{italian_cuisine.id}"[^>]*disabled/ do
         # If disabled due to no count, this means the restaurant-cuisine association

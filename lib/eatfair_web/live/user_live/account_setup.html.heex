@@ -3,7 +3,9 @@
     <div class="text-center mb-8">
       <.header>
         Set Up Your Account
-        <:subtitle>Secure your account or continue without a password — both give you full access</:subtitle>
+        <:subtitle>
+          Secure your account or continue without a password — both give you full access
+        </:subtitle>
       </.header>
     </div>
 
@@ -27,8 +29,8 @@
           required={true}
         />
       </fieldset>
-
-      <!-- Delivery Address -->
+      
+<!-- Delivery Address -->
       <fieldset class="space-y-4 border border-gray-200 rounded-lg p-6">
         <legend class="text-lg font-medium text-gray-900 px-2">
           Delivery Address
@@ -93,8 +95,8 @@
           </div>
         </div>
       </fieldset>
-
-      <!-- Invoice Address -->
+      
+<!-- Invoice Address -->
       <fieldset class="space-y-4 border border-gray-200 rounded-lg p-6">
         <legend class="text-lg font-medium text-gray-900 px-2">
           Invoice Address
@@ -112,7 +114,7 @@
             Invoice address same as delivery address
           </span>
         </label>
-        
+
         <div class={unless(@same_as_delivery, do: "space-y-4", else: "space-y-4 opacity-50")}>
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="fieldset mb-2">
@@ -176,8 +178,8 @@
           </div>
         </div>
       </fieldset>
-
-      <!-- Account Security (Optional) -->
+      
+<!-- Account Security (Optional) -->
       <fieldset class="space-y-4 border border-gray-200 rounded-lg p-6">
         <legend class="text-lg font-medium text-gray-900 px-2">
           Account Security (Optional)
@@ -200,8 +202,8 @@
           />
         </div>
       </fieldset>
-
-      <!-- Marketing Preferences -->
+      
+<!-- Marketing Preferences -->
       <fieldset class="space-y-4 border border-gray-200 rounded-lg p-6">
         <legend class="text-lg font-medium text-gray-900 px-2">
           Preferences
@@ -219,8 +221,8 @@
           </span>
         </label>
       </fieldset>
-
-      <!-- Terms Acceptance (Required for Both Flows) -->
+      
+<!-- Terms Acceptance (Required for Both Flows) -->
       <div class="border-t border-gray-200 pt-6">
         <label class="flex items-start gap-3 mb-6">
           <input
@@ -252,13 +254,13 @@
           >
             Complete Setup with Password
           </.button>
-          
+
           <div class="or-separator flex items-center justify-center py-2 md:hidden">
             <div class="border-t border-gray-300 flex-grow"></div>
             <span class="px-4 text-sm font-medium text-gray-500 bg-white">OR</span>
             <div class="border-t border-gray-300 flex-grow"></div>
           </div>
-          
+
           <.button
             type="button"
             phx-click="skip"
@@ -267,7 +269,7 @@
             Complete Setup without Password
           </.button>
         </div>
-        
+
         <div class="or-separator hidden md:flex items-center justify-center py-4">
           <div class="border-t border-gray-300 flex-grow"></div>
           <span class="px-4 text-sm font-medium text-gray-500 bg-white">OR</span>

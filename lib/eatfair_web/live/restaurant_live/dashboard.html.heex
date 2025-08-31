@@ -1,437 +1,465 @@
 <Layouts.app flash={@flash} current_scope={@current_scope}>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" data-test="restaurant-dashboard">
-  <!-- Header with Restaurant Info and Status -->
-  <div class="bg-white shadow rounded-lg p-6 mb-8">
-    <div class="flex items-center justify-between">
-      <div class="flex items-center">
-        <%= if @restaurant.image_url do %>
-          <img
-            src={@restaurant.image_url}
-            alt={@restaurant.name}
-            class="w-16 h-16 rounded-lg object-cover mr-4"
-          />
-        <% else %>
-          <div class="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center mr-4">
-            <.icon name="hero-building-storefront" class="w-8 h-8 text-gray-400" />
-          </div>
-        <% end %>
-
-        <div>
-          <h1 class="text-3xl font-bold text-gray-900">{@restaurant.name}</h1>
-          <p class="text-gray-600">{@restaurant.address}</p>
-          <%= if @restaurant.description do %>
-            <p class="text-gray-500 mt-1">{@restaurant.description}</p>
-          <% end %>
-        </div>
-      </div>
-      
-<!-- Status Toggle -->
-      <div class="flex items-center space-x-4">
-        <.link
-          href={~p"/restaurant/orders"}
-          data-test="quick-orders-link"
-          class="inline-flex items-center px-3 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors"
-          title="Quick access to order management"
-        >
-          <.icon name="hero-clipboard-document-list" class="w-4 h-4 mr-1" />
-          Orders
-          <%= if assigns[:pending_count] && @pending_count > 0 do %>
-            <span class="ml-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
-              {@pending_count}
-            </span>
-          <% end %>
-        </.link>
-        <%= if @restaurant.is_open do %>
-          <div class="flex items-center" data-test="restaurant-status-open">
-            <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
-            <span class="text-green-700 font-semibold">Open</span>
-          </div>
-        <% else %>
-          <div class="flex items-center" data-test="restaurant-status-closed">
-            <div class="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
-            <span class="text-red-700 font-semibold">Closed</span>
-          </div>
-        <% end %>
-
-        <button
-          phx-click="toggle_status"
-          data-test="toggle-restaurant-status"
-          class={"px-4 py-2 rounded-md font-medium transition-colors #{if @restaurant.is_open, do: "bg-red-100 text-red-700 hover:bg-red-200", else: "bg-green-100 text-green-700 hover:bg-green-200"}"}
-        >
-          {if @restaurant.is_open, do: "Close Restaurant", else: "Open Restaurant"}
-        </button>
-      </div>
-    </div>
-  </div>
-  
-<!-- Quick Stats -->
-  <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
-    <div class="bg-white shadow rounded-lg p-6">
-      <div class="flex items-center">
-        <.icon name="hero-clock" class="w-8 h-8 text-blue-500 mr-3" />
-        <div>
-          <p class="text-2xl font-semibold text-gray-900">
-            {@restaurant.avg_preparation_time || 30} min
-          </p>
-          <p class="text-gray-600">
-            Average prep time: {@restaurant.avg_preparation_time || 30} minutes
-          </p>
-        </div>
-      </div>
-    </div>
-
-    <div class="bg-white shadow rounded-lg p-6">
-      <div class="flex items-center">
-        <.icon name="hero-currency-euro" class="w-8 h-8 text-green-500 mr-3" />
-        <div>
-          <p class="text-2xl font-semibold text-gray-900">
-            €{Decimal.to_string(@restaurant.min_order_value || Decimal.new("0"))}
-          </p>
-          <p class="text-gray-600">Minimum order</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="bg-white shadow rounded-lg p-6">
-      <div class="flex items-center">
-        <.icon name="hero-map-pin" class="w-8 h-8 text-purple-500 mr-3" />
-        <div>
-          <p class="text-2xl font-semibold text-gray-900">
-            {@restaurant.delivery_radius_km || 5} km
-          </p>
-          <p class="text-gray-600">Delivery radius</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="bg-white shadow rounded-lg p-6">
-      <div class="flex items-center">
-        <.icon name="hero-star" class="w-8 h-8 text-yellow-500 mr-3" />
-        <div>
-          <p class="text-2xl font-semibold text-gray-900">
-            {if @restaurant.rating, do: Decimal.to_string(@restaurant.rating), else: "New"}
-          </p>
-          <p class="text-gray-600">Rating</p>
-        </div>
-      </div>
-    </div>
-  </div>
-  
-<!-- Order Overview Section -->
-  <div class="bg-white shadow-lg rounded-lg border border-gray-200 p-6 mb-8" data-test="order-overview-section">
-    <div class="flex items-center justify-between mb-6">
-      <div class="flex items-center">
-        <.icon name="hero-clipboard-document-list" class="w-8 h-8 text-indigo-500 mr-3" />
-        <div>
-          <h2 class="text-xl font-semibold text-gray-900">Order Management</h2>
-          <div class="flex items-center space-x-2">
-            <p class="text-gray-600">Real-time order status and management</p>
-            <div class="flex items-center space-x-1 text-xs" data-test="connection-status">
-              <div class={[
-                "w-2 h-2 rounded-full",
-                (if @connection_status == :connected, do: "bg-green-500", else: "bg-red-500")
-              ]}></div>
-              <span class={[
-                "font-medium",
-                (if @connection_status == :connected, do: "text-green-600", else: "text-red-600")
-              ]}>
-                <%= if @connection_status == :connected do %>
-                  Live
-                <% else %>
-                  Offline
-                <% end %>
-              </span>
-              <span class="text-gray-400">•</span>
-              <span class="text-gray-500">
-                Updated {DateTime.diff(DateTime.utc_now(), @last_updated, :second)}s ago
-              </span>
+    <!-- Header with Restaurant Info and Status -->
+    <div class="bg-white shadow rounded-lg p-6 mb-8">
+      <div class="flex items-center justify-between">
+        <div class="flex items-center">
+          <%= if @restaurant.image_url do %>
+            <img
+              src={@restaurant.image_url}
+              alt={@restaurant.name}
+              class="w-16 h-16 rounded-lg object-cover mr-4"
+            />
+          <% else %>
+            <div class="w-16 h-16 rounded-lg bg-gray-200 flex items-center justify-center mr-4">
+              <.icon name="hero-building-storefront" class="w-8 h-8 text-gray-400" />
             </div>
-          </div>
-        </div>
-      </div>
-      <div class="flex items-center space-x-3">
-        <!-- Notification Bell -->
-        <div class="relative">
-          <button 
-            phx-click="toggle_notification_center"
-            class="p-2 rounded-full hover:bg-gray-100 relative transition-colors"
-            aria-label="Notifications"
-            data-test="notification-bell"
-          >
-            <.icon name="hero-bell" class="h-6 w-6 text-gray-700" />
-            <%= if @unread_count > 0 do %>
-              <span 
-                class="absolute top-0 right-0 -mt-1 -mr-1 px-2 py-1 text-xs font-bold rounded-full bg-red-500 text-white"
-                data-test="notification-count"
-              >
-                {@unread_count}
-              </span>
+          <% end %>
+
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900">{@restaurant.name}</h1>
+            <p class="text-gray-600">{@restaurant.address}</p>
+            <%= if @restaurant.description do %>
+              <p class="text-gray-500 mt-1">{@restaurant.description}</p>
             <% end %>
-          </button>
+          </div>
         </div>
         
-        <.link
-          href={~p"/restaurant/orders"}
-          data-test="manage-orders-link"
-          class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors font-medium"
-        >
-          <.icon name="hero-arrow-right" class="w-4 h-4 ml-2" /> Manage Orders
-        </.link>
-      </div>
-    </div>
-
-    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-      <!-- Pending Confirmations -->
-      <div class={[
-        "rounded-lg p-4 border-2", 
-        (if @pending_count > 0, do: "bg-red-50 border-red-200", else: "bg-gray-50 border-gray-200")
-      ]}>
-        <div class="flex items-center justify-between">
-          <div class="flex items-center">
-            <.icon 
-              name="hero-exclamation-triangle" 
-              class={Enum.join([
-                "w-6 h-6 mr-3",
-                (if @pending_count > 0, do: "text-red-500", else: "text-gray-400")
-              ], " ")} 
-            />
-            <div>
-              <p class={[
-                "text-2xl font-bold",
-                (if @pending_count > 0, do: "text-red-700", else: "text-gray-500")
-              ]}>
+<!-- Status Toggle -->
+        <div class="flex items-center space-x-4">
+          <.link
+            href={~p"/restaurant/orders"}
+            data-test="quick-orders-link"
+            class="inline-flex items-center px-3 py-2 text-sm font-medium text-indigo-600 hover:text-indigo-800 bg-indigo-50 hover:bg-indigo-100 rounded-md transition-colors"
+            title="Quick access to order management"
+          >
+            <.icon name="hero-clipboard-document-list" class="w-4 h-4 mr-1" /> Orders
+            <%= if assigns[:pending_count] && @pending_count > 0 do %>
+              <span class="ml-1 bg-red-500 text-white text-xs font-bold px-1.5 py-0.5 rounded-full">
                 {@pending_count}
-              </p>
-              <p class={[
-                "text-sm font-medium",
-                (if @pending_count > 0, do: "text-red-600", else: "text-gray-500")
-              ]}>
-                Pending Confirmations
-              </p>
+              </span>
+            <% end %>
+          </.link>
+          <%= if @restaurant.is_open do %>
+            <div class="flex items-center" data-test="restaurant-status-open">
+              <div class="w-3 h-3 bg-green-500 rounded-full mr-2"></div>
+              <span class="text-green-700 font-semibold">Open</span>
             </div>
-          </div>
-          <%= if @pending_count > 0 do %>
-            <div class="bg-red-100 text-red-800 text-xs font-semibold px-2 py-1 rounded-full">
-              Needs Action
-            </div>
-          <% end %>
-        </div>
-        <%= if @pending_count > 0 do %>
-          <p class="text-red-700 text-xs mt-2">
-            Orders waiting for your confirmation
-          </p>
-        <% else %>
-          <p class="text-gray-500 text-xs mt-2">
-            No orders pending confirmation
-          </p>
-        <% end %>
-      </div>
-
-      <!-- Active Orders -->
-      <div class={[
-        "rounded-lg p-4 border-2", 
-        (if @active_count > 0, do: "bg-blue-50 border-blue-200", else: "bg-gray-50 border-gray-200")
-      ]}>
-        <div class="flex items-center justify-between">
-          <div class="flex items-center">
-            <.icon 
-              name="hero-cog-6-tooth" 
-              class={Enum.join([
-                "w-6 h-6 mr-3",
-                (if @active_count > 0, do: "text-blue-500", else: "text-gray-400")
-              ], " ")} 
-            />
-            <div>
-              <p class={[
-                "text-2xl font-bold",
-                (if @active_count > 0, do: "text-blue-700", else: "text-gray-500")
-              ]}>
-                {@active_count}
-              </p>
-              <p class={[
-                "text-sm font-medium",
-                (if @active_count > 0, do: "text-blue-600", else: "text-gray-500")
-              ]}>
-                Active Orders
-              </p>
-            </div>
-          </div>
-          <%= if @active_count > 0 do %>
-            <div class="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded-full">
-              In Progress
+          <% else %>
+            <div class="flex items-center" data-test="restaurant-status-closed">
+              <div class="w-3 h-3 bg-red-500 rounded-full mr-2"></div>
+              <span class="text-red-700 font-semibold">Closed</span>
             </div>
           <% end %>
+
+          <button
+            phx-click="toggle_status"
+            data-test="toggle-restaurant-status"
+            class={"px-4 py-2 rounded-md font-medium transition-colors #{if @restaurant.is_open, do: "bg-red-100 text-red-700 hover:bg-red-200", else: "bg-green-100 text-green-700 hover:bg-green-200"}"}
+          >
+            {if @restaurant.is_open, do: "Close Restaurant", else: "Open Restaurant"}
+          </button>
         </div>
-        <%= if @active_count > 0 do %>
-          <p class="text-blue-700 text-xs mt-2">
-            Orders being prepared or delivered
-          </p>
-        <% else %>
-          <p class="text-gray-500 text-xs mt-2">
-            No orders currently being processed
-          </p>
-        <% end %>
-      </div>
-    </div>
-
-    <%= if @pending_count > 0 or @active_count > 0 do %>
-      <div class="mt-4 text-center">
-        <p class="text-gray-600 text-sm">
-          💡 <strong>Quick access:</strong> Manage all orders from one place with real-time updates
-        </p>
-      </div>
-    <% end %>
-  </div>
-  
-<!-- Main Action Cards -->
-  <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-    <!-- Menu Management -->
-    <div class="bg-white shadow rounded-lg p-6">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-semibold text-gray-900">Menu Management</h2>
-        <.icon name="hero-book-open" class="w-6 h-6 text-gray-400" />
-      </div>
-
-      <p class="text-gray-600 mb-4">
-        Create and manage your menu items, set prices, and control availability.
-      </p>
-
-      <div class="flex space-x-3">
-        <.link
-          href={~p"/restaurant/menu"}
-          data-test="manage-menus-link"
-          class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-        >
-          <.icon name="hero-pencil-square" class="w-4 h-4 mr-2" /> Manage Menus
-        </.link>
-
-        <.link
-          href={~p"/restaurant/menu"}
-          data-test="create-first-menu"
-          class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
-        >
-          <.icon name="hero-plus" class="w-4 h-4 mr-2" /> Create Menu
-        </.link>
       </div>
     </div>
     
-<!-- Restaurant Profile -->
-    <div class="bg-white shadow rounded-lg p-6">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-xl font-semibold text-gray-900">Restaurant Profile</h2>
-        <.icon name="hero-building-storefront" class="w-6 h-6 text-gray-400" />
-      </div>
-
-      <p class="text-gray-600 mb-4">
-        Update your restaurant information, hours, and operational settings.
-      </p>
-
-      <div class="flex space-x-3">
-        <.link
-          href={~p"/restaurant/profile/edit"}
-          data-test="edit-profile-link"
-          class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-        >
-          <.icon name="hero-cog-6-tooth" class="w-4 h-4 mr-2" /> Edit Restaurant
-        </.link>
-      </div>
-    </div>
-  </div>
-  
-<!-- Analytics Section (Future Enhancement) -->
-  <div class="bg-white shadow rounded-lg p-6" data-test="analytics-section">
-    <div class="flex items-center justify-between mb-4">
-      <h2 class="text-xl font-semibold text-gray-900">Business Analytics</h2>
-      <.icon name="hero-chart-bar-square" class="w-6 h-6 text-gray-400" />
-    </div>
-
-    <div class="text-center py-8">
-      <.icon name="hero-chart-pie" class="w-16 h-16 text-gray-300 mx-auto mb-4" />
-      <p class="text-gray-500 text-lg mb-2">Analytics coming soon!</p>
-      <p class="text-gray-400">
-        We're building powerful insights to help you understand your customers and grow your business.
-      </p>
-    </div>
-  </div>
-  
-<!-- Inspiration Footer -->
-  <div class="mt-12 text-center">
-    <div class="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-8">
-      <h3 class="text-2xl font-semibold text-gray-900 mb-2">
-        🎉 You're Empowering Your Community!
-      </h3>
-      <p class="text-gray-600 mb-4">
-        Every order through EatFair means you keep 100% of your revenue while building direct relationships with your customers.
-      </p>
-      <div class="flex justify-center space-x-6 text-sm text-gray-500">
-        <span>✓ Zero Commission Fees</span>
-        <span>✓ Own Your Customer Data</span>
-        <span>✓ Build Your Brand</span>
-        <span>✓ Community First</span>
-      </div>
-    </div>
-  </div>
-  
-  <!-- Notification Center -->
-  <%= if @show_notification_center do %>
-    <div 
-      class="fixed top-20 right-4 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto"
-      data-test="notification-center"
-    >
-      <div class="p-3 border-b border-gray-200 flex justify-between items-center">
-        <h3 class="font-semibold text-gray-800">Recent Updates</h3>
-        <button 
-          phx-click="toggle_notification_center"
-          class="text-gray-400 hover:text-gray-600"
-          aria-label="Close notifications"
-        >
-          <.icon name="hero-x-mark" class="h-4 w-4" />
-        </button>
-      </div>
-      
-      <div>
-        <%= if Enum.empty?(@notifications) do %>
-          <div class="p-4 text-center text-gray-500">
-            <.icon name="hero-bell-slash" class="w-8 h-8 mx-auto mb-2 text-gray-300" />
-            <p class="text-sm">No recent notifications</p>
-            <p class="text-xs text-gray-400 mt-1">New order updates will appear here</p>
+<!-- Quick Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+      <div class="bg-white shadow rounded-lg p-6">
+        <div class="flex items-center">
+          <.icon name="hero-clock" class="w-8 h-8 text-blue-500 mr-3" />
+          <div>
+            <p class="text-2xl font-semibold text-gray-900">
+              {@restaurant.avg_preparation_time || 30} min
+            </p>
+            <p class="text-gray-600">
+              Average prep time: {@restaurant.avg_preparation_time || 30} minutes
+            </p>
           </div>
-        <% else %>
-          <%= for notification <- @notifications do %>
-            <div 
-              id={"notification-#{notification.id}"}
-              data-test="notification-item"
-              class={[
-                "p-3 border-b border-gray-100 relative hover:bg-gray-50 transition-colors",
-                if(notification.read, do: "bg-gray-50", else: "bg-white"),
-                if(notification.priority == :critical, do: "border-l-4 border-l-red-500", else: "")
-              ]}
-            >
-              <button 
-                phx-click="dismiss_notification"
-                phx-value-id={notification.id}
-                data-test="dismiss-notification"
-                class="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
-                aria-label="Dismiss"
-              >
-                <.icon name="hero-x-mark" class="h-4 w-4" />
-              </button>
-              
-              <div class="pr-5">
-                <p class={[
-                  "font-medium text-sm", 
-                  if(notification.priority == :critical, do: "text-red-700", else: "text-gray-800")
+        </div>
+      </div>
+
+      <div class="bg-white shadow rounded-lg p-6">
+        <div class="flex items-center">
+          <.icon name="hero-currency-euro" class="w-8 h-8 text-green-500 mr-3" />
+          <div>
+            <p class="text-2xl font-semibold text-gray-900">
+              €{Decimal.to_string(@restaurant.min_order_value || Decimal.new("0"))}
+            </p>
+            <p class="text-gray-600">Minimum order</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white shadow rounded-lg p-6">
+        <div class="flex items-center">
+          <.icon name="hero-map-pin" class="w-8 h-8 text-purple-500 mr-3" />
+          <div>
+            <p class="text-2xl font-semibold text-gray-900">
+              {@restaurant.delivery_radius_km || 5} km
+            </p>
+            <p class="text-gray-600">Delivery radius</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white shadow rounded-lg p-6">
+        <div class="flex items-center">
+          <.icon name="hero-star" class="w-8 h-8 text-yellow-500 mr-3" />
+          <div>
+            <p class="text-2xl font-semibold text-gray-900">
+              {if @restaurant.rating, do: Decimal.to_string(@restaurant.rating), else: "New"}
+            </p>
+            <p class="text-gray-600">Rating</p>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+<!-- Order Overview Section -->
+    <div
+      class="bg-white shadow-lg rounded-lg border border-gray-200 p-6 mb-8"
+      data-test="order-overview-section"
+    >
+      <div class="flex items-center justify-between mb-6">
+        <div class="flex items-center">
+          <.icon name="hero-clipboard-document-list" class="w-8 h-8 text-indigo-500 mr-3" />
+          <div>
+            <h2 class="text-xl font-semibold text-gray-900">Order Management</h2>
+            <div class="flex items-center space-x-2">
+              <p class="text-gray-600">Real-time order status and management</p>
+              <div class="flex items-center space-x-1 text-xs" data-test="connection-status">
+                <div class={[
+                  "w-2 h-2 rounded-full",
+                  if(@connection_status == :connected, do: "bg-green-500", else: "bg-red-500")
                 ]}>
-                  {notification.title}
-                </p>
-                <p class="text-sm text-gray-600 mt-1">{notification.message}</p>
-                <p class="text-xs text-gray-400 mt-1">{format_time_ago(notification.timestamp)}</p>
+                </div>
+                <span class={[
+                  "font-medium",
+                  if(@connection_status == :connected, do: "text-green-600", else: "text-red-600")
+                ]}>
+                  <%= if @connection_status == :connected do %>
+                    Live
+                  <% else %>
+                    Offline
+                  <% end %>
+                </span>
+                <span class="text-gray-400">•</span>
+                <span class="text-gray-500">
+                  Updated {DateTime.diff(DateTime.utc_now(), @last_updated, :second)}s ago
+                </span>
               </div>
             </div>
+          </div>
+        </div>
+        <div class="flex items-center space-x-3">
+          <!-- Notification Bell -->
+          <div class="relative">
+            <button
+              phx-click="toggle_notification_center"
+              class="p-2 rounded-full hover:bg-gray-100 relative transition-colors"
+              aria-label="Notifications"
+              data-test="notification-bell"
+            >
+              <.icon name="hero-bell" class="h-6 w-6 text-gray-700" />
+              <%= if @unread_count > 0 do %>
+                <span
+                  class="absolute top-0 right-0 -mt-1 -mr-1 px-2 py-1 text-xs font-bold rounded-full bg-red-500 text-white"
+                  data-test="notification-count"
+                >
+                  {@unread_count}
+                </span>
+              <% end %>
+            </button>
+          </div>
+
+          <.link
+            href={~p"/restaurant/orders"}
+            data-test="manage-orders-link"
+            class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors font-medium"
+          >
+            <.icon name="hero-arrow-right" class="w-4 h-4 ml-2" /> Manage Orders
+          </.link>
+        </div>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <!-- Pending Confirmations -->
+        <div class={[
+          "rounded-lg p-4 border-2",
+          if(@pending_count > 0,
+            do: "bg-red-50 border-red-200",
+            else: "bg-gray-50 border-gray-200"
+          )
+        ]}>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <.icon
+                name="hero-exclamation-triangle"
+                class={
+                  Enum.join(
+                    [
+                      "w-6 h-6 mr-3",
+                      if(@pending_count > 0, do: "text-red-500", else: "text-gray-400")
+                    ],
+                    " "
+                  )
+                }
+              />
+              <div>
+                <p class={[
+                  "text-2xl font-bold",
+                  if(@pending_count > 0, do: "text-red-700", else: "text-gray-500")
+                ]}>
+                  {@pending_count}
+                </p>
+                <p class={[
+                  "text-sm font-medium",
+                  if(@pending_count > 0, do: "text-red-600", else: "text-gray-500")
+                ]}>
+                  Pending Confirmations
+                </p>
+              </div>
+            </div>
+            <%= if @pending_count > 0 do %>
+              <div class="bg-red-100 text-red-800 text-xs font-semibold px-2 py-1 rounded-full">
+                Needs Action
+              </div>
+            <% end %>
+          </div>
+          <%= if @pending_count > 0 do %>
+            <p class="text-red-700 text-xs mt-2">
+              Orders waiting for your confirmation
+            </p>
+          <% else %>
+            <p class="text-gray-500 text-xs mt-2">
+              No orders pending confirmation
+            </p>
           <% end %>
-        <% end %>
+        </div>
+        
+<!-- Active Orders -->
+        <div class={[
+          "rounded-lg p-4 border-2",
+          if(@active_count > 0,
+            do: "bg-blue-50 border-blue-200",
+            else: "bg-gray-50 border-gray-200"
+          )
+        ]}>
+          <div class="flex items-center justify-between">
+            <div class="flex items-center">
+              <.icon
+                name="hero-cog-6-tooth"
+                class={
+                  Enum.join(
+                    [
+                      "w-6 h-6 mr-3",
+                      if(@active_count > 0, do: "text-blue-500", else: "text-gray-400")
+                    ],
+                    " "
+                  )
+                }
+              />
+              <div>
+                <p class={[
+                  "text-2xl font-bold",
+                  if(@active_count > 0, do: "text-blue-700", else: "text-gray-500")
+                ]}>
+                  {@active_count}
+                </p>
+                <p class={[
+                  "text-sm font-medium",
+                  if(@active_count > 0, do: "text-blue-600", else: "text-gray-500")
+                ]}>
+                  Active Orders
+                </p>
+              </div>
+            </div>
+            <%= if @active_count > 0 do %>
+              <div class="bg-blue-100 text-blue-800 text-xs font-semibold px-2 py-1 rounded-full">
+                In Progress
+              </div>
+            <% end %>
+          </div>
+          <%= if @active_count > 0 do %>
+            <p class="text-blue-700 text-xs mt-2">
+              Orders being prepared or delivered
+            </p>
+          <% else %>
+            <p class="text-gray-500 text-xs mt-2">
+              No orders currently being processed
+            </p>
+          <% end %>
+        </div>
+      </div>
+
+      <%= if @pending_count > 0 or @active_count > 0 do %>
+        <div class="mt-4 text-center">
+          <p class="text-gray-600 text-sm">
+            💡 <strong>Quick access:</strong>
+            Manage all orders from one place with real-time updates
+          </p>
+        </div>
+      <% end %>
+    </div>
+    
+<!-- Main Action Cards -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
+      <!-- Menu Management -->
+      <div class="bg-white shadow rounded-lg p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-semibold text-gray-900">Menu Management</h2>
+          <.icon name="hero-book-open" class="w-6 h-6 text-gray-400" />
+        </div>
+
+        <p class="text-gray-600 mb-4">
+          Create and manage your menu items, set prices, and control availability.
+        </p>
+
+        <div class="flex space-x-3">
+          <.link
+            href={~p"/restaurant/menu"}
+            data-test="manage-menus-link"
+            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            <.icon name="hero-pencil-square" class="w-4 h-4 mr-2" /> Manage Menus
+          </.link>
+
+          <.link
+            href={~p"/restaurant/menu"}
+            data-test="create-first-menu"
+            class="inline-flex items-center px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-700 transition-colors"
+          >
+            <.icon name="hero-plus" class="w-4 h-4 mr-2" /> Create Menu
+          </.link>
+        </div>
+      </div>
+      
+<!-- Restaurant Profile -->
+      <div class="bg-white shadow rounded-lg p-6">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-xl font-semibold text-gray-900">Restaurant Profile</h2>
+          <.icon name="hero-building-storefront" class="w-6 h-6 text-gray-400" />
+        </div>
+
+        <p class="text-gray-600 mb-4">
+          Update your restaurant information, hours, and operational settings.
+        </p>
+
+        <div class="flex space-x-3">
+          <.link
+            href={~p"/restaurant/profile/edit"}
+            data-test="edit-profile-link"
+            class="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+          >
+            <.icon name="hero-cog-6-tooth" class="w-4 h-4 mr-2" /> Edit Restaurant
+          </.link>
+        </div>
       </div>
     </div>
-  <% end %>
+    
+<!-- Analytics Section (Future Enhancement) -->
+    <div class="bg-white shadow rounded-lg p-6" data-test="analytics-section">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-xl font-semibold text-gray-900">Business Analytics</h2>
+        <.icon name="hero-chart-bar-square" class="w-6 h-6 text-gray-400" />
+      </div>
+
+      <div class="text-center py-8">
+        <.icon name="hero-chart-pie" class="w-16 h-16 text-gray-300 mx-auto mb-4" />
+        <p class="text-gray-500 text-lg mb-2">Analytics coming soon!</p>
+        <p class="text-gray-400">
+          We're building powerful insights to help you understand your customers and grow your business.
+        </p>
+      </div>
+    </div>
+    
+<!-- Inspiration Footer -->
+    <div class="mt-12 text-center">
+      <div class="bg-gradient-to-r from-blue-50 to-green-50 rounded-lg p-8">
+        <h3 class="text-2xl font-semibold text-gray-900 mb-2">
+          🎉 You're Empowering Your Community!
+        </h3>
+        <p class="text-gray-600 mb-4">
+          Every order through EatFair means you keep 100% of your revenue while building direct relationships with your customers.
+        </p>
+        <div class="flex justify-center space-x-6 text-sm text-gray-500">
+          <span>✓ Zero Commission Fees</span>
+          <span>✓ Own Your Customer Data</span>
+          <span>✓ Build Your Brand</span>
+          <span>✓ Community First</span>
+        </div>
+      </div>
+    </div>
+    
+<!-- Notification Center -->
+    <%= if @show_notification_center do %>
+      <div
+        class="fixed top-20 right-4 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto"
+        data-test="notification-center"
+      >
+        <div class="p-3 border-b border-gray-200 flex justify-between items-center">
+          <h3 class="font-semibold text-gray-800">Recent Updates</h3>
+          <button
+            phx-click="toggle_notification_center"
+            class="text-gray-400 hover:text-gray-600"
+            aria-label="Close notifications"
+          >
+            <.icon name="hero-x-mark" class="h-4 w-4" />
+          </button>
+        </div>
+
+        <div>
+          <%= if Enum.empty?(@notifications) do %>
+            <div class="p-4 text-center text-gray-500">
+              <.icon name="hero-bell-slash" class="w-8 h-8 mx-auto mb-2 text-gray-300" />
+              <p class="text-sm">No recent notifications</p>
+              <p class="text-xs text-gray-400 mt-1">New order updates will appear here</p>
+            </div>
+          <% else %>
+            <%= for notification <- @notifications do %>
+              <div
+                id={"notification-#{notification.id}"}
+                data-test="notification-item"
+                class={[
+                  "p-3 border-b border-gray-100 relative hover:bg-gray-50 transition-colors",
+                  if(notification.read, do: "bg-gray-50", else: "bg-white"),
+                  if(notification.priority == :critical,
+                    do: "border-l-4 border-l-red-500",
+                    else: ""
+                  )
+                ]}
+              >
+                <button
+                  phx-click="dismiss_notification"
+                  phx-value-id={notification.id}
+                  data-test="dismiss-notification"
+                  class="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+                  aria-label="Dismiss"
+                >
+                  <.icon name="hero-x-mark" class="h-4 w-4" />
+                </button>
+
+                <div class="pr-5">
+                  <p class={[
+                    "font-medium text-sm",
+                    if(notification.priority == :critical,
+                      do: "text-red-700",
+                      else: "text-gray-800"
+                    )
+                  ]}>
+                    {notification.title}
+                  </p>
+                  <p class="text-sm text-gray-600 mt-1">{notification.message}</p>
+                  <p class="text-xs text-gray-400 mt-1">
+                    {format_time_ago(notification.timestamp)}
+                  </p>
+                </div>
+              </div>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    <% end %>
   </div>
 </Layouts.app>

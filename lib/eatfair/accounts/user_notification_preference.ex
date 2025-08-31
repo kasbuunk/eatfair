@@ -1,11 +1,11 @@
 defmodule Eatfair.Accounts.UserNotificationPreference do
   @moduledoc """
   User notification preferences schema for marketing and communication settings.
-  
+
   Tracks user consent and preferences for various types of notifications
   with timestamps for legal compliance.
   """
-  
+
   use Ecto.Schema
   import Ecto.Changeset
 
@@ -28,14 +28,14 @@ defmodule Eatfair.Accounts.UserNotificationPreference do
 
   @doc """
   Changeset for updating notification preferences.
-  
+
   Automatically sets opt-in/opt-out timestamps based on marketing_emails boolean.
   """
   def changeset(preference, attrs) do
     preference
     |> cast(attrs, [
-      :user_id, 
-      :marketing_emails, 
+      :user_id,
+      :marketing_emails,
       :marketing_opt_in_at,
       :marketing_opt_out_at,
       :order_updates,
@@ -55,11 +55,11 @@ defmodule Eatfair.Accounts.UserNotificationPreference do
         changeset
         |> put_change(:marketing_opt_in_at, DateTime.utc_now())
         |> put_change(:marketing_opt_out_at, nil)
-      
+
       false ->
         changeset
         |> put_change(:marketing_opt_out_at, DateTime.utc_now())
-      
+
       nil ->
         # No change to marketing_emails, keep existing timestamps
         changeset

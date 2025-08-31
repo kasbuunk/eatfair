@@ -44,7 +44,7 @@ defmodule EatfairWeb.RestaurantOrderProcessingTest do
 
       # ✅ Should have Accept Order button
       assert has_element?(dashboard_live, "#accept-order-#{pending_order.id}")
-      
+
       # 👨‍🍳 Restaurant owner accepts the order
       dashboard_live
       |> element("#accept-order-#{pending_order.id}")
@@ -58,7 +58,7 @@ defmodule EatfairWeb.RestaurantOrderProcessingTest do
       # ✅ Should no longer see order in Pending section
       html = render(dashboard_live)
       refute html =~ "<h2 class=\"text-xl font-bold text-gray-900 mb-4\">Pending Orders</h2>"
-      
+
       # ✅ Should see order in "New Orders" (confirmed) section
       assert html =~ "New Orders"
       assert html =~ "123 Customer St, Amsterdam"
@@ -78,7 +78,7 @@ defmodule EatfairWeb.RestaurantOrderProcessingTest do
             restaurant_id: restaurant.id,
             total_price: meal.price,
             delivery_address: "456 Customer Ave, Utrecht",
-            customer_phone: "+31687654321", 
+            customer_phone: "+31687654321",
             customer_email: "customer2@example.com",
             status: "pending"
           },
@@ -93,12 +93,12 @@ defmodule EatfairWeb.RestaurantOrderProcessingTest do
 
       # 👨‍🍳 Restaurant owner rejects the order
       dashboard_live
-      |> element("#reject-order-#{pending_order.id}")  
+      |> element("#reject-order-#{pending_order.id}")
       |> render_click()
 
       # ✅ Should show rejection reason modal/form
       assert has_element?(dashboard_live, "[data-modal='rejection-modal']")
-      
+
       # 👨‍🍳 Enter rejection reason
       dashboard_live
       |> form("#rejection-form", %{
@@ -118,7 +118,9 @@ defmodule EatfairWeb.RestaurantOrderProcessingTest do
       assert rejection_event != nil
       assert rejection_event.priority == "high"
       assert rejection_event.data["rejection_reason"] == "out_of_ingredients"
-      assert rejection_event.data["rejection_notes"] == "Sorry, we ran out of the main ingredient for this dish"
+
+      assert rejection_event.data["rejection_notes"] ==
+               "Sorry, we ran out of the main ingredient for this dish"
 
       # ✅ Order should no longer appear on restaurant dashboard
       html = render(dashboard_live)
@@ -183,7 +185,9 @@ defmodule EatfairWeb.RestaurantOrderProcessingTest do
       assert failure_event.data["failure_reason"] == "address_not_found"
     end
 
-    test "restaurant owner can see customer contact information and use contact links", %{conn: conn} do
+    test "restaurant owner can see customer contact information and use contact links", %{
+      conn: conn
+    } do
       # 🎯 Setup: Order with customer contact details
       customer = user_fixture()
       restaurant_owner = user_fixture()
@@ -198,7 +202,7 @@ defmodule EatfairWeb.RestaurantOrderProcessingTest do
             total_price: meal.price,
             delivery_address: "321 Contact Test St, Den Haag",
             customer_phone: "+31698765432",
-            customer_email: "contact@example.com", 
+            customer_email: "contact@example.com",
             status: "confirmed"
           },
           [%{meal_id: meal.id, quantity: 1}]
@@ -213,7 +217,7 @@ defmodule EatfairWeb.RestaurantOrderProcessingTest do
 
       # ✅ Should have clickable phone link
       assert html =~ "tel:+31698765432"
-      
+
       # ✅ Should have clickable email link  
       assert html =~ "mailto:contact@example.com"
 
@@ -229,7 +233,7 @@ defmodule EatfairWeb.RestaurantOrderProcessingTest do
       meal = meal_fixture(%{restaurant_id: restaurant.id})
 
       # Create orders in different statuses
-      {:ok, pending_order} = 
+      {:ok, pending_order} =
         Orders.create_order_with_items(
           %{
             customer_id: customer.id,
@@ -241,13 +245,13 @@ defmodule EatfairWeb.RestaurantOrderProcessingTest do
           [%{meal_id: meal.id, quantity: 1}]
         )
 
-      {:ok, confirmed_order} = 
+      {:ok, confirmed_order} =
         Orders.create_order_with_items(
           %{
             customer_id: customer.id,
             restaurant_id: restaurant.id,
             total_price: meal.price,
-            delivery_address: "Confirmed Order Address", 
+            delivery_address: "Confirmed Order Address",
             status: "confirmed"
           },
           [%{meal_id: meal.id, quantity: 1}]
@@ -255,12 +259,12 @@ defmodule EatfairWeb.RestaurantOrderProcessingTest do
 
       # ✅ list_restaurant_orders should include pending orders
       orders_by_status = Orders.list_restaurant_orders(restaurant.id)
-      
+
       # Should have pending key with pending orders
       assert Map.has_key?(orders_by_status, :pending)
       assert length(orders_by_status.pending) == 1
       assert hd(orders_by_status.pending).id == pending_order.id
-      
+
       # Should still have confirmed orders
       assert length(orders_by_status.confirmed) == 1
       assert hd(orders_by_status.confirmed).id == confirmed_order.id
@@ -285,9 +289,10 @@ defmodule EatfairWeb.RestaurantOrderProcessingTest do
         )
 
       # ✅ Should be able to transition from out_for_delivery to delivery_failed
-      {:ok, failed_order} = Orders.update_order_status(order, "delivery_failed", %{
-        delay_reason: "Could not locate customer address"
-      })
+      {:ok, failed_order} =
+        Orders.update_order_status(order, "delivery_failed", %{
+          delay_reason: "Could not locate customer address"
+        })
 
       assert failed_order.status == "delivery_failed"
       assert failed_order.delay_reason == "Could not locate customer address"

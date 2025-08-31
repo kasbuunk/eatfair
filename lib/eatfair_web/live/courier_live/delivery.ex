@@ -21,7 +21,7 @@ defmodule EatfairWeb.CourierLive.Delivery do
             ← Back to Dashboard
           </.link>
           <h1 class="text-3xl font-bold text-gray-900 mt-2">
-            🚚 Delivery #<%= @delivery_id %>
+            🚚 Delivery #{@delivery_id}
           </h1>
         </div>
 

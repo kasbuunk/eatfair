@@ -6,9 +6,9 @@ defmodule EatfairWeb.CourierLive.Login do
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
     # Redirect if already logged in as courier
-    if socket.assigns.current_scope && 
-       socket.assigns.current_scope.user && 
-       socket.assigns.current_scope.user.role == "courier" do
+    if socket.assigns.current_scope &&
+         socket.assigns.current_scope.user &&
+         socket.assigns.current_scope.user.role == "courier" do
       {:ok, redirect(socket, to: ~p"/courier/dashboard")}
     else
       form = to_form(%{"email" => "", "password" => ""}, as: "user")
@@ -33,7 +33,7 @@ defmodule EatfairWeb.CourierLive.Login do
         # which will handle session creation and redirect properly
         socket = assign(socket, :trigger_submit, true)
         {:noreply, socket}
-      
+
       %{} = _user ->
         socket =
           socket
@@ -66,10 +66,10 @@ defmodule EatfairWeb.CourierLive.Login do
           </p>
         </div>
 
-        <.form 
-          :let={f} 
-          for={@form} 
-          id="courier_login_form" 
+        <.form
+          :let={f}
+          for={@form}
+          id="courier_login_form"
           action={~p"/users/log-in"}
           phx-submit="submit"
           phx-trigger-action={@trigger_submit}

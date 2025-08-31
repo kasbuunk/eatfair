@@ -163,13 +163,13 @@ defmodule Eatfair.Notifications do
   defp maybe_add_donation_aware_data(event_data, order, "delivered") do
     donation_amount = order.donation_amount || Decimal.new("0.00")
     has_donation = Decimal.gt?(donation_amount, 0)
-    
+
     base_donation_data = %{
       "donation_amount" => Decimal.to_string(donation_amount),
       "support_options" => ["social_sharing", "write_reviews"]
     }
-    
-    donation_specific_data = 
+
+    donation_specific_data =
       if has_donation do
         # Customer donated - thank them and encourage sharing
         %{
@@ -188,19 +188,19 @@ defmodule Eatfair.Notifications do
           "support_options" => ["social_sharing", "write_reviews", "recommend_platform"]
         }
       end
-    
+
     event_data
     |> Map.merge(base_donation_data)
     |> Map.merge(donation_specific_data)
   end
-  
+
   defp maybe_add_donation_aware_data(event_data, _order, _status), do: event_data
-  
+
   defp generate_social_share_url(order) do
     # Generate a social sharing URL - in production this would be a real URL
     "https://eatfair.com/share/order/#{order.id}"
   end
-  
+
   defp generate_donation_url(order) do
     # Generate a donation URL - in production this would be a real donation flow
     "https://eatfair.com/donate/restaurant/#{order.restaurant_id}"

@@ -72,8 +72,10 @@ defmodule EatfairWeb.RestaurantLive.FilterCompositionBugTest do
       assert html_after_location =~ "Amsterdam"
 
       # Debug: Check what restaurants are actually visible
-      IO.puts("\n=== HTML after location filter ===\n#{html_after_location}\n==================\n")
-      
+      IO.puts(
+        "\n=== HTML after location filter ===\n#{html_after_location}\n==================\n"
+      )
+
       # With Amsterdam location, Amsterdam restaurant should be shown (nearby)
       # Laren and London restaurants should not be shown (too far)
       # Note: Amsterdam restaurant has 15km radius, so it covers the coordinates
@@ -101,7 +103,7 @@ defmodule EatfairWeb.RestaurantLive.FilterCompositionBugTest do
       # CURRENT BUG (these should pass):
       refute has_element?(lv, "#restaurant-#{london_restaurant.id}"),
              "London Fish & Chips should NOT be visible (too far from Amsterdam location filter)"
-             
+
       refute has_element?(lv, "#restaurant-#{laren_restaurant.id}"),
              "Laren Fine Dining should NOT be visible (too far from Amsterdam location filter)"
 

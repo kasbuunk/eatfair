@@ -1,7 +1,7 @@
 defmodule Eatfair.Refunds do
   @moduledoc """
   The Refunds context for managing staged refunds.
-  
+
   This context handles creating refund records that stage refunds for manual processing,
   without actually processing the refund immediately. This allows for fraud prevention,
   manual review, and different refund policies based on the situation.

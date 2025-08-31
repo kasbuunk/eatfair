@@ -31,13 +31,16 @@ defmodule Eatfair.AccountsFixtures do
     user = unconfirmed_user_fixture(attrs)
 
     # Update role if specified
-    user = 
+    user =
       case attrs[:role] do
-        nil -> user
+        nil ->
+          user
+
         role when is_atom(role) ->
           changeset = Ecto.Changeset.change(user, %{role: Atom.to_string(role)})
           {:ok, updated_user} = Eatfair.Repo.update(changeset)
           updated_user
+
         role when is_binary(role) ->
           changeset = Ecto.Changeset.change(user, %{role: role})
           {:ok, updated_user} = Eatfair.Repo.update(changeset)

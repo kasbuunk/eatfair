@@ -3,7 +3,7 @@ defmodule Eatfair.RefundsTest do
 
   alias Eatfair.Refunds
   alias Eatfair.Orders
-  
+
   import Eatfair.AccountsFixtures
   import Eatfair.RestaurantsFixtures
 
@@ -12,8 +12,8 @@ defmodule Eatfair.RefundsTest do
       customer = user_fixture()
       restaurant = restaurant_fixture()
       meal = meal_fixture(%{restaurant_id: restaurant.id, price: Decimal.new("25.50")})
-      
-      {:ok, order} = 
+
+      {:ok, order} =
         Orders.create_order_with_items(
           %{
             customer_id: customer.id,
@@ -26,16 +26,17 @@ defmodule Eatfair.RefundsTest do
         )
 
       # Create a staged refund for order rejection
-      {:ok, refund} = Refunds.create_refund_for_order(order, %{
-        reason: "order_rejected", 
-        reason_details: "Restaurant ran out of ingredients"
-      })
+      {:ok, refund} =
+        Refunds.create_refund_for_order(order, %{
+          reason: "order_rejected",
+          reason_details: "Restaurant ran out of ingredients"
+        })
 
       assert refund.order_id == order.id
       assert refund.customer_id == customer.id
       assert refund.amount == meal.price
       assert refund.reason == "order_rejected"
-      assert refund.reason_details == "Restaurant ran out of ingredients" 
+      assert refund.reason_details == "Restaurant ran out of ingredients"
       assert refund.status == "pending"
       assert refund.processed_at == nil
     end
@@ -44,12 +45,12 @@ defmodule Eatfair.RefundsTest do
       customer = user_fixture()
       restaurant = restaurant_fixture()
       meal = meal_fixture(%{restaurant_id: restaurant.id, price: Decimal.new("15.75")})
-      
-      {:ok, order} = 
+
+      {:ok, order} =
         Orders.create_order_with_items(
           %{
             customer_id: customer.id,
-            restaurant_id: restaurant.id, 
+            restaurant_id: restaurant.id,
             total_price: meal.price,
             delivery_address: "456 Delivery St",
             status: "out_for_delivery"
@@ -58,10 +59,11 @@ defmodule Eatfair.RefundsTest do
         )
 
       # Create staged refund for delivery failure
-      {:ok, refund} = Refunds.create_refund_for_order(order, %{
-        reason: "delivery_failed",
-        reason_details: "Address not found, customer unreachable"
-      })
+      {:ok, refund} =
+        Refunds.create_refund_for_order(order, %{
+          reason: "delivery_failed",
+          reason_details: "Address not found, customer unreachable"
+        })
 
       assert refund.reason == "delivery_failed"
       assert refund.amount == meal.price
@@ -70,28 +72,40 @@ defmodule Eatfair.RefundsTest do
 
     test "list_pending_refunds/0 returns all unprocessed refunds" do
       customer1 = user_fixture()
-      customer2 = user_fixture() 
+      customer2 = user_fixture()
       restaurant = restaurant_fixture()
       meal = meal_fixture(%{restaurant_id: restaurant.id})
 
-      {:ok, order1} = Orders.create_order_with_items(
-        %{customer_id: customer1.id, restaurant_id: restaurant.id, total_price: meal.price, 
-          delivery_address: "Addr1", status: "pending"},
-        [%{meal_id: meal.id, quantity: 1}]
-      )
-      
-      {:ok, order2} = Orders.create_order_with_items(
-        %{customer_id: customer2.id, restaurant_id: restaurant.id, total_price: meal.price,
-          delivery_address: "Addr2", status: "pending"}, 
-        [%{meal_id: meal.id, quantity: 1}]
-      )
+      {:ok, order1} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer1.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Addr1",
+            status: "pending"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
+
+      {:ok, order2} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer2.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Addr2",
+            status: "pending"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
 
       # Create refunds
       {:ok, refund1} = Refunds.create_refund_for_order(order1, %{reason: "order_rejected"})
       {:ok, refund2} = Refunds.create_refund_for_order(order2, %{reason: "delivery_failed"})
 
       pending_refunds = Refunds.list_pending_refunds()
-      
+
       assert length(pending_refunds) == 2
       refund_ids = Enum.map(pending_refunds, & &1.id)
       assert refund1.id in refund_ids
@@ -102,20 +116,27 @@ defmodule Eatfair.RefundsTest do
       customer = user_fixture()
       restaurant = restaurant_fixture()
       meal = meal_fixture(%{restaurant_id: restaurant.id})
-      
-      {:ok, order} = Orders.create_order_with_items(
-        %{customer_id: customer.id, restaurant_id: restaurant.id, total_price: meal.price,
-          delivery_address: "Test Addr", status: "pending"},
-        [%{meal_id: meal.id, quantity: 1}]
-      )
+
+      {:ok, order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Test Addr",
+            status: "pending"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
 
       {:ok, refund} = Refunds.create_refund_for_order(order, %{reason: "order_rejected"})
-      
+
       # Mark as processed
-      {:ok, processed_refund} = Refunds.mark_refund_processed(refund, %{
-        processor_notes: "Processed via Stripe refund API",
-        external_refund_id: "re_1234567890"
-      })
+      {:ok, processed_refund} =
+        Refunds.mark_refund_processed(refund, %{
+          processor_notes: "Processed via Stripe refund API",
+          external_refund_id: "re_1234567890"
+        })
 
       assert processed_refund.status == "processed"
       assert processed_refund.processor_notes == "Processed via Stripe refund API"
@@ -127,12 +148,18 @@ defmodule Eatfair.RefundsTest do
       customer = user_fixture()
       restaurant = restaurant_fixture()
       meal = meal_fixture(%{restaurant_id: restaurant.id})
-      
-      {:ok, order} = Orders.create_order_with_items(
-        %{customer_id: customer.id, restaurant_id: restaurant.id, total_price: meal.price,
-          delivery_address: "Test Addr", status: "pending"},
-        [%{meal_id: meal.id, quantity: 1}]
-      )
+
+      {:ok, order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Test Addr",
+            status: "pending"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
 
       # Create multiple refunds (edge case - maybe partial refunds or retry scenarios)
       {:ok, _refund1} = Refunds.create_refund_for_order(order, %{reason: "order_rejected"})
@@ -149,28 +176,30 @@ defmodule Eatfair.RefundsTest do
       restaurant_owner = user_fixture()
       restaurant = restaurant_fixture(%{owner_id: restaurant_owner.id})
       meal = meal_fixture(%{restaurant_id: restaurant.id, price: Decimal.new("20.00")})
-      
-      {:ok, order} = Orders.create_order_with_items(
-        %{
-          customer_id: customer.id,
-          restaurant_id: restaurant.id,
-          total_price: meal.price,
-          delivery_address: "Integration Test Address", 
-          status: "pending"
-        },
-        [%{meal_id: meal.id, quantity: 1}]
-      )
+
+      {:ok, order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Integration Test Address",
+            status: "pending"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
 
       # Reject the order (this should create a staged refund)
-      {:ok, _updated_order} = Orders.update_order_status(order, "cancelled", %{
-        rejection_reason: "out_of_ingredients",
-        rejection_notes: "Sorry, we ran out of key ingredients"
-      })
+      {:ok, _updated_order} =
+        Orders.update_order_status(order, "cancelled", %{
+          rejection_reason: "out_of_ingredients",
+          rejection_notes: "Sorry, we ran out of key ingredients"
+        })
 
       # Should have created a staged refund
       refunds = Refunds.get_refunds_for_order(order.id)
       assert length(refunds) == 1
-      
+
       refund = hd(refunds)
       assert refund.reason == "order_rejected"
       assert Decimal.equal?(refund.amount, meal.price)
@@ -182,28 +211,30 @@ defmodule Eatfair.RefundsTest do
       customer = user_fixture()
       restaurant = restaurant_fixture()
       meal = meal_fixture(%{restaurant_id: restaurant.id, price: Decimal.new("18.50")})
-      
-      {:ok, order} = Orders.create_order_with_items(
-        %{
-          customer_id: customer.id,
-          restaurant_id: restaurant.id,
-          total_price: meal.price,
-          delivery_address: "Delivery Failure Address",
-          status: "out_for_delivery"  
-        },
-        [%{meal_id: meal.id, quantity: 1}]
-      )
+
+      {:ok, order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Delivery Failure Address",
+            status: "out_for_delivery"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
 
       # Report delivery failure (this should create a staged refund)
-      {:ok, _updated_order} = Orders.update_order_status(order, "delivery_failed", %{
-        failure_reason: "address_not_found",
-        failure_notes: "Customer address could not be located"
-      })
+      {:ok, _updated_order} =
+        Orders.update_order_status(order, "delivery_failed", %{
+          failure_reason: "address_not_found",
+          failure_notes: "Customer address could not be located"
+        })
 
       # Should have created a staged refund
       refunds = Refunds.get_refunds_for_order(order.id)
       assert length(refunds) == 1
-      
+
       refund = hd(refunds)
       assert refund.reason == "delivery_failed"
       assert Decimal.equal?(refund.amount, meal.price)

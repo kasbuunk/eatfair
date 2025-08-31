@@ -95,22 +95,24 @@ defmodule EatfairWeb.Integration.RestaurantDiscoveryTest do
       # Look for a cuisine that has restaurants (from the test output, we know Pizza has count 1)
       # Click on Pizza cuisine filter since it's available and not disabled
       discovery_live
-      |> element("input[type=\"checkbox\"][phx-click=\"toggle_cuisine\"][phx-value-cuisine_id=\"27\"]")
+      |> element(
+        "input[type=\"checkbox\"][phx-click=\"toggle_cuisine\"][phx-value-cuisine_id=\"27\"]"
+      )
       |> render_click()
 
       # After filtering, should only see Pizza restaurants
       # Verify that the filtering worked by checking that the restaurant list changed
       updated_html = render(discovery_live)
       assert updated_html =~ "Pizza"
-      
+
       # Should still have at least one restaurant showing (the Pizza one)
       assert has_element?(discovery_live, "[id^='restaurant-']")
-      
+
       # Reset filter by clicking "All Cuisines"
       discovery_live
       |> element("input[type=\"checkbox\"][phx-click=\"select_all_cuisines\"]")
       |> render_click()
-      
+
       # Should see all restaurants again
       # Should show the total count again  
       assert has_element?(discovery_live, "[id^='restaurant-']")

@@ -75,15 +75,15 @@ defmodule EatfairWeb.OrderLive.Payment do
     case parse_donation_amount(amount_str) do
       {:ok, donation_amount} ->
         total_with_donation = Decimal.add(socket.assigns.cart_total, donation_amount)
-        
-        socket = 
+
+        socket =
           socket
           |> assign(:donation_amount, donation_amount)
           |> assign(:total_with_donation, total_with_donation)
           |> assign(:payment_error, nil)
-        
+
         {:noreply, socket}
-        
+
       {:error, reason} ->
         socket = assign(socket, :payment_error, reason)
         {:noreply, socket}
@@ -116,7 +116,7 @@ defmodule EatfairWeb.OrderLive.Payment do
   def handle_info(:complete_payment, socket) do
     # Simulate payment processing result
     # 90% success rate for demo in development, 100% in test
-    payment_success = 
+    payment_success =
       if Mix.env() == :test do
         true
       else
@@ -144,6 +144,7 @@ defmodule EatfairWeb.OrderLive.Payment do
                   {:error, reason} ->
                     # Log error but don't block user flow
                     require Logger
+
                     Logger.error(
                       "Failed to send verification email for order #{order.id}: #{inspect(reason)}"
                     )
@@ -163,7 +164,7 @@ defmodule EatfairWeb.OrderLive.Payment do
             {:error, reason} ->
               require Logger
               Logger.error("Payment processing failed for order #{order.id}: #{inspect(reason)}")
-              
+
               socket =
                 socket
                 |> assign(:payment_processing, false)
@@ -175,7 +176,7 @@ defmodule EatfairWeb.OrderLive.Payment do
         {:error, changeset} ->
           require Logger
           Logger.error("Order creation failed: #{inspect(changeset)}")
-          
+
           socket =
             socket
             |> assign(:payment_processing, false)
@@ -332,21 +333,26 @@ defmodule EatfairWeb.OrderLive.Payment do
 
   defp parse_donation_amount(""), do: {:ok, Decimal.new("0.00")}
   defp parse_donation_amount(nil), do: {:ok, Decimal.new("0.00")}
+
   defp parse_donation_amount(amount_str) when is_binary(amount_str) do
     case Decimal.parse(amount_str) do
       {amount, _} ->
         cond do
           Decimal.negative?(amount) ->
             {:error, "Donation amount cannot be negative"}
+
           Decimal.gt?(amount, 100) ->
             {:error, "Maximum donation amount is €100"}
+
           true ->
             {:ok, Decimal.new(amount_str)}
         end
+
       :error ->
         {:error, "Invalid donation amount"}
     end
   end
+
   defp parse_donation_amount(_), do: {:error, "Invalid donation amount"}
 
   defp calculate_initial_total(socket) do

@@ -67,7 +67,6 @@ defmodule EatfairWeb.RestaurantDiscoveryFlowTest do
       refute String.contains?(order_html, "currently closed")
     end
 
-
     defp create_genuinely_open_restaurant do
       # Create a restaurant that is actually open for orders right now
       current_time = DateTime.now!("Europe/Amsterdam")
@@ -77,7 +76,8 @@ defmodule EatfairWeb.RestaurantDiscoveryFlowTest do
       # Started 1 hour ago
       order_open = max(0, current_minute - 60)
       # Closes in 2 hours, but ensure we leave room for kitchen close time
-      order_close = min(1410, current_minute + 120)  # Max 23:30 to allow 30min gap
+      # Max 23:30 to allow 30min gap
+      order_close = min(1410, current_minute + 120)
       # Kitchen closes 30 minutes after orders, but max at 24:00 (1440)
       kitchen_close = order_close + 30
 
@@ -120,7 +120,8 @@ defmodule EatfairWeb.RestaurantDiscoveryFlowTest do
       # Started 1 hour ago
       order_open = max(0, current_minute - 60)
       # Closes in 2 hours, but ensure we leave room for kitchen close time
-      order_close = min(1410, current_minute + 120)  # Max 23:30 to allow 30min gap
+      # Max 23:30 to allow 30min gap
+      order_close = min(1410, current_minute + 120)
       # Kitchen closes 30 minutes after orders
       kitchen_close = order_close + 30
 

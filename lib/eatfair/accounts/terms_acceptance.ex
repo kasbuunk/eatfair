@@ -1,14 +1,14 @@
 defmodule Eatfair.Accounts.TermsAcceptance do
   @moduledoc """
   Schema for tracking terms and conditions acceptance for legal compliance.
-  
+
   This creates an immutable audit trail of when users accept the platform's
   terms and conditions, including version tracking for future terms updates.
   """
-  
+
   use Ecto.Schema
   import Ecto.Changeset
-  
+
   alias Eatfair.Accounts.User
 
   schema "terms_acceptances" do
@@ -32,7 +32,7 @@ defmodule Eatfair.Accounts.TermsAcceptance do
     |> foreign_key_constraint(:user_id)
     |> put_accepted_at_if_missing()
   end
-  
+
   @doc """
   Creates a terms acceptance record with current timestamp and metadata.
   """
