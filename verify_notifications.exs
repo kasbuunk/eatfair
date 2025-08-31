@@ -57,7 +57,7 @@ case Accounts.get_user_by_email(night_owl_email) do
     IO.puts("🌐 Dashboard Access:")
     IO.puts("  URL: http://localhost:4000/restaurant/dashboard")
     IO.puts("  Login: #{night_owl_email}")
-    IO.puts("  Password: password123")
+    IO.puts("  Password: password123456")
     
     IO.puts("")
     IO.puts("🎉 Notification system is fully functional!")
