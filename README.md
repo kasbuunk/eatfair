@@ -70,13 +70,12 @@ mix run priv/repo/seeds.exs
 ### 🚚 Courier Accounts
 | Name | Email | Location | Affiliation |
 |------|-------|----------|-------------|
-| Max Speedman | `courier.max@eatfair.nl` | East Amsterdam | General |
+| **Max Speedman** | `courier.max@eatfair.nl` | **Utrecht** | **🌙 Night Owl Express** |
 | Lisa Lightning | `courier.lisa@eatfair.nl` | West Amsterdam | General |
 | Ahmed Express | `courier.ahmed@eatfair.nl` | East Amsterdam | General |
 | Sophie Delivery | `courier.sophie@eatfair.nl` | South Amsterdam | General |
 | Utrecht Rider | `courier.utrecht@eatfair.nl` | Central Utrecht | General |
 | Snelle Jan | `courier.jan.utrecht@eatfair.nl` | South Utrecht | General |
-| **Max Speedman** | `max.speedman@courier.nightowl.nl` | **Utrecht** | **🌙 Night Owl Express** |
 | **Lisa Lightning** | `lisa.lightning@courier.nightowl.nl` | **Utrecht** | **🌙 Night Owl Express** |
 
 ---

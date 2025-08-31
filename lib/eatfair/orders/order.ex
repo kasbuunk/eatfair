@@ -6,6 +6,7 @@ defmodule Eatfair.Orders.Order do
   alias Eatfair.Restaurants.Restaurant
   alias Eatfair.Orders.OrderItem
   alias Eatfair.Orders.Payment
+  alias Eatfair.Orders.DeliveryBatch
   alias Eatfair.Accounts.EmailVerification
 
   @valid_statuses [
@@ -72,6 +73,7 @@ defmodule Eatfair.Orders.Order do
     belongs_to :restaurant, Restaurant
     # For future courier assignment
     belongs_to :courier, User
+    belongs_to :delivery_batch, DeliveryBatch
     has_many :order_items, OrderItem
     has_one :payment, Payment
     has_many :email_verifications, EmailVerification
@@ -101,6 +103,7 @@ defmodule Eatfair.Orders.Order do
       :customer_phone,
       :restaurant_id,
       :courier_id,
+      :delivery_batch_id,
       :confirmed_at,
       :preparing_at,
       :ready_at,

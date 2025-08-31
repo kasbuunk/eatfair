@@ -8,6 +8,17 @@ defmodule EatfairWeb.RestaurantLive.FilterCompositionBugTest do
 
   describe "Restaurant Filter Composition Bug" do
     setup do
+      # Get current time to set proper operational hours
+      current_time = DateTime.now!("Europe/Amsterdam")
+      current_minute = current_time.hour * 60 + current_time.minute
+      current_day = Date.day_of_week(current_time)
+      operating_days_bitmask = :math.pow(2, current_day - 1) |> round()
+      
+      # Set wide operational hours to ensure restaurants are open now
+      order_open = max(0, current_minute - 60)  # Started 1 hour ago
+      order_close = min(1410, current_minute + 120)  # Closes in 2 hours
+      kitchen_close = min(1440, order_close + 30)  # Kitchen closes 30 min after orders
+
       # Create restaurants in different locations to test filtering
       laren_restaurant =
         restaurant_fixture(%{
@@ -18,7 +29,14 @@ defmodule EatfairWeb.RestaurantLive.FilterCompositionBugTest do
           latitude: Decimal.new("52.2576"),
           longitude: Decimal.new("5.2278"),
           delivery_radius_km: 8,
-          is_open: true
+          is_open: true,
+          # Make sure it's actually open for orders right now
+          order_open_time: order_open,
+          order_close_time: order_close,
+          kitchen_close_time: kitchen_close,
+          operating_days: operating_days_bitmask,
+          timezone: "Europe/Amsterdam",
+          force_closed: false
         })
 
       london_restaurant =
@@ -30,7 +48,14 @@ defmodule EatfairWeb.RestaurantLive.FilterCompositionBugTest do
           latitude: Decimal.new("51.5074"),
           longitude: Decimal.new("-0.1278"),
           delivery_radius_km: 5,
-          is_open: true
+          is_open: true,
+          # Make sure it's actually open for orders right now
+          order_open_time: order_open,
+          order_close_time: order_close,
+          kitchen_close_time: kitchen_close,
+          operating_days: operating_days_bitmask,
+          timezone: "Europe/Amsterdam",
+          force_closed: false
         })
 
       amsterdam_restaurant =
@@ -42,7 +67,14 @@ defmodule EatfairWeb.RestaurantLive.FilterCompositionBugTest do
           latitude: Decimal.new("52.3702"),
           longitude: Decimal.new("4.8952"),
           delivery_radius_km: 15,
-          is_open: true
+          is_open: true,
+          # Make sure it's actually open for orders right now
+          order_open_time: order_open,
+          order_close_time: order_close,
+          kitchen_close_time: kitchen_close,
+          operating_days: operating_days_bitmask,
+          timezone: "Europe/Amsterdam",
+          force_closed: false
         })
 
       %{

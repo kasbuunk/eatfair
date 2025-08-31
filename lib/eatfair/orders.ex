@@ -11,6 +11,7 @@ defmodule Eatfair.Orders do
   alias Eatfair.Orders.Payment
   alias Eatfair.Orders.OrderStatusEvent
   alias Eatfair.Orders.CourierLocationUpdate
+  alias Eatfair.Orders.DeliveryBatch
   alias Eatfair.Refunds
   alias Eatfair.Notifications
 
@@ -1250,4 +1251,90 @@ defmodule Eatfair.Orders do
   defp primary_email(%Order{customer_id: nil, customer_email: email}), do: email
   defp primary_email(%Order{customer: %{email: email}}), do: email
   defp primary_email(_), do: nil
+
+  # ============================================================================
+  # DELIVERY BATCH MANAGEMENT FUNCTIONS
+  # ============================================================================
+
+  @doc """
+  Creates a delivery batch.
+  """
+  def create_delivery_batch(attrs \\ %{}) do
+    %DeliveryBatch{}
+    |> DeliveryBatch.changeset(attrs)
+    |> Repo.insert()
+  end
+
+  @doc """
+  Updates a delivery batch.
+  """
+  def update_delivery_batch(%DeliveryBatch{} = batch, attrs) do
+    batch
+    |> DeliveryBatch.changeset(attrs)
+    |> Repo.update()
+  end
+
+  @doc """
+  Updates delivery batch status.
+  """
+  def update_delivery_batch_status(%DeliveryBatch{} = batch, new_status) do
+    update_delivery_batch(batch, %{status: new_status})
+  end
+
+  @doc """
+  Gets a delivery batch with preloaded orders.
+  """
+  def get_delivery_batch_with_orders(id) do
+    DeliveryBatch
+    |> preload([:courier, :restaurant, orders: [:customer, :restaurant, order_items: :meal]])
+    |> Repo.get!(id)
+  end
+
+  @doc """
+  Lists delivery batches for a restaurant.
+  """
+  def list_restaurant_delivery_batches(restaurant_id) do
+    DeliveryBatch
+    |> where([b], b.restaurant_id == ^restaurant_id)
+    |> preload([:courier, orders: [:customer]])
+    |> order_by([b], desc: b.inserted_at)
+    |> Repo.all()
+  end
+
+  @doc """
+  Lists delivery batches for a courier.
+  """
+  def list_courier_delivery_batches(courier_id) do
+    DeliveryBatch
+    |> where([b], b.courier_id == ^courier_id)
+    |> where([b], b.status not in ["draft", "cancelled"])
+    |> preload([:restaurant, orders: [:customer]])
+    |> order_by([b], asc: b.scheduled_pickup_time)
+    |> Repo.all()
+  end
+
+  @doc """
+  Assigns orders to a delivery batch.
+  Updates the orders' delivery_batch_id and sets their delivery_status to "scheduled".
+  """
+  def assign_orders_to_batch(batch_id, order_ids) do
+    Repo.transaction(fn ->
+      # Update all orders to be assigned to this batch
+      {count, _} = 
+        from(o in Order, where: o.id in ^order_ids)
+        |> Repo.update_all(set: [
+          delivery_batch_id: batch_id,
+          delivery_status: "scheduled",
+          updated_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+        ])
+
+      if count == length(order_ids) do
+        # Get the updated batch
+        batch = get_delivery_batch_with_orders(batch_id)
+        batch
+      else
+        Repo.rollback("Failed to assign all orders to batch")
+      end
+    end)
+  end
 end

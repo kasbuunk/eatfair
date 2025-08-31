@@ -198,7 +198,7 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
   end
 
   defp search_restaurants(socket, query) do
-    # Apply search filter while preserving location and other filters
+    # Get all restaurants as starting point
     all_restaurants =
       case get_current_user_id(socket) do
         nil -> Restaurants.list_restaurants_with_location_data()
@@ -228,11 +228,10 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
     search_filtered_restaurants = filter_by_search_query(base_restaurants, query)
 
     # Apply all current filters on top of search results
-    filtered_restaurants =
-      filter_by_current_filters(search_filtered_restaurants, socket.assigns.filters)
+    final_restaurants = filter_by_current_filters(search_filtered_restaurants, socket.assigns.filters)
 
     socket
-    |> assign(:restaurants, filtered_restaurants)
+    |> assign(:restaurants, final_restaurants)
     |> calculate_cuisine_counts()
   end
 

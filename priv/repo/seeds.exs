@@ -2541,18 +2541,7 @@ courier_data = [
   },
 
   # Night Owl Express dedicated couriers (Utrecht-based for themed naming)
-  %{
-    name: "Max Speedman",
-    email: "max.speedman@courier.nightowl.nl",
-    password: "password123456",
-    role: "courier",
-    phone_number: "+31-6-2222-1001",
-    default_address: "Lange Nieuwstraat 106, 3512 PH Utrecht",
-    status: "active",
-    vehicle: "e-bike",
-    coverage_area: "utrecht-nightowl",
-    affiliated_restaurant: "Night Owl Express NL"
-  },
+  # Note: Max Speedman already exists above as courier.max@eatfair.nl
   %{
     name: "Lisa Lightning",
     email: "lisa.lightning@courier.nightowl.nl",
