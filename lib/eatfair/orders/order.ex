@@ -22,6 +22,7 @@ defmodule Eatfair.Orders.Order do
 
   schema "orders" do
     field :status, :string, default: "pending"
+    field :delivery_status, :string, default: "not_ready"
     field :total_price, :decimal
     field :courier_assigned_at, :naive_datetime
     field :delivery_address, :string
@@ -78,11 +79,20 @@ defmodule Eatfair.Orders.Order do
     timestamps()
   end
 
+  @valid_delivery_statuses [
+    "not_ready",
+    "staged",
+    "scheduled",
+    "in_transit",
+    "delivered"
+  ]
+
   @doc false
   def changeset(order, attrs) do
     order
     |> cast(attrs, [
       :status,
+      :delivery_status,
       :total_price,
       :delivery_address,
       :delivery_notes,
@@ -121,6 +131,7 @@ defmodule Eatfair.Orders.Order do
       message: "Please provide a complete delivery address"
     )
     |> validate_inclusion(:status, @valid_statuses)
+    |> validate_inclusion(:delivery_status, @valid_delivery_statuses)
     |> validate_number(:total_price, greater_than_or_equal_to: 0)
     |> validate_number(:estimated_prep_time_minutes, greater_than: 0)
     |> validate_number(:actual_prep_time_minutes, greater_than: 0)

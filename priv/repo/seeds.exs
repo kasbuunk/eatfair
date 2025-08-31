@@ -2538,6 +2538,32 @@ courier_data = [
     status: "active",
     vehicle: "e-bike",
     coverage_area: "test-area"
+  },
+
+  # Night Owl Express dedicated couriers (Utrecht-based for themed naming)
+  %{
+    name: "Max Speedman",
+    email: "max.speedman@courier.nightowl.nl",
+    password: "password123456",
+    role: "courier",
+    phone_number: "+31-6-2222-1001",
+    default_address: "Lange Nieuwstraat 106, 3512 PH Utrecht",
+    status: "active",
+    vehicle: "e-bike",
+    coverage_area: "utrecht-nightowl",
+    affiliated_restaurant: "Night Owl Express NL"
+  },
+  %{
+    name: "Lisa Lightning",
+    email: "lisa.lightning@courier.nightowl.nl",
+    password: "password123456",
+    role: "courier",
+    phone_number: "+31-6-2222-1002",
+    default_address: "Domplein 29, 3512 JE Utrecht",
+    status: "active",
+    vehicle: "scooter",
+    coverage_area: "utrecht-nightowl",
+    affiliated_restaurant: "Night Owl Express NL"
   }
 ]
 

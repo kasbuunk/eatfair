@@ -553,6 +553,17 @@ defmodule Eatfair.Orders do
   end
 
   @doc """
+  Lists orders by delivery status.
+  """
+  def list_orders_by_delivery_status(delivery_status) do
+    Order
+    |> where([o], o.delivery_status == ^delivery_status)
+    |> preload([:customer, :restaurant, order_items: :meal])
+    |> order_by([o], desc: o.inserted_at)
+    |> Repo.all()
+  end
+
+  @doc """
   Gets estimated delivery time based on order status and restaurant prep time.
   """
   def calculate_estimated_delivery(order) do
