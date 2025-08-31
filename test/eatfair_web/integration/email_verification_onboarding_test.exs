@@ -29,7 +29,7 @@ defmodule EatfairWeb.EmailVerificationOnboardingTest do
 
       # Assertions for the auto-account creation and redirect flow
       assert redirected_to(response) == "/users/account-setup"
-      assert get_flash(response, :info) =~ "Complete your account setup"
+      assert Phoenix.Flash.get(response.assigns.flash, :info) =~ "Complete your account setup"
 
       # Check user was created and logged in
       conn_after_verification = Plug.Conn.fetch_session(response)
@@ -64,7 +64,7 @@ defmodule EatfairWeb.EmailVerificationOnboardingTest do
 
       # This should PASS now that auto-account creation is implemented
       assert redirected_to(response) == "/users/account-setup"
-      assert get_flash(response, :info) =~ "Complete your account setup"
+      assert Phoenix.Flash.get(response.assigns.flash, :info) =~ "Complete your account setup"
 
       # Verify user was created and logged in
       conn_after_verification = Plug.Conn.fetch_session(response)
@@ -210,7 +210,7 @@ defmodule EatfairWeb.EmailVerificationOnboardingTest do
 
       # IMPLEMENTED BEHAVIOR: Should redirect to account setup after auto-account creation
       assert redirected_to(response) == "/users/account-setup"
-      assert get_flash(response, :info) =~ "Complete your account setup"
+      assert Phoenix.Flash.get(response.assigns.flash, :info) =~ "Complete your account setup"
 
       # Verify session was created (user is logged in automatically)
       conn_after_verification = Plug.Conn.fetch_session(response)
@@ -368,7 +368,7 @@ defmodule EatfairWeb.EmailVerificationOnboardingTest do
       response = get(conn, ~p"/verify-email/#{verification.token}")
 
       assert redirected_to(response) == "/"
-      assert get_flash(response, :error) =~ "expired"
+      assert Phoenix.Flash.get(response.assigns.flash, :error) =~ "expired"
     end
 
     test "should handle already verified tokens", %{conn: conn} do
@@ -391,7 +391,7 @@ defmodule EatfairWeb.EmailVerificationOnboardingTest do
       # Second attempt should handle gracefully
       response = get(conn, ~p"/verify-email/#{verification.token}")
       assert redirected_to(response) == "/"
-      assert get_flash(response, :info) =~ "already been verified"
+      assert Phoenix.Flash.get(response.assigns.flash, :info) =~ "already been verified"
     end
   end
 end

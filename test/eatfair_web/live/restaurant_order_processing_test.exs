@@ -12,7 +12,7 @@ defmodule EatfairWeb.RestaurantOrderProcessingTest do
     test "restaurant orders page must have navbar for navigation", %{conn: conn} do
       # 🎯 Setup: Restaurant owner accessing order management
       restaurant_owner = user_fixture(%{role: "restaurant_owner"})
-      restaurant = restaurant_fixture(%{owner_id: restaurant_owner.id})
+      _restaurant = restaurant_fixture(%{owner_id: restaurant_owner.id})
       
       conn = log_in_user(conn, restaurant_owner)
       

@@ -80,7 +80,7 @@ defmodule Eatfair.FileUpload do
   For MVP, this is a simple pass-through that returns the original binary.
   Future: Can implement actual compression with Mogrify or Image library.
   """
-  def compress_image(image_binary, opts \\ %{}) when is_binary(image_binary) do
+  def compress_image(image_binary, _opts \\ %{}) when is_binary(image_binary) do
     # For MVP, just return the original binary
     # In the future, this could:
     # - Resize based on opts[:max_width] || 1200
@@ -92,7 +92,7 @@ defmodule Eatfair.FileUpload do
   # Generate unique filename using timestamp and random string
   defp generate_filename do
     timestamp = System.system_time(:second)
-    random = :crypto.strong_rand_bytes(8) |> Base.encode32() |> binary_part(0, 8)
-    "#{timestamp}__{random}"
+    random_string = :crypto.strong_rand_bytes(8) |> Base.encode32() |> binary_part(0, 8)
+    "#{timestamp}__#{random_string}"
   end
 end
