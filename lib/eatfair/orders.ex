@@ -1337,4 +1337,32 @@ defmodule Eatfair.Orders do
       end
     end)
   end
+
+  @doc """
+  Counts delivery batches by status for a courier.
+  Returns a map with status as keys and counts as values.
+  """
+  def count_courier_batches_by_status(courier_id) do
+    DeliveryBatch
+    |> where([b], b.courier_id == ^courier_id)
+    |> where([b], b.status not in ["draft", "cancelled"])
+    |> group_by([b], b.status)
+    |> select([b], {b.status, count(b.id)})
+    |> Repo.all()
+    |> Enum.into(%{})
+  end
+
+  @doc """
+  Counts completed delivery batches for a courier today.
+  """
+  def count_courier_completed_batches_today(courier_id) do
+    today_start = DateTime.utc_now() |> DateTime.to_date() |> DateTime.new!(~T[00:00:00])
+    today_end = DateTime.add(today_start, 1, :day)
+
+    DeliveryBatch
+    |> where([b], b.courier_id == ^courier_id)
+    |> where([b], b.status == "completed")
+    |> where([b], b.updated_at >= ^today_start and b.updated_at < ^today_end)
+    |> Repo.aggregate(:count, :id)
+  end
 end
