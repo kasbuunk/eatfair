@@ -8,6 +8,46 @@ defmodule EatfairWeb.RestaurantOrderProcessingTest do
   alias Eatfair.Orders
   alias Eatfair.Notifications
 
+  describe "🧭 Restaurant Navigation: Critical Bug - Missing Navbar" do
+    test "restaurant orders page must have navbar for navigation", %{conn: conn} do
+      # 🎯 Setup: Restaurant owner accessing order management
+      restaurant_owner = user_fixture()
+      restaurant = restaurant_fixture(%{owner_id: restaurant_owner.id})
+      
+      conn = log_in_user(conn, restaurant_owner)
+      
+      # 🏪 Restaurant owner visits order management page
+      {:ok, orders_live, html} = live(conn, "/restaurant/orders")
+      
+      # ✅ Must have navbar with navigation links
+      assert has_element?(orders_live, "nav", "Navigation bar")
+      assert has_element?(orders_live, "a[href='/restaurant/dashboard']", "Dashboard link")
+      assert has_element?(orders_live, "a[href='/']", "Home link") 
+      
+      # ✅ Navbar should be part of main layout, not just order page
+      assert html =~ "nav"
+      # Check for typical navbar content
+      assert html =~ "EatFair" || html =~ "Dashboard" || html =~ "Home"
+      
+      # ✅ Navigation links should be functional
+      # Test clicking dashboard link takes user to dashboard
+      result = orders_live |> element("a[href='/restaurant/dashboard']") |> render_click()
+      
+      # Should redirect or navigate to dashboard
+      case result do
+        {:error, {:redirect, %{to: "/restaurant/dashboard"}}} -> 
+          # Good - proper redirect
+          assert true
+        {:error, {:live_redirect, %{to: "/restaurant/dashboard"}}} ->
+          # Also good - live redirect  
+          assert true
+        _ ->
+          # Should at least have redirect behavior
+          assert false, "Dashboard navigation should redirect to /restaurant/dashboard"
+      end
+    end
+  end
+
   describe "🏪 Restaurant Order Processing: Missing Critical Features" do
     test "restaurant owner can see pending orders and accept them", %{conn: conn} do
       # 🎯 Setup: Restaurant receives a new order in pending state  
