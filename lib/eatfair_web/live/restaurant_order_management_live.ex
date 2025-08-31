@@ -24,8 +24,8 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
         PubSub.subscribe(Eatfair.PubSub, "restaurant_orders:#{restaurant.id}")
         PubSub.subscribe(Eatfair.PubSub, "user_notifications:#{current_user.id}")
 
-        # Get orders grouped by status
-        orders_by_status = Orders.list_restaurant_orders(restaurant.id)
+        # Start with active orders by default
+        orders_by_status = Orders.list_restaurant_orders(restaurant.id, :active)
 
         # Load existing notification events for the user
         notification_events = Notifications.list_events_for_user(current_user.id)
@@ -36,6 +36,8 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
           socket
           |> assign(:restaurant, restaurant)
           |> assign(:orders_by_status, orders_by_status)
+          |> assign(:orders_filter, :active)  # Track current filter
+          |> assign(:history_orders, [])
           |> assign(:page_title, "Order Management - #{restaurant.name}")
           |> assign(:notifications, notifications)
           |> assign(:unread_count, unread_count)
@@ -338,6 +340,32 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
 
     {:noreply, socket}
   end
+  
+  @impl true
+  def handle_event("switch_to_active", _params, socket) do
+    orders_by_status = Orders.list_restaurant_orders(socket.assigns.restaurant.id, :active)
+    
+    socket = 
+      socket
+      |> assign(:orders_filter, :active)
+      |> assign(:orders_by_status, orders_by_status)
+      |> assign(:history_orders, [])
+    
+    {:noreply, socket}
+  end
+  
+  @impl true
+  def handle_event("switch_to_history", _params, socket) do
+    history_orders = Orders.list_restaurant_orders(socket.assigns.restaurant.id, :history)
+    
+    socket = 
+      socket
+      |> assign(:orders_filter, :history)
+      |> assign(:orders_by_status, %{pending: [], confirmed: [], preparing: [], ready: [], out_for_delivery: []})  # Empty for history view
+      |> assign(:history_orders, history_orders)
+    
+    {:noreply, socket}
+  end
 
   @impl true
   def render(assigns) do
@@ -424,6 +452,51 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
               </div>
             <% end %>
           <% end %>
+        </div>
+      </div>
+      
+    <!-- Active/History Tabs -->
+      <div class="mt-6">
+        <div class="border-b border-gray-200">
+          <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+            <button
+              phx-click="switch_to_active"
+              data-test="active-tab"
+              class={[
+                "whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors",
+                if(@orders_filter == :active,
+                  do: "border-blue-500 text-blue-600",
+                  else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                )
+              ]}
+            >
+              Active
+              <%= if @orders_filter == :active do %>
+                <span class="ml-2 bg-blue-100 text-blue-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
+                  {length(@orders_by_status.pending) + length(@orders_by_status.confirmed) + length(@orders_by_status.preparing) + length(@orders_by_status.ready) + length(@orders_by_status.out_for_delivery)}
+                </span>
+              <% end %>
+            </button>
+            
+            <button
+              phx-click="switch_to_history"
+              data-test="history-tab"
+              class={[
+                "whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors",
+                if(@orders_filter == :history,
+                  do: "border-blue-500 text-blue-600",
+                  else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                )
+              ]}
+            >
+              History
+              <%= if @orders_filter == :history do %>
+                <span class="ml-2 bg-blue-100 text-blue-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
+                  {length(@history_orders)}
+                </span>
+              <% end %>
+            </button>
+          </nav>
         </div>
       </div>
       
@@ -534,13 +607,114 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
           </div>
         <% end %>
         
-    <!-- Empty State -->
-        <%= if Enum.all?(@orders_by_status, fn {_status, orders} -> length(orders) == 0 end) do %>
-          <div class="text-center py-12">
-            <.icon name="hero-shopping-bag" class="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 class="text-lg font-medium text-gray-900 mb-2">No Active Orders</h3>
-            <p class="text-gray-500">When you receive orders, they'll appear here for management.</p>
-          </div>
+    <!-- History Orders -->
+        <%= if @orders_filter == :history do %>
+          <%= if length(@history_orders) > 0 do %>
+            <div>
+              <h2 class="text-xl font-bold text-gray-900 mb-4">Order History</h2>
+              <div class="bg-white shadow overflow-hidden sm:rounded-md">
+                <ul class="divide-y divide-gray-200">
+                  <%= for order <- @history_orders do %>
+                    <li class="px-6 py-4">
+                      <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                          <div class="flex-shrink-0">
+                            <div class={[
+                              "w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium",
+                              case order.status do
+                                "delivered" -> "bg-green-100 text-green-800"
+                                "cancelled" -> "bg-red-100 text-red-800"
+                                "delivery_failed" -> "bg-yellow-100 text-yellow-800"
+                                _ -> "bg-gray-100 text-gray-800"
+                              end
+                            ]}>
+                              <%= case order.status do %>
+                                <% "delivered" -> %> ✓
+                                <% "cancelled" -> %> ✗
+                                <% "delivery_failed" -> %> ⚠
+                                <% _ -> %> ?
+                              <% end %>
+                            </div>
+                          </div>
+                          
+                          <div class="ml-4">
+                            <div class="flex items-center">
+                              <p class="text-sm font-medium text-gray-900">
+                                Order #{order.id}
+                              </p>
+                              <span class={[
+                                "ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full",
+                                case order.status do
+                                  "delivered" -> "bg-green-100 text-green-800"
+                                  "cancelled" -> "bg-red-100 text-red-800"
+                                  "delivery_failed" -> "bg-yellow-100 text-yellow-800"
+                                  _ -> "bg-gray-100 text-gray-800"
+                                end
+                              ]}>
+                                {String.replace(order.status, "_", " ")}
+                              </span>
+                            </div>
+                            <div class="mt-1 flex items-center text-sm text-gray-500">
+                              <p>
+                                {order.delivery_address} • 
+                                <%= if order.delivered_at do %>
+                                  Completed {format_time_ago(order.delivered_at)}
+                                <% else %>
+                                  Completed {format_time_ago(order.updated_at)}
+                                <% end %>
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div class="flex items-center">
+                          <div class="text-right mr-4">
+                            <p class="text-sm font-medium text-gray-900">€{order.total_price}</p>
+                            <p class="text-sm text-gray-500">
+                              {Enum.reduce(order.order_items, 0, fn item, acc -> acc + item.quantity end)} items
+                            </p>
+                          </div>
+                          
+                          <div class="flex-shrink-0">
+                            <.icon name="hero-chevron-right" class="h-5 w-5 text-gray-400" />
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <!-- Order Items Summary -->
+                      <div class="mt-3 text-sm text-gray-600">
+                        <%= for item <- Enum.take(order.order_items, 3) do %>
+                          <span class="mr-4">
+                            {item.quantity}× {item.meal.name}
+                          </span>
+                        <% end %>
+                        <%= if length(order.order_items) > 3 do %>
+                          <span class="text-gray-400">
+                            and {length(order.order_items) - 3} more...
+                          </span>
+                        <% end %>
+                      </div>
+                    </li>
+                  <% end %>
+                </ul>
+              </div>
+            </div>
+          <% else %>
+            <div class="text-center py-12">
+              <.icon name="hero-clock" class="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 class="text-lg font-medium text-gray-900 mb-2">No Order History</h3>
+              <p class="text-gray-500">Completed and cancelled orders will appear here.</p>
+            </div>
+          <% end %>
+        <% else %>
+          <!-- Empty State for Active Orders -->
+          <%= if Enum.all?(@orders_by_status, fn {_status, orders} -> length(orders) == 0 end) do %>
+            <div class="text-center py-12">
+              <.icon name="hero-shopping-bag" class="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 class="text-lg font-medium text-gray-900 mb-2">No Active Orders</h3>
+              <p class="text-gray-500">When you receive orders, they'll appear here for management.</p>
+            </div>
+          <% end %>
         <% end %>
       </div>
     </div>

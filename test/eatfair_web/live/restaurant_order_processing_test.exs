@@ -27,7 +27,7 @@ defmodule EatfairWeb.RestaurantOrderProcessingTest do
       # ✅ Navbar should be part of main layout, not just order page
       assert html =~ "nav"
       # Check for typical navbar content
-      assert html =~ "EatFair" || html =~ "Dashboard" || html =~ "Home"
+      assert html =~ "Eatfair" || html =~ "My Restaurant" || html =~ "Track Orders"
       
       # ✅ Navigation links should be functional
       # Test clicking dashboard link takes user to dashboard (select desktop version)
@@ -342,6 +342,242 @@ defmodule EatfairWeb.RestaurantOrderProcessingTest do
       failure_event = Enum.find(events, &(&1.data["new_status"] == "delivery_failed"))
       assert failure_event != nil
       assert failure_event.priority == "high"
+    end
+  end
+
+  describe "📊 Historic Orders: Missing Critical Feature" do
+    test "restaurant owner can view completed order history", %{conn: conn} do
+      # 🎯 Setup: Restaurant with mix of active and historic orders
+      restaurant_owner = user_fixture(%{role: "restaurant_owner"})
+      restaurant = restaurant_fixture(%{owner_id: restaurant_owner.id})
+      customer = user_fixture()
+      meal = meal_fixture(%{restaurant_id: restaurant.id})
+
+      # Create active orders
+      {:ok, _active_order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Active Order Address",
+            status: "confirmed"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
+
+      # Create historic orders
+      {:ok, _delivered_order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Delivered Order Address",
+            status: "delivered"
+          },
+          [%{meal_id: meal.id, quantity: 2}]
+        )
+
+      {:ok, _cancelled_order} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Cancelled Order Address",
+            status: "cancelled"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
+
+      conn = log_in_user(conn, restaurant_owner)
+
+      # 🏪 Restaurant owner visits order management page
+      {:ok, orders_live, html} = live(conn, "/restaurant/orders")
+
+      # ✅ Should see "Active" tab by default
+      assert html =~ "Active"
+      assert html =~ "Active Order Address"
+      refute html =~ "Delivered Order Address"
+      refute html =~ "Cancelled Order Address"
+
+      # ✅ Should have "History" tab button
+      assert has_element?(orders_live, "[data-test='history-tab']", "History")
+
+      # 👨‍🍳 Restaurant owner clicks History tab
+      orders_live
+      |> element("[data-test='history-tab']")
+      |> render_click()
+
+      # ✅ Should now see historic orders
+      html = render(orders_live)
+      refute html =~ "Active Order Address"  # Active orders hidden
+      assert html =~ "Delivered Order Address"
+      assert html =~ "Cancelled Order Address"
+      assert html =~ "Delivered"
+      assert html =~ "cancelled"
+
+      # ✅ Should be able to switch back to Active tab
+      assert has_element?(orders_live, "[data-test='active-tab']", "Active")
+
+      orders_live
+      |> element("[data-test='active-tab']")
+      |> render_click()
+
+      html = render(orders_live)
+      assert html =~ "Active Order Address"
+      refute html =~ "Delivered Order Address"
+      refute html =~ "Cancelled Order Address"
+    end
+
+    test "Orders.list_restaurant_orders/2 supports active vs history filtering", %{conn: _conn} do
+      # 🎯 Test the context function directly
+      restaurant = restaurant_fixture()
+      customer = user_fixture()
+      meal = meal_fixture(%{restaurant_id: restaurant.id})
+
+      # Create orders in different statuses
+      {:ok, _pending} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Pending Address",
+            status: "pending"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
+
+      {:ok, _confirmed} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Confirmed Address",
+            status: "confirmed"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
+
+      {:ok, _delivered} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Delivered Address",
+            status: "delivered"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
+
+      {:ok, _cancelled} =
+        Orders.create_order_with_items(
+          %{
+            customer_id: customer.id,
+            restaurant_id: restaurant.id,
+            total_price: meal.price,
+            delivery_address: "Cancelled Address",
+            status: "cancelled"
+          },
+          [%{meal_id: meal.id, quantity: 1}]
+        )
+
+      # ✅ Active filter should return active statuses only
+      active_orders = Orders.list_restaurant_orders(restaurant.id, :active)
+      active_addresses = extract_addresses(active_orders)
+      assert "Pending Address" in active_addresses
+      assert "Confirmed Address" in active_addresses
+      refute "Delivered Address" in active_addresses
+      refute "Cancelled Address" in active_addresses
+
+      # ✅ History filter should return completed statuses only  
+      history_orders = Orders.list_restaurant_orders(restaurant.id, :history)
+      history_addresses = extract_addresses(history_orders)
+      refute "Pending Address" in history_addresses
+      refute "Confirmed Address" in history_addresses
+      assert "Delivered Address" in history_addresses
+      assert "Cancelled Address" in history_addresses
+
+      # ✅ Default (no filter) should return all active orders for backward compatibility
+      all_active_orders = Orders.list_restaurant_orders(restaurant.id)
+      all_addresses = extract_addresses(all_active_orders)
+      assert "Pending Address" in all_addresses
+      assert "Confirmed Address" in all_addresses
+      refute "Delivered Address" in all_addresses
+      refute "Cancelled Address" in all_addresses
+    end
+
+    defp extract_addresses(orders_by_status) when is_map(orders_by_status) do
+      orders_by_status
+      |> Map.values()
+      |> List.flatten()
+      |> Enum.map(& &1.delivery_address)
+    end
+
+    defp extract_addresses(orders) when is_list(orders) do
+      Enum.map(orders, & &1.delivery_address)
+    end
+  end
+
+  describe "🚚 Courier Integration: Missing Critical Features" do
+    test "Night Owl couriers can login and access delivery dashboard", %{conn: conn} do
+      # 🎯 Setup: Test specific Night Owl couriers from seeds
+      max_courier = user_fixture(%{
+        email: "max.speedman@courier.nightowl.nl",
+        name: "Max Speedman", 
+        role: "courier",
+        phone_number: "+31612345001"
+      })
+      
+      _lisa_courier = user_fixture(%{
+        email: "lisa.lightning@courier.nightowl.nl", 
+        name: "Lisa Lightning",
+        role: "courier",
+        phone_number: "+31612345002" 
+      })
+
+      # 🚚 Max courier logs in and accesses dashboard
+      conn = log_in_user(conn, max_courier)
+      
+      # ✅ Should be able to access courier dashboard
+      {:ok, courier_live, html} = live(conn, "/courier/dashboard")
+      
+      assert html =~ "Courier Dashboard"
+      assert html =~ "Max Speedman"  # Courier name displayed
+      assert html =~ "Available Delivery Batches"  # Core courier functionality
+      
+      # ✅ Should have logout functionality
+      assert has_element?(courier_live, "[data-test='logout-link']", "Log out")
+    end
+
+    test "courier role authorization prevents non-couriers from accessing courier dashboard", %{conn: conn} do
+      # 🎯 Setup: Regular customer tries to access courier dashboard
+      customer = user_fixture(%{role: "customer"})
+      conn = log_in_user(conn, customer)
+      
+      # ❌ Should be redirected and see error message
+      {:error, {:redirect, %{to: redirect_path, flash: %{"error" => error_message}}}} = 
+        live(conn, "/courier/dashboard")
+      
+      assert redirect_path == "/courier/login"
+      assert error_message =~ "You must be a courier"
+    end
+    
+    test "restaurant owners cannot access courier features", %{conn: conn} do
+      # 🎯 Setup: Restaurant owner tries courier access
+      restaurant_owner = user_fixture(%{role: "restaurant_owner"})
+      conn = log_in_user(conn, restaurant_owner)
+      
+      # ❌ Should be denied access
+      {:error, {:redirect, %{to: redirect_path, flash: %{"error" => error_message}}}} = 
+        live(conn, "/courier/dashboard")
+      
+      assert redirect_path == "/courier/login" 
+      assert error_message =~ "You must be a courier"
     end
   end
 end

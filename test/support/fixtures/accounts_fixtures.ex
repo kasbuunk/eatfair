@@ -28,6 +28,7 @@ defmodule Eatfair.AccountsFixtures do
   end
 
   def user_fixture(attrs \\ %{}) do
+    attrs = if is_list(attrs), do: Enum.into(attrs, %{}), else: attrs
     user = unconfirmed_user_fixture(attrs)
 
     # Update role if specified
@@ -43,6 +44,18 @@ defmodule Eatfair.AccountsFixtures do
 
         role when is_binary(role) ->
           changeset = Ecto.Changeset.change(user, %{role: role})
+          {:ok, updated_user} = Eatfair.Repo.update(changeset)
+          updated_user
+      end
+    
+    # Update name and phone_number if specified
+    user =
+      case Map.take(attrs, [:name, :phone_number]) do
+        empty when map_size(empty) == 0 ->
+          user
+          
+        updates ->
+          changeset = Ecto.Changeset.change(user, updates)
           {:ok, updated_user} = Eatfair.Repo.update(changeset)
           updated_user
       end

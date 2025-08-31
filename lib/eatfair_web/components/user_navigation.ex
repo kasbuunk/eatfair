@@ -47,7 +47,6 @@ defmodule EatfairWeb.UserNavigation do
                 Track Orders
               </.link>
               
-    <!-- Restaurant Dashboard (if owner) -->
               <%= if @current_scope.user.role == "restaurant_owner" do %>
                 <.link
                   navigate={~p"/restaurant/dashboard"}
@@ -93,13 +92,15 @@ defmodule EatfairWeb.UserNavigation do
                       <.icon name="hero-cog-6-tooth" class="w-4 h-4 mr-3" /> Account Settings
                     </.link>
 
-                    <.link
-                      navigate={~p"/restaurant/onboard"}
-                      class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
-                    >
-                      <.icon name="hero-building-storefront" class="w-4 h-4 mr-3" />
-                      Start Your Restaurant
-                    </.link>
+                    <%= if @current_scope.user.role != "courier" do %>
+                      <.link
+                        navigate={~p"/restaurant/onboard"}
+                        class="flex items-center px-4 py-2 text-sm text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      >
+                        <.icon name="hero-building-storefront" class="w-4 h-4 mr-3" />
+                        Start Your Restaurant
+                      </.link>
+                    <% end %>
 
                     <hr class="my-1 border-gray-200 dark:border-gray-600" />
 
@@ -107,8 +108,9 @@ defmodule EatfairWeb.UserNavigation do
                       href={~p"/users/log-out"}
                       method="delete"
                       class="flex items-center px-4 py-2 text-sm text-red-600 dark:text-red-400 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
+                      data-test="logout-link"
                     >
-                      <.icon name="hero-arrow-right-on-rectangle" class="w-4 h-4 mr-3" /> Log Out
+                      <.icon name="hero-arrow-right-on-rectangle" class="w-4 h-4 mr-3" /> Log out
                     </.link>
                   </div>
                 </div>
@@ -190,19 +192,22 @@ defmodule EatfairWeb.UserNavigation do
                 Account Settings
               </.link>
 
-              <.link
-                navigate={~p"/restaurant/onboard"}
-                class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
-              >
-                Start Your Restaurant
-              </.link>
+              <%= if @current_scope.user.role != "courier" do %>
+                <.link
+                  navigate={~p"/restaurant/onboard"}
+                  class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
+                >
+                  Start Your Restaurant
+                </.link>
+              <% end %>
 
               <.link
                 href={~p"/users/log-out"}
                 method="delete"
                 class="block px-3 py-2 text-base font-medium text-red-600 dark:text-red-400 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
+                data-test="logout-link"
               >
-                Log Out
+                Log out
               </.link>
             <% else %>
               <.link

@@ -481,13 +481,33 @@ defmodule Eatfair.Orders do
   Lists orders for a restaurant organized by status.
   """
   def list_restaurant_orders(restaurant_id) do
-    Order
+    list_restaurant_orders(restaurant_id, :active)
+  end
+
+  @doc """
+  Lists orders for a restaurant with filtering support.
+  
+  ## Parameters
+  - restaurant_id: The ID of the restaurant
+  - filter: :active (default) for pending/confirmed/preparing/ready/out_for_delivery, or :history for delivered/cancelled
+  """
+  def list_restaurant_orders(restaurant_id, filter) when filter in [:active, :history] do
+    statuses = case filter do
+      :active -> ["pending", "confirmed", "preparing", "ready", "out_for_delivery"]
+      :history -> ["delivered", "cancelled", "delivery_failed"]
+    end
+    
+    orders = Order
     |> where([o], o.restaurant_id == ^restaurant_id)
-    |> where([o], o.status in ["pending", "confirmed", "preparing", "ready", "out_for_delivery"])
+    |> where([o], o.status in ^statuses)
     |> preload([:customer, order_items: :meal])
-    |> order_by([o], asc: :inserted_at)
+    |> order_by([o], desc: :inserted_at)  # History shows most recent first
     |> Repo.all()
-    |> group_orders_by_status()
+    
+    case filter do
+      :active -> group_orders_by_status(orders)
+      :history -> orders  # History returns flat list, not grouped
+    end
   end
 
   @doc """

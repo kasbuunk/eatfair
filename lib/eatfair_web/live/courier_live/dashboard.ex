@@ -1,5 +1,7 @@
 defmodule EatfairWeb.CourierLive.Dashboard do
   use EatfairWeb, :live_view
+  
+  alias EatfairWeb.Layouts
 
   @impl Phoenix.LiveView
   def mount(_params, _session, socket) do
@@ -13,6 +15,7 @@ defmodule EatfairWeb.CourierLive.Dashboard do
   @impl Phoenix.LiveView
   def render(assigns) do
     ~H"""
+    <Layouts.app flash={assigns[:flash] || %{}} current_scope={assigns[:current_scope]}>
     <div class="min-h-screen bg-gray-50">
       <div class="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
         <div class="mb-8">
@@ -20,7 +23,7 @@ defmodule EatfairWeb.CourierLive.Dashboard do
             🚚 Courier Dashboard
           </h1>
           <p class="mt-2 text-sm text-gray-600">
-            Welcome, {@current_scope.user.name}!
+            Welcome, {(@current_scope && @current_scope.user && @current_scope.user.name) || "Courier"}!
           </p>
         </div>
 
@@ -97,7 +100,7 @@ defmodule EatfairWeb.CourierLive.Dashboard do
         
     <!-- Available Deliveries Section -->
         <div class="mt-8">
-          <h2 class="text-lg font-medium text-gray-900 mb-4">Available Deliveries</h2>
+          <h2 class="text-lg font-medium text-gray-900 mb-4">Available Delivery Batches</h2>
           <div class="bg-white shadow overflow-hidden sm:rounded-md">
             <ul class="divide-y divide-gray-200">
               <!-- Sample delivery items -->
@@ -132,6 +135,7 @@ defmodule EatfairWeb.CourierLive.Dashboard do
         </div>
       </div>
     </div>
+    </Layouts.app>
     """
   end
 end
