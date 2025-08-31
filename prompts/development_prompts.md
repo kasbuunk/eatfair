@@ -132,6 +132,8 @@ PROVIDE SPECIFIC IMPROVEMENTS WITH CODE EXAMPLES.
 
 ## Refactoring Prompts
 
+**Comprehensive Refactoring**: For systematic code quality improvement, SOLID principles, and boy scout rule: [Refactoring Framework](refactoring.md) - Complete refactoring workflow
+
 ### Technical Debt Resolution
 ```
 I need to address technical debt: [DEBT_DESCRIPTION]

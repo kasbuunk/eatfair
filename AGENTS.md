@@ -169,6 +169,7 @@ All agent types must:
 - **#documentation** → `prompts/sync_documentation.md` - Documentation sync and maintenance
 - **#testing** → `prompts/validate_and_fix_tests.md` - Test validation and debugging
 - **#development** → `prompts/start_feature_development.md` - Feature development workflow
+- **#refactoring** → `prompts/refactoring.md` - Code quality improvement and technical debt resolution
 
 ### Comprehensive Development
 - **#prompts** → `prompts/development_prompts.md` - Collection of common development task prompts
