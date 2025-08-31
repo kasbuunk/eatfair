@@ -1,4 +1,5 @@
-<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" data-test="restaurant-dashboard">
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8" data-test="restaurant-dashboard">
   <!-- Header with Restaurant Info and Status -->
   <div class="bg-white shadow rounded-lg p-6 mb-8">
     <div class="flex items-center justify-between">
@@ -123,43 +124,87 @@
         <.icon name="hero-clipboard-document-list" class="w-8 h-8 text-indigo-500 mr-3" />
         <div>
           <h2 class="text-xl font-semibold text-gray-900">Order Management</h2>
-          <p class="text-gray-600">Real-time order status and management</p>
+          <div class="flex items-center space-x-2">
+            <p class="text-gray-600">Real-time order status and management</p>
+            <div class="flex items-center space-x-1 text-xs" data-test="connection-status">
+              <div class={[
+                "w-2 h-2 rounded-full",
+                (if @connection_status == :connected, do: "bg-green-500", else: "bg-red-500")
+              ]}></div>
+              <span class={[
+                "font-medium",
+                (if @connection_status == :connected, do: "text-green-600", else: "text-red-600")
+              ]}>
+                <%= if @connection_status == :connected do %>
+                  Live
+                <% else %>
+                  Offline
+                <% end %>
+              </span>
+              <span class="text-gray-400">•</span>
+              <span class="text-gray-500">
+                Updated {DateTime.diff(DateTime.utc_now(), @last_updated, :second)}s ago
+              </span>
+            </div>
+          </div>
         </div>
       </div>
-      <.link
-        href={~p"/restaurant/orders"}
-        data-test="manage-orders-link"
-        class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors font-medium"
-      >
-        <.icon name="hero-arrow-right" class="w-4 h-4 ml-2" /> Manage Orders
-      </.link>
+      <div class="flex items-center space-x-3">
+        <!-- Notification Bell -->
+        <div class="relative">
+          <button 
+            phx-click="toggle_notification_center"
+            class="p-2 rounded-full hover:bg-gray-100 relative transition-colors"
+            aria-label="Notifications"
+            data-test="notification-bell"
+          >
+            <.icon name="hero-bell" class="h-6 w-6 text-gray-700" />
+            <%= if @unread_count > 0 do %>
+              <span 
+                class="absolute top-0 right-0 -mt-1 -mr-1 px-2 py-1 text-xs font-bold rounded-full bg-red-500 text-white"
+                data-test="notification-count"
+              >
+                {@unread_count}
+              </span>
+            <% end %>
+          </button>
+        </div>
+        
+        <.link
+          href={~p"/restaurant/orders"}
+          data-test="manage-orders-link"
+          class="inline-flex items-center px-4 py-2 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition-colors font-medium"
+        >
+          <.icon name="hero-arrow-right" class="w-4 h-4 ml-2" /> Manage Orders
+        </.link>
+      </div>
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
       <!-- Pending Confirmations -->
       <div class={[
         "rounded-lg p-4 border-2", 
-        if @pending_count > 0, do: "bg-red-50 border-red-200", else: "bg-gray-50 border-gray-200"
+        (if @pending_count > 0, do: "bg-red-50 border-red-200", else: "bg-gray-50 border-gray-200")
       ]}>
         <div class="flex items-center justify-between">
           <div class="flex items-center">
             <.icon 
               name="hero-exclamation-triangle" 
-              class={[
+              class={Enum.join([
                 "w-6 h-6 mr-3",
-                if @pending_count > 0, do: "text-red-500", else: "text-gray-400"
-              ]} 
+                (if @pending_count > 0, do: "text-red-500", else: "text-gray-400")
+              ], " ")} 
             />
             <div>
               <p class={[
                 "text-2xl font-bold",
-                if @pending_count > 0, do: "text-red-700", else: "text-gray-500"
+                (if @pending_count > 0, do: "text-red-700", else: "text-gray-500")
               ]}>
                 {@pending_count}
               </p>
               <p class={[
                 "text-sm font-medium",
-                if @pending_count > 0, do: "text-red-600", else: "text-gray-500"
+                (if @pending_count > 0, do: "text-red-600", else: "text-gray-500")
               ]}>
                 Pending Confirmations
               </p>
@@ -185,27 +230,27 @@
       <!-- Active Orders -->
       <div class={[
         "rounded-lg p-4 border-2", 
-        if @active_count > 0, do: "bg-blue-50 border-blue-200", else: "bg-gray-50 border-gray-200"
+        (if @active_count > 0, do: "bg-blue-50 border-blue-200", else: "bg-gray-50 border-gray-200")
       ]}>
         <div class="flex items-center justify-between">
           <div class="flex items-center">
             <.icon 
               name="hero-cog-6-tooth" 
-              class={[
+              class={Enum.join([
                 "w-6 h-6 mr-3",
-                if @active_count > 0, do: "text-blue-500", else: "text-gray-400"
-              ]} 
+                (if @active_count > 0, do: "text-blue-500", else: "text-gray-400")
+              ], " ")} 
             />
             <div>
               <p class={[
                 "text-2xl font-bold",
-                if @active_count > 0, do: "text-blue-700", else: "text-gray-500"
+                (if @active_count > 0, do: "text-blue-700", else: "text-gray-500")
               ]}>
                 {@active_count}
               </p>
               <p class={[
                 "text-sm font-medium",
-                if @active_count > 0, do: "text-blue-600", else: "text-gray-500"
+                (if @active_count > 0, do: "text-blue-600", else: "text-gray-500")
               ]}>
                 Active Orders
               </p>
@@ -326,4 +371,67 @@
       </div>
     </div>
   </div>
-</div>
+  
+  <!-- Notification Center -->
+  <%= if @show_notification_center do %>
+    <div 
+      class="fixed top-20 right-4 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto"
+      data-test="notification-center"
+    >
+      <div class="p-3 border-b border-gray-200 flex justify-between items-center">
+        <h3 class="font-semibold text-gray-800">Recent Updates</h3>
+        <button 
+          phx-click="toggle_notification_center"
+          class="text-gray-400 hover:text-gray-600"
+          aria-label="Close notifications"
+        >
+          <.icon name="hero-x-mark" class="h-4 w-4" />
+        </button>
+      </div>
+      
+      <div>
+        <%= if Enum.empty?(@notifications) do %>
+          <div class="p-4 text-center text-gray-500">
+            <.icon name="hero-bell-slash" class="w-8 h-8 mx-auto mb-2 text-gray-300" />
+            <p class="text-sm">No recent notifications</p>
+            <p class="text-xs text-gray-400 mt-1">New order updates will appear here</p>
+          </div>
+        <% else %>
+          <%= for notification <- @notifications do %>
+            <div 
+              id={"notification-#{notification.id}"}
+              data-test="notification-item"
+              class={[
+                "p-3 border-b border-gray-100 relative hover:bg-gray-50 transition-colors",
+                if(notification.read, do: "bg-gray-50", else: "bg-white"),
+                if(notification.priority == :critical, do: "border-l-4 border-l-red-500", else: "")
+              ]}
+            >
+              <button 
+                phx-click="dismiss_notification"
+                phx-value-id={notification.id}
+                data-test="dismiss-notification"
+                class="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+                aria-label="Dismiss"
+              >
+                <.icon name="hero-x-mark" class="h-4 w-4" />
+              </button>
+              
+              <div class="pr-5">
+                <p class={[
+                  "font-medium text-sm", 
+                  if(notification.priority == :critical, do: "text-red-700", else: "text-gray-800")
+                ]}>
+                  {notification.title}
+                </p>
+                <p class="text-sm text-gray-600 mt-1">{notification.message}</p>
+                <p class="text-xs text-gray-400 mt-1">{format_time_ago(notification.timestamp)}</p>
+              </div>
+            </div>
+          <% end %>
+        <% end %>
+      </div>
+    </div>
+  <% end %>
+  </div>
+</Layouts.app>
