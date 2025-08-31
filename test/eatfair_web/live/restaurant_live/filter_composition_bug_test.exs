@@ -4,7 +4,7 @@ defmodule EatfairWeb.RestaurantLive.FilterCompositionBugTest do
   import Phoenix.LiveViewTest
   import Eatfair.RestaurantsFixtures
 
-  @moduletag :skip
+  # @moduletag :skip  # UN-SKIPPED: Critical bug affecting restaurant discovery
 
   describe "Restaurant Filter Composition Bug" do
     setup do

@@ -4,9 +4,12 @@ defmodule EatfairWeb.Live.Components.AddressAutocompleteTest do
 
   alias EatfairWeb.Live.Components.AddressAutocomplete
 
-  # NOTE: These tests are temporarily disabled due to live_isolated API changes
-  # They use an older API that no longer works with Phoenix LiveView 1.1.8
-  # The AddressAutocomplete component is tested through integration tests instead
+  # DEPRECATED: Superseded by integration tests
+  # These isolated component tests use the older live_isolated API that is incompatible with Phoenix LiveView 1.1.8
+  # The AddressAutocomplete component is comprehensively tested through:
+  # - test/eatfair_web/live/restaurant_live/discovery_redesign_test.exs (integration tests)
+  # - test/eatfair_web/integration/restaurant_discovery_test.exs (end-to-end user journeys)
+  # See: features_completed.md "Address Autocomplete Component" for functionality validation
   @moduletag :skip
 
   describe "AddressAutocomplete component" do

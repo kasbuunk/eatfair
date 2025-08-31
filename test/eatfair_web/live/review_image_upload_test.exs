@@ -7,7 +7,9 @@ defmodule EatfairWeb.ReviewImageUploadTest do
 
   alias Eatfair.{Orders, Reviews}
 
-  # Skip these tests until image upload functionality is implemented
+  # POST-MVP: Secure File Upload & Storage System (per product specification)
+  # See: product_specification.md "Secure File Upload & Storage System" - Priority: Post-MVP (Security-Critical Implementation)
+  # This feature requires comprehensive security architecture including malware detection, CDN integration, and audit logging
   @moduletag :skip
 
   setup do
