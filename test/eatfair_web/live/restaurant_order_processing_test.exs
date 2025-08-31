@@ -11,7 +11,7 @@ defmodule EatfairWeb.RestaurantOrderProcessingTest do
   describe "🧭 Restaurant Navigation: Critical Bug - Missing Navbar" do
     test "restaurant orders page must have navbar for navigation", %{conn: conn} do
       # 🎯 Setup: Restaurant owner accessing order management
-      restaurant_owner = user_fixture()
+      restaurant_owner = user_fixture(%{role: "restaurant_owner"})
       restaurant = restaurant_fixture(%{owner_id: restaurant_owner.id})
       
       conn = log_in_user(conn, restaurant_owner)
@@ -21,8 +21,8 @@ defmodule EatfairWeb.RestaurantOrderProcessingTest do
       
       # ✅ Must have navbar with navigation links
       assert has_element?(orders_live, "nav", "Navigation bar")
-      assert has_element?(orders_live, "a[href='/restaurant/dashboard']", "Dashboard link")
-      assert has_element?(orders_live, "a[href='/']", "Home link") 
+      assert has_element?(orders_live, "a[href='/restaurant/dashboard']", "My Restaurant")
+      assert has_element?(orders_live, "a[href='/']", "Eatfair")
       
       # ✅ Navbar should be part of main layout, not just order page
       assert html =~ "nav"
@@ -30,8 +30,8 @@ defmodule EatfairWeb.RestaurantOrderProcessingTest do
       assert html =~ "EatFair" || html =~ "Dashboard" || html =~ "Home"
       
       # ✅ Navigation links should be functional
-      # Test clicking dashboard link takes user to dashboard
-      result = orders_live |> element("a[href='/restaurant/dashboard']") |> render_click()
+      # Test clicking dashboard link takes user to dashboard (select desktop version)
+      result = orders_live |> element(".hidden.md\\:flex a[href='/restaurant/dashboard']") |> render_click()
       
       # Should redirect or navigate to dashboard
       case result do
