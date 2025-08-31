@@ -173,6 +173,39 @@ defmodule Eatfair.Orders do
   end
 
   @doc """
+  Counts pending orders for a restaurant that need confirmation.
+  
+  Returns the number of orders with status "pending" for the given restaurant.
+  Used by restaurant dashboard to show at-a-glance order confirmation needs.
+  
+  ## Examples
+  
+      iex> count_pending_confirmations(restaurant_id)
+      3
+  
+  """
+  def count_pending_confirmations(restaurant_id) do
+    count_restaurant_orders_by_status(restaurant_id, "pending")
+  end
+
+  @doc """
+  Counts active orders for a restaurant (confirmed through out_for_delivery).
+  
+  Returns the number of orders that are currently being processed by the restaurant.
+  Includes statuses: "confirmed", "preparing", "ready", "out_for_delivery".
+  Excludes: "pending", "delivered", "cancelled".
+  
+  ## Examples
+  
+      iex> count_active_orders(restaurant_id)
+      12
+  
+  """
+  def count_active_orders(restaurant_id) do
+    count_restaurant_orders_by_status(restaurant_id, ["confirmed", "preparing", "ready", "out_for_delivery"])
+  end
+
+  @doc """
   Gets a single order.
 
   Raises `Ecto.NoResultsError` if the Order does not exist.
@@ -515,6 +548,23 @@ defmodule Eatfair.Orders do
   end
 
   # Private helper functions
+
+  # Helper function for restaurant order counts
+  defp count_restaurant_orders_by_status(restaurant_id, status) when is_binary(status) do
+    Order
+    |> select([o], count(o.id))
+    |> where([o], o.restaurant_id == ^restaurant_id)
+    |> where([o], o.status == ^status)
+    |> Repo.one()
+  end
+
+  defp count_restaurant_orders_by_status(restaurant_id, statuses) when is_list(statuses) do
+    Order
+    |> select([o], count(o.id))
+    |> where([o], o.restaurant_id == ^restaurant_id)
+    |> where([o], o.status in ^statuses)
+    |> Repo.one()
+  end
 
   defp add_status_timestamp(attrs, status, timestamp) do
     case status do

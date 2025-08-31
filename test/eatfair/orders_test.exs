@@ -309,4 +309,197 @@ defmodule Eatfair.OrdersTest do
       assert is_float(event.metadata[:total_amount])
     end
   end
+
+  describe "order counts for restaurant dashboard" do
+    test "count_pending_confirmations/1 returns number of pending orders" do
+      # Setup: Restaurant and customers
+      restaurant = restaurant_fixture()
+      customer1 = user_fixture()
+      customer2 = user_fixture()
+      meal = meal_fixture(%{restaurant_id: restaurant.id})
+
+      # Create orders with various statuses
+      {:ok, _pending1} = Orders.create_order_with_items(
+        %{
+          customer_id: customer1.id,
+          restaurant_id: restaurant.id,
+          total_price: meal.price,
+          delivery_address: "Address 1",
+          status: "pending"
+        },
+        [%{meal_id: meal.id, quantity: 1}]
+      )
+
+      {:ok, _pending2} = Orders.create_order_with_items(
+        %{
+          customer_id: customer2.id,
+          restaurant_id: restaurant.id,
+          total_price: meal.price,
+          delivery_address: "Address 2",
+          status: "pending"
+        },
+        [%{meal_id: meal.id, quantity: 1}]
+      )
+
+      {:ok, _confirmed} = Orders.create_order_with_items(
+        %{
+          customer_id: customer1.id,
+          restaurant_id: restaurant.id,
+          total_price: meal.price,
+          delivery_address: "Address 3",
+          status: "confirmed"
+        },
+        [%{meal_id: meal.id, quantity: 1}]
+      )
+
+      # Test the count function
+      assert Orders.count_pending_confirmations(restaurant.id) == 2
+    end
+
+    test "count_active_orders/1 returns number of active orders (confirmed through out_for_delivery)" do
+      # Setup
+      restaurant = restaurant_fixture()
+      customer = user_fixture()
+      meal = meal_fixture(%{restaurant_id: restaurant.id})
+
+      # Create orders with various statuses
+      {:ok, _pending} = Orders.create_order_with_items(
+        %{
+          customer_id: customer.id,
+          restaurant_id: restaurant.id,
+          total_price: meal.price,
+          delivery_address: "Address 1",
+          status: "pending"
+        },
+        [%{meal_id: meal.id, quantity: 1}]
+      )
+
+      {:ok, _confirmed} = Orders.create_order_with_items(
+        %{
+          customer_id: customer.id,
+          restaurant_id: restaurant.id,
+          total_price: meal.price,
+          delivery_address: "Address 2",
+          status: "confirmed"
+        },
+        [%{meal_id: meal.id, quantity: 1}]
+      )
+
+      {:ok, _preparing} = Orders.create_order_with_items(
+        %{
+          customer_id: customer.id,
+          restaurant_id: restaurant.id,
+          total_price: meal.price,
+          delivery_address: "Address 3",
+          status: "preparing"
+        },
+        [%{meal_id: meal.id, quantity: 1}]
+      )
+
+      {:ok, _ready} = Orders.create_order_with_items(
+        %{
+          customer_id: customer.id,
+          restaurant_id: restaurant.id,
+          total_price: meal.price,
+          delivery_address: "Address 4",
+          status: "ready"
+        },
+        [%{meal_id: meal.id, quantity: 1}]
+      )
+
+      {:ok, _out_for_delivery} = Orders.create_order_with_items(
+        %{
+          customer_id: customer.id,
+          restaurant_id: restaurant.id,
+          total_price: meal.price,
+          delivery_address: "Address 5",
+          status: "out_for_delivery"
+        },
+        [%{meal_id: meal.id, quantity: 1}]
+      )
+
+      {:ok, _delivered} = Orders.create_order_with_items(
+        %{
+          customer_id: customer.id,
+          restaurant_id: restaurant.id,
+          total_price: meal.price,
+          delivery_address: "Address 6",
+          status: "delivered"
+        },
+        [%{meal_id: meal.id, quantity: 1}]
+      )
+
+      {:ok, _cancelled} = Orders.create_order_with_items(
+        %{
+          customer_id: customer.id,
+          restaurant_id: restaurant.id,
+          total_price: meal.price,
+          delivery_address: "Address 7",
+          status: "cancelled"
+        },
+        [%{meal_id: meal.id, quantity: 1}]
+      )
+
+      # Active orders are: confirmed, preparing, ready, out_for_delivery
+      # Should NOT include: pending, delivered, cancelled
+      assert Orders.count_active_orders(restaurant.id) == 4
+    end
+
+    test "count functions return 0 for restaurant with no orders" do
+      restaurant = restaurant_fixture()
+      
+      assert Orders.count_pending_confirmations(restaurant.id) == 0
+      assert Orders.count_active_orders(restaurant.id) == 0
+    end
+
+    test "count functions only count orders for the specified restaurant" do
+      restaurant1 = restaurant_fixture()
+      restaurant2 = restaurant_fixture()
+      customer = user_fixture()
+      meal1 = meal_fixture(%{restaurant_id: restaurant1.id})
+      meal2 = meal_fixture(%{restaurant_id: restaurant2.id})
+
+      # Create orders for restaurant1
+      {:ok, _pending1} = Orders.create_order_with_items(
+        %{
+          customer_id: customer.id,
+          restaurant_id: restaurant1.id,
+          total_price: meal1.price,
+          delivery_address: "Address 1",
+          status: "pending"
+        },
+        [%{meal_id: meal1.id, quantity: 1}]
+      )
+
+      {:ok, _confirmed1} = Orders.create_order_with_items(
+        %{
+          customer_id: customer.id,
+          restaurant_id: restaurant1.id,
+          total_price: meal1.price,
+          delivery_address: "Address 2",
+          status: "confirmed"
+        },
+        [%{meal_id: meal1.id, quantity: 1}]
+      )
+
+      # Create orders for restaurant2
+      {:ok, _pending2} = Orders.create_order_with_items(
+        %{
+          customer_id: customer.id,
+          restaurant_id: restaurant2.id,
+          total_price: meal2.price,
+          delivery_address: "Address 3",
+          status: "pending"
+        },
+        [%{meal_id: meal2.id, quantity: 1}]
+      )
+
+      # Each restaurant should only see its own orders
+      assert Orders.count_pending_confirmations(restaurant1.id) == 1
+      assert Orders.count_active_orders(restaurant1.id) == 1
+      
+      assert Orders.count_pending_confirmations(restaurant2.id) == 1
+      assert Orders.count_active_orders(restaurant2.id) == 0
+    end
+  end
 end

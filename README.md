@@ -45,30 +45,55 @@ mix run priv/repo/seeds.exs
 ### 🍽️ Restaurant Owners
 | Name | Email | Restaurant | Location |
 |------|-------|------------|----------|
-| Marco Rossi | `marco@bellaitalia.com` | Bella Italia Amsterdam | Amsterdam |
-| Wei Chen | `wei@goldenlotus.com` | Golden Lotus | Amsterdam |
+| Marco Rossi | `marco@bellaitalia.com` | Bella Italia Central | Amsterdam |
+| Wei Chen | `wei@goldenlotus.com` | Golden Lotus Amsterdam | Amsterdam |
 | Marie Dubois | `marie@jordaanbistro.com` | Jordaan Bistro | Amsterdam |
-| Raj Patel | `raj@spicegarden.com` | Spice Garden Utrecht | Utrecht |
-| Carlos Mendoza | `carlos@utrechttaco.com` | Utrecht Taco Bar | Utrecht |
-| **Wei Chen** | `owner22@nightowlexpressnl.nl` | **Night Owl Express NL** | **Utrecht** |
+| Yuki Tanaka | `yuki@sushitokyo.com` | Sushi Tokyo East | Amsterdam |
+| Emma de Vries | `emma@healthybowl.nl` | Healthy Bowl Co. | Amsterdam |
+| Jake Williams | `jake@burgerpalace.com` | Burger Palace Amsterdam | Amsterdam |
+| Raj Patel | `raj@spiceroute.com` | Spice Route India | Amsterdam |
+| Priya Sharma | `priya@spicegarden.nl` | Spice Garden Utrecht | Utrecht |
+| Carlos Mendoza | `carlos@utrechttaco.nl` | Utrecht Taco Bar | Utrecht |
+| **Night Owl Manager** | `owner@nightowl.nl` | **Night Owl Express NL** | **Utrecht** |
 
 ### 📱 Customer Accounts
 | Name | Email | Location | Special Features |
 |------|-------|----------|------------------|
 | Test Customer | `test@eatfair.nl` | Central Amsterdam | General testing |
-| Piet van Amsterdam | `piet@example.nl` | Amsterdam | Regular customer |
-| Emma Janssen | `emma@example.nl` | Utrecht | Utrecht resident |
-| Lisa de Vries | `lisa@example.nl` | Het Gooi | Distance boundary testing |
-| Jan de Frequent | `frequent@example.nl` | Amsterdam | **Has test orders in all status states** |
-| Sophie Vegano | `vegan@example.nl` | Amsterdam | Dietary preferences testing |
-| Multi Address | `multi@example.nl` | Amsterdam | **Multiple addresses**: Work, Holiday Home, Parents' House |
+| Piet van Amsterdam | `piet@eatfair.nl` | Amsterdam | Regular customer |
+| Emma Janssen | `emma@utrecht.nl` | Utrecht | Utrecht resident |
+| Lisa de Vries | `lisa@hetgooi.nl` | Het Gooi | Distance boundary testing |
+| Jan de Frequent | `frequent@eatfair.nl` | Amsterdam | **Has test orders in all status states** |
+| Sophie Vegano | `vegan@eatfair.nl` | Amsterdam | Dietary preferences testing |
+| Multi Address | `multi@eatfair.nl` | Amsterdam | **Multiple addresses**: Work, Holiday Home, Parents' House |
 
 ### 🚚 Courier Accounts
 | Name | Email | Location |
 |------|-------|----------|
-| Max Speedman | `courier1@example.nl` | East Amsterdam |
-| Fietskoerier Utrecht | `courier2@example.nl` | Central Utrecht |
-| Test Courier | `testcourier@eatfair.nl` | Central Amsterdam |
+| Max Speedman | `courier.max@eatfair.nl` | East Amsterdam |
+| Lisa Lightning | `courier.lisa@eatfair.nl` | West Amsterdam |
+| Ahmed Express | `courier.ahmed@eatfair.nl` | East Amsterdam |
+| Sophie Delivery | `courier.sophie@eatfair.nl` | South Amsterdam |
+| Utrecht Rider | `courier.utrecht@eatfair.nl` | Central Utrecht |
+| Snelle Jan | `courier.jan.utrecht@eatfair.nl` | South Utrecht |
+
+---
+
+## ✅ Verify Login Credentials
+
+To test that you can actually log in with the accounts above:
+
+```bash
+# Reset and seed the database with test accounts
+mix ecto.reset
+
+# Start the server
+mix phx.server
+```
+
+Then visit [`localhost:4000`](http://localhost:4000) and try logging in with any of the accounts above.
+
+**Quick Test**: Use `test@eatfair.nl` / `password123456` to verify the customer login works.
 
 ---
 
@@ -138,27 +163,27 @@ mix ecto.rollback
 5. **Update order status** - customers see real-time updates
 
 ### Order Tracking Testing
-1. **Login** as `frequent@example.nl`
+1. **Login** as `frequent@eatfair.nl`
 2. **View order history** - account has orders in all status states
 3. **Watch real-time updates** as restaurant updates order status
 4. **Test notification system** - events logged for status changes
 
 ### Geographic & Address Testing
-1. **Login** as `multi@example.nl`
+1. **Login** as `multi@eatfair.nl`
 2. **Manage multiple addresses** - Home, Work, Holiday Home, Parents' House
 3. **Test delivery radius** - try ordering from different address locations
 4. **Distance boundary testing** - restaurants outside radius show "unavailable"
 
 ### Review System Testing
-1. **Login** as `frequent@example.nl` (has delivered orders)
+1. **Login** as `frequent@eatfair.nl` (has delivered orders)
 2. **Submit reviews** - only allowed after order completion
 3. **View restaurant ratings** - average ratings update automatically
 4. **Test authorization** - cannot review without completing orders
 
 ### Night Owl Express Order Processing Testing
-**Restaurant Owner**: Wei Chen (`owner22@nightowlexpressnl.nl` / `password123456`)
+**Restaurant Owner**: Night Owl Manager (`owner@nightowl.nl` / `password123456`)
 
-1. **Login** as Night Owl restaurant owner: `owner22@nightowlexpressnl.nl`
+1. **Login** as Night Owl restaurant owner: `owner@nightowl.nl`
 2. **Access restaurant dashboard** at `/restaurant/dashboard`
 3. **Process incoming orders** at `/restaurant/orders` - Night Owl has extensive order history
 4. **Test high-volume order management** - 120+ orders across multiple statuses
