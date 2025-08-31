@@ -501,7 +501,7 @@ defmodule Eatfair.Orders do
     orders = Order
     |> where([o], o.restaurant_id == ^restaurant_id)
     |> where([o], o.status in ^statuses)
-    |> preload([:customer, order_items: :meal])
+    |> preload([:customer, order_items: :meal, delivery_batch: :courier])
     |> order_by([o], desc: :inserted_at)  # History shows most recent first
     |> Repo.all()
     

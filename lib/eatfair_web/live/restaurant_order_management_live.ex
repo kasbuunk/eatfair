@@ -828,6 +828,55 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
             <% end %>
           </div>
         </div>
+        
+        <!-- Delivery Context Information -->
+        <div class="mt-2 pt-2 border-t border-gray-200">
+          <h5 class="font-medium text-gray-800 text-xs mb-1">Delivery Status</h5>
+          <div class="flex items-center justify-between">
+            <%= if @order.delivery_status do %>
+              <span class={[
+                "inline-flex px-2 py-1 rounded-full text-xs font-medium",
+                case @order.delivery_status do
+                  "scheduled" -> "bg-blue-100 text-blue-800"
+                  "assigned" -> "bg-purple-100 text-purple-800"
+                  "in_transit" -> "bg-orange-100 text-orange-800"
+                  "delivered" -> "bg-green-100 text-green-800"
+                  _ -> "bg-gray-100 text-gray-800"
+                end
+              ]} data-test="delivery-status-badge">
+                {String.replace(@order.delivery_status || "unscheduled", "_", " ")}
+              </span>
+            <% else %>
+              <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800" data-test="delivery-status-badge">
+                unscheduled
+              </span>
+            <% end %>
+            
+            <%= if @order.delivery_batch do %>
+              <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800" data-test="batch-status-chip">
+                Batched
+              </span>
+            <% else %>
+              <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600" data-test="batch-status-chip">
+                Unbatched
+              </span>
+            <% end %>
+          </div>
+          
+          <%= if @order.delivery_batch do %>
+            <div class="mt-1 text-xs text-gray-600">
+              <span class="font-medium">Batch:</span>
+              <a href={"#"} class="text-blue-600 hover:text-blue-800 underline" data-test="batch-code-link">
+                {@order.delivery_batch.batch_code}
+              </a>
+              <%= if @order.delivery_batch.courier do %>
+                <span class="ml-2">
+                  • <span class="font-medium">Courier:</span> {@order.delivery_batch.courier.name}
+                </span>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
       </div>
       
     <!-- Delay Information -->

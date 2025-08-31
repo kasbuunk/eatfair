@@ -122,6 +122,7 @@ defmodule EatfairWeb.Router do
 
       # Order management for restaurants
       live "/restaurant/orders", RestaurantOrderManagementLive, :index
+      live "/restaurant/delivery-batches", RestaurantDeliveryBatchLive, :index
     end
 
     post "/users/update-password", UserSessionController, :update_password

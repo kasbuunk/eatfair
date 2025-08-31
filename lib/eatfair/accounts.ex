@@ -1003,6 +1003,25 @@ defmodule Eatfair.Accounts do
     |> Repo.exists?()
   end
 
+  ## Courier functions
+
+  @doc """
+  Lists all users with the courier role.
+  Used for restaurant delivery batch creation.
+
+  ## Examples
+
+      iex> list_couriers()
+      [%User{}, ...]
+
+  """
+  def list_couriers do
+    User
+    |> where([u], u.role == "courier")
+    |> order_by([u], :name)
+    |> Repo.all()
+  end
+
   ## Token helper
 
   defp update_user_and_delete_all_tokens(changeset) do

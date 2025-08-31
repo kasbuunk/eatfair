@@ -267,9 +267,9 @@ defmodule EatfairWeb.CourierLive.Dashboard do
         
         <!-- Delivery Batches Section -->
         <div class="mt-8">
-          <h2 class="text-lg font-medium text-gray-900 mb-4">Delivery Batches</h2>
+          <h2 class="text-lg font-medium text-gray-900 mb-4">Available Delivery Batches</h2>
           
-          <%= if Enum.empty?(@streams.delivery_batches) do %>
+          <%= if Enum.empty?(@batches) do %>
             <div class="bg-white shadow overflow-hidden sm:rounded-md">
               <div class="px-4 py-12 text-center">
                 <div class="mx-auto h-12 w-12 text-gray-400">
