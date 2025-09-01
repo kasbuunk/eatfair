@@ -146,6 +146,21 @@ mix test --trace
 mix test --failed
 ```
 
+### Test Data Scripts
+```bash
+# Basic seed data (all restaurants, users, menus)
+mix run priv/repo/seeds.exs
+
+# Comprehensive Night Owl test data (29 orders across ALL delivery stages)
+mix run priv/repo/night_owl_test_orders.exs
+```
+
+**Night Owl Test Data** creates orders for manual testing of:
+- **All 9 order statuses**: `pending` → `confirmed` → `preparing` → `ready` → `out_for_delivery` → `delivered` + edge cases (`cancelled`, `rejected`, `delivery_failed`)
+- **Complete delivery lifecycle**: Order placement → Restaurant processing → Courier assignment → Live tracking → Completion
+- **Historical data**: 15 delivered orders spanning 30 days + failed orders for pagination testing
+- **Real relationships**: Customer (`test@eatfair.nl`) ↔ Restaurant (`Night Owl Express NL`) ↔ Courier (`courier.max@eatfair.nl`)
+
 ### Code Quality Checks
 ```bash
 # Run all pre-commit checks (compile with warnings as errors, format, test)
