@@ -145,53 +145,136 @@ All agent types must:
 
 ---
 
-## Prompt Tag Directory
+## 🎯 Comprehensive Prompt System Guide
 
-*When users include #tags in their requests, reference the appropriate prompts to provide comprehensive guidance.*
+### How to Use the Tag-Based Prompt System
 
-### Universal Principles (Project-Agnostic)
-- **#tdd** → `prompts/tdd_principles.md` - Core test-driven development cycle and practices
-- **#quality** → `prompts/quality_gates.md` - Universal quality standards and automated checks
-- **#git** → `prompts/git.md` - Version control workflow and best practices
+**The EatFair project uses a modular, tag-based prompt system with two types:**
 
-### Technology-Specific Guidelines
-- **#elixir** → `prompts/elixir.md` - Elixir language patterns and conventions
-- **#phoenix** → `prompts/phoenix.md` - Phoenix framework patterns and LiveView guidelines
-- **#llms** → `prompts/llms.md` - LLM interaction patterns and prompt engineering
+#### Main Task Categories (Complete Workflows)
+Use these for end-to-end work processes:
+- **#feature_dev** → `prompts/feature_dev.md` - Implement new features using TDD
+- **#debug_bug** → `prompts/debug_bug.md` - Systematically investigate and fix bugs  
+- **#product_strategy** → `prompts/product_strategy.md` - Plan product direction and prioritization
+- **#test_author** → `prompts/test_author.md` - Create comprehensive test coverage
+- **#support_triage** → `prompts/support_triage.md` - Process user feedback and issues
+- **#code_orient** → `prompts/code_orient.md` - Understand unfamiliar codebase structure
+- **#env_setup** → `prompts/env_setup.md` - Set up development environments
+- **#quick_fix** → `prompts/quick_fix.md` - Implement small, low-risk changes
+- **#refactor** → `prompts/refactor.md` - Improve code quality without changing behavior
+- **#incident_resp** → `prompts/incident_resp.md` - Handle production incidents
 
-### Project Development Methodology
-- **#mvp** → `prompts/mvp_development.md` - MVP development methodology and early-stage practices
-- **#greenfield** → `prompts/greenfield_project.md` - New project development without legacy constraints
+#### Building Blocks (Composable Steps)
+Use these for specific workflow steps:
+- **#context_intake** → `prompts/context_intake.md` - Gather requirements and understand work
+- **#test_plan** → `prompts/test_plan.md` - Design comprehensive test coverage
+- **#write_tests** → `prompts/write_tests.md` - Create tests following TDD principles
+- **#impl_change** → `prompts/impl_change.md` - Make code changes with quality safeguards
+- **#run_all_tests** → `prompts/run_all_tests.md` - Execute and validate test suite
+- **#create_repro** → `prompts/create_repro.md` - Create bug reproduction test cases
+- **#isolate_cause** → `prompts/isolate_cause.md` - Systematically find root causes
+- **#route_task** → `prompts/route_task.md` - Classify and route incoming work requests
+- **#doc_update** → `prompts/doc_update.md` - Update project documentation
 
-### Workflow and Process
-- **#prioritization** → `prompts/prioritize_work.md` - Work prioritization system and decision framework
-- **#feedback** → `prompts/process_feedback.md` - Systematic feedback processing and issue resolution
-- **#documentation** → `prompts/sync_documentation.md` - Documentation sync and maintenance
-- **#testing** → `prompts/validate_and_fix_tests.md` - Test validation and debugging
-- **#development** → `prompts/start_feature_development.md` - Feature development workflow
-- **#refactoring** → `prompts/refactoring.md` - Code quality improvement and technical debt resolution
+### 🔍 Prompt Discovery and Usage
 
-### Comprehensive Development
-- **#prompts** → `prompts/development_prompts.md` - Collection of common development task prompts
-- **#lifecycle** → `prompts/software_development_lifecycle.md` - EatFair-specific development workflow
+#### When User Includes Tags
+1. **Identify Tags**: Look for `#tag` patterns in user requests
+2. **Find Prompt Files**: Tags map directly to filenames: `#feature_dev` → `prompts/feature_dev.md`
+3. **Read Full Prompt**: Load the complete prompt content and follow its guidance
+4. **Apply Configuration**: Reference `prompts_config/` files for EatFair-specific customizations
 
-### Tag Usage Guidelines
+#### When No Tags Present
+1. **Apply Classification**: Use `#route_task` to classify the type of work
+2. **Suggest Appropriate Tags**: Recommend relevant prompts based on work type
+3. **Compose Workflow**: Chain multiple prompts if complex work is needed
 
-**Single Tag Usage**: Use one primary tag to focus on specific guidance
+#### Fallback Strategy When Prompt Not Found
+1. **Check Similar Categories**: Look for related prompts that might cover the work
+2. **Compose from Building Blocks**: Combine building block prompts to create workflow
+3. **Use Generic Patterns**: Apply closest existing prompt with modifications
+4. **Request Clarification**: Ask user to refine request or provide more specific category
+
+### 📋 Tag Composition Patterns
+
+#### Sequential Composition (Pipeline)
 ```
-"I need help with #tdd for implementing user authentication"
+"Apply #context_intake then #test_plan then #write_tests for user authentication"
 ```
+→ Chain building blocks in sequence for complex workflows
 
-**Multiple Tag Usage**: Combine tags for comprehensive guidance
+#### Conditional Composition (Routing)
 ```
-"I need to implement a new feature using #tdd #phoenix #mvp principles"
+"Use #route_task to determine if this needs #feature_dev or #debug_bug"
 ```
+→ Use routing to select appropriate main workflow
 
-**Tag Resolution Process**:
-1. **Identify Primary Domain**: Determine the main area of focus
-2. **Reference Appropriate Prompts**: Read the tagged prompt files for guidance
-3. **Apply Context**: Adapt general principles to specific project context
-4. **Integrate Guidelines**: Combine multiple tagged guidelines when relevant
+#### Configuration Integration
+```
+"Use #feature_dev with Phoenix LiveView patterns for real-time notifications"
+```
+→ Apply main workflow with technology-specific configuration
+
+### ⚙️ Configuration System
+
+#### EatFair-Specific Customizations
+All prompts reference configuration files in `prompts_config/`:
+- **tech_stack.md** - Phoenix/Elixir patterns and conventions
+- **project_context.md** - EatFair business domain and requirements  
+- **workflows.md** - Development processes and backlog management
+- **quality_standards.md** - Testing approaches and quality gates
+
+#### How Configuration Works
+1. **Generic Prompt**: Provides methodology and universal best practices
+2. **Configuration Override**: Adds project-specific patterns and requirements
+3. **Context Integration**: Applies business domain knowledge and constraints
+4. **Workflow Alignment**: Ensures consistency with EatFair development processes
+
+### 🚀 Usage Examples
+
+#### Simple Usage
+```
+"Use #debug_bug to fix the cart calculation error"
+```
+→ Applies complete debugging workflow with EatFair configuration
+
+#### Building Block Composition
+```
+"Apply #context_intake then #isolate_cause to understand this performance issue"
+```
+→ Explicitly chains specific building blocks
+
+#### Technology Integration
+```
+"Use #feature_dev with Phoenix LiveView patterns to implement real-time chat"
+```
+→ Applies development workflow with technology-specific guidance
+
+### 🔗 Prompt Network
+
+**Complete workflow map**: See `prompts/PROMPT_NETWORK.md` for visual dependency mapping
+
+**Cross-references**: Each prompt includes "Related Prompts" section showing:
+- **Prerequisites**: What to use before this prompt
+- **Complements**: What works alongside this prompt  
+- **Follows**: What to use after this prompt
+
+### 📖 Legacy Prompt Migration
+
+**Old System** (Deprecated):
+- File-based references like `prioritize_work.md`
+- Monolithic prompts with mixed concerns
+- Project-specific content mixed with generic guidance
+
+**New System** (Current):
+- Tag-based references like `#product_strategy`
+- Modular prompts with single responsibilities
+- Clean separation of generic methodology and project configuration
+
+**Migration Guide**:
+- Replace file references with tag references
+- Use building block composition instead of monolithic prompts
+- Apply configuration system for project-specific customization
 
 ---
 

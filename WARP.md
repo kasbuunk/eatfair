@@ -160,25 +160,38 @@ This document defines the global principles and operational rules that govern ou
 
 *For comprehensive prompt navigation and agent coordination, see [AGENTS.md](AGENTS.md) which contains the complete tag-based prompt directory and agent interaction patterns.*
 
-### 📋 **Quick Start for Warp Terminal**
+### 📋 **New Tag-Based Prompt System**
 
-**Most Common Workflows:**
-- **What should I work on next?** → Use `#prioritization` tag for work prioritization
-- **Start feature development** → Use `#development` tag for feature implementation
-- **Fix failing tests** → Use `#testing` tag for test debugging
-- **Process user feedback** → Use `#feedback` tag for systematic issue resolution
-- **Technical guidance** → Use `#phoenix` `#elixir` tags for framework-specific help
+**Our prompts have been reorganized into a modular, tag-based system:**
+
+#### Main Task Categories
+- **Feature Development** → Use `#feature_dev` to implement new functionality
+- **Bug Debugging** → Use `#debug_bug` to systematically find and fix issues
+- **Product Strategy** → Use `#product_strategy` for planning and prioritization
+- **Test Authoring** → Use `#test_author` to create comprehensive test coverage
+- **Support Triage** → Use `#support_triage` to process feedback and issues
+
+#### Building Blocks (Composable Workflow Steps)
+- **Context Intake** → Use `#context_intake` to gather requirements and understand work
+- **Test Planning** → Use `#test_plan` to design comprehensive test coverage
+- **Writing Tests** → Use `#write_tests` to create tests following TDD principles
+- **Implementation** → Use `#impl_change` to write code with quality safeguards
+- **Running Tests** → Use `#run_all_tests` to validate all functionality works
+- **Bug Reproduction** → Use `#create_repro` to create minimal test cases for bugs
+- **Root Cause Analysis** → Use `#isolate_cause` to systematically find issue sources
+
+**Prompt Network Map**: See [prompts/PROMPT_NETWORK.md](prompts/PROMPT_NETWORK.md) for complete workflow diagrams
 
 **Key Documents:**
 - **Project Vision** → [product_specification.md](documentation/product_specification.md) (What we're building and why)
 - **Current Status** → [backlog_dashboard.md](backlog_dashboard.md) (Work priorities and progress)
-- **Agent Coordination** → [AGENTS.md](AGENTS.md) (Complete prompt navigation and agent roles)
+- **Technology Patterns** → [prompts_config/tech_stack.md](prompts_config/tech_stack.md) (EatFair-specific patterns)
 
-**Using Tags:**
+**Using Tags in Requests:**
 Include hashtags in your requests to access specific guidance:
-- `"I need to implement user authentication using #tdd #phoenix #mvp principles"`
-- `"Help me with #feedback processing for the search feature"`
-- `"Show me #quality gates for this code change"`
+- `"Use #feature_dev to implement user authentication system"`
+- `"Use #debug_bug to fix the payment calculation error"`
+- `"Apply #context_intake then #isolate_cause to understand the performance issue"`
 
 ## Development Workflow
 
@@ -217,16 +230,16 @@ mix setup
 **Daily development session:**
 ```
 # Check current priorities
-"Check backlog_dashboard.md and use prioritize_work.md to determine next work"
+"Use #product_strategy to determine what work to prioritize next"
 # Then implement using TDD
-"Use start_feature_development.md to implement the next priority feature"
+"Use #feature_dev to implement the next priority feature"
 ```
 
 **Need specific guidance?**
-- 🎯 **What to work on**: Use prioritize_work.md master prompt  
-- 📋 **Feature development**: Use start_feature_development.md prompt
-- 🔧 **Fix issues**: Use process_feedback.md for systematic issue resolution
-- 🧪 **Test problems**: Use validate_and_fix_tests.md
+- 🎯 **What to work on**: Use `#product_strategy` for work prioritization
+- 📋 **Feature development**: Use `#feature_dev` for TDD implementation
+- 🔧 **Fix issues**: Use `#support_triage` or `#debug_bug` for systematic issue resolution
+- 🧪 **Test problems**: Use `#test_author` for comprehensive testing
 
 ## Important Notes
 

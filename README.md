@@ -1,13 +1,77 @@
-# Eatfair
+# EatFair
 
-To start your Phoenix server:
+A commission-free food delivery platform that empowers local restaurant entrepreneurs.
 
-* Run `mix setup` to install and setup dependencies
-* Start Phoenix endpoint with `mix phx.server` or inside IEx with `iex -S mix phx.server`
+## 🎯 Using EatFair's Tag-Based Development System
 
-Now you can visit [`localhost:4000`](http://localhost:4000) from your browser.
+EatFair uses a sophisticated tag-based prompt system for efficient development. Here are the most important workflows:
 
-Ready to run in production? Please [check our deployment guides](https://hexdocs.pm/phoenix/deployment.html).
+### 🚀 Main Development Workflows
+
+#### Feature Development
+```bash
+# Implement complete new features using TDD methodology
+Use #feature_dev to implement user notification preferences system
+Use #feature_dev to add restaurant analytics dashboard
+Use #feature_dev to implement real-time order tracking
+```
+
+#### Bug Resolution
+```bash
+# Systematically debug and fix issues
+Use #debug_bug to fix payment calculation errors
+Use #debug_bug to resolve location search crashes
+Use #debug_bug to fix mobile checkout failures
+```
+
+#### Product Strategy & Planning
+```bash
+# Plan features and prioritize development work
+Use #product_strategy to plan Q2 feature roadmap
+Use #product_strategy to evaluate new restaurant onboarding flow
+Use #product_strategy to prioritize mobile app vs web improvements
+```
+
+#### User Support & Feedback
+```bash
+# Process customer feedback and support requests
+Use #support_triage to handle restaurant owner checkout complaints
+Use #support_triage to process consumer delivery time feedback
+Use #support_triage to investigate payment processing issues
+```
+
+#### Quality & Testing
+```bash
+# Ensure comprehensive test coverage and quality
+Use #test_author to create comprehensive payment system tests
+Use #test_author to add end-to-end restaurant onboarding tests
+Use #code_review to evaluate authentication system changes
+```
+
+### 🧩 Building Block Composition
+
+#### Sequential Workflows
+```bash
+# Chain building blocks for complex work
+Apply #context_intake then #test_plan then #feature_dev for order tracking
+Use #context_intake then #create_repro then #debug_bug for checkout issues
+Apply #test_plan then #write_tests then #run_all_tests for payment validation
+```
+
+#### EatFair-Specific Examples
+```bash
+# Restaurant owner workflows
+Use #feature_dev to implement menu bulk upload for restaurant efficiency
+Use #debug_bug to fix delivery radius calculation affecting restaurant visibility
+
+# Consumer experience workflows  
+Use #feature_dev to add restaurant favorites and order history
+Use #support_triage to handle consumer complaints about delivery times
+
+# Business logic workflows
+Use #test_author to ensure zero commission calculations are bulletproof
+Use #debug_bug to fix location-based restaurant discovery accuracy
+```
 
 ## 🚀 Quick Start Guide
 
@@ -26,17 +90,21 @@ iex -S mix phx.server
 
 The application will be available at [`localhost:4000`](http://localhost:4000).
 
-### Reset to Clean State
+### Development Guidelines
 
 ```bash
-# Reset database and reseed with fresh data
-mix ecto.reset
+# Check what to work on next
+Use #product_strategy to determine current priorities
 
-# Run seed script manually
-mix run priv/repo/seeds.exs
+# Start new feature development
+Use #feature_dev to implement the next priority feature
+
+# Fix any issues that arise
+Use #debug_bug to systematically resolve problems
+
+# Ensure quality before committing
+Use #run_all_tests to validate all functionality works
 ```
-
----
 
 ## 👤 Test User Accounts
 
@@ -49,22 +117,13 @@ mix run priv/repo/seeds.exs
 | Wei Chen | `wei@goldenlotus.com` | Golden Lotus Amsterdam | Amsterdam |
 | Marie Dubois | `marie@jordaanbistro.com` | Jordaan Bistro | Amsterdam |
 | Yuki Tanaka | `yuki@sushitokyo.com` | Sushi Tokyo East | Amsterdam |
-| Emma de Vries | `emma@healthybowl.nl` | Healthy Bowl Co. | Amsterdam |
-| Jake Williams | `jake@burgerpalace.com` | Burger Palace Amsterdam | Amsterdam |
-| Raj Patel | `raj@spiceroute.com` | Spice Route India | Amsterdam |
-| Priya Sharma | `priya@spicegarden.nl` | Spice Garden Utrecht | Utrecht |
-| Carlos Mendoza | `carlos@utrechttaco.nl` | Utrecht Taco Bar | Utrecht |
 | **Night Owl Manager** | `owner@nightowl.nl` | **Night Owl Express NL** | **Utrecht** |
 
 ### 📱 Customer Accounts
 | Name | Email | Location | Special Features |
 |------|-------|----------|------------------|
 | Test Customer | `test@eatfair.nl` | Central Amsterdam | General testing |
-| Piet van Amsterdam | `piet@eatfair.nl` | Amsterdam | Regular customer |
-| Emma Janssen | `emma@utrecht.nl` | Utrecht | Utrecht resident |
-| Lisa de Vries | `lisa@hetgooi.nl` | Het Gooi | Distance boundary testing |
 | Jan de Frequent | `frequent@eatfair.nl` | Amsterdam | **Has test orders in all status states** |
-| Sophie Vegano | `vegan@eatfair.nl` | Amsterdam | Dietary preferences testing |
 | Multi Address | `multi@eatfair.nl` | Amsterdam | **Multiple addresses**: Work, Holiday Home, Parents' House |
 
 ### 🚚 Courier Accounts
@@ -72,36 +131,10 @@ mix run priv/repo/seeds.exs
 |------|-------|----------|-------------|
 | **Max Speedman** | `courier.max@eatfair.nl` | **Utrecht** | **🌙 Night Owl Express** |
 | Lisa Lightning | `courier.lisa@eatfair.nl` | West Amsterdam | General |
-| Ahmed Express | `courier.ahmed@eatfair.nl` | East Amsterdam | General |
-| Sophie Delivery | `courier.sophie@eatfair.nl` | South Amsterdam | General |
-| Utrecht Rider | `courier.utrecht@eatfair.nl` | Central Utrecht | General |
-| Snelle Jan | `courier.jan.utrecht@eatfair.nl` | South Utrecht | General |
-| **Lisa Lightning** | `lisa.lightning@courier.nightowl.nl` | **Utrecht** | **🌙 Night Owl Express** |
-
----
-
-## ✅ Verify Login Credentials
-
-To test that you can actually log in with the accounts above:
-
-```bash
-# Reset and seed the database with test accounts
-mix ecto.reset
-
-# Start the server
-mix phx.server
-```
-
-Then visit [`localhost:4000`](http://localhost:4000) and try logging in with any of the accounts above.
-
-**Quick Test**: Use `test@eatfair.nl` / `password123456` to verify the customer login works.
-
----
 
 ## 🧪 Testing & Development
 
 ### Running Tests
-
 ```bash
 # Run all tests (163 tests, ~0.9 seconds)
 mix test
@@ -109,15 +142,11 @@ mix test
 # Run tests with detailed output
 mix test --trace
 
-# Run specific test file
-mix test test/eatfair_web/integration/order_flow_test.exs
-
 # Run only failed tests
 mix test --failed
 ```
 
 ### Code Quality Checks
-
 ```bash
 # Run all pre-commit checks (compile with warnings as errors, format, test)
 mix precommit
@@ -125,26 +154,16 @@ mix precommit
 # Individual quality checks
 mix compile --warnings-as-errors  # Check for warnings
 mix format                         # Format code
-mix deps.unlock --unused           # Remove unused dependencies
 ```
 
 ### Database Operations
-
 ```bash
-# Create database
-mix ecto.create
-
-# Run migrations
-mix ecto.migrate
-
 # Reset database (drop, create, migrate, seed)
 mix ecto.reset
 
-# Rollback migration
-mix ecto.rollback
+# Run migrations
+mix ecto.migrate
 ```
-
----
 
 ## 🎯 Manual Testing Scenarios
 
@@ -163,48 +182,56 @@ mix ecto.rollback
 4. **Process orders** at `/restaurant/orders` - organized by status
 5. **Update order status** - customers see real-time updates
 
-### Order Tracking Testing
-1. **Login** as `frequent@eatfair.nl`
-2. **View order history** - account has orders in all status states
-3. **Watch real-time updates** as restaurant updates order status
-4. **Test notification system** - events logged for status changes
+## 📚 Documentation & Development System
 
-### Geographic & Address Testing
-1. **Login** as `multi@eatfair.nl`
-2. **Manage multiple addresses** - Home, Work, Holiday Home, Parents' House
-3. **Test delivery radius** - try ordering from different address locations
-4. **Distance boundary testing** - restaurants outside radius show "unavailable"
+- **[Development Guide](AGENTS.md)**: Complete prompt system documentation and usage patterns
+- **[System Constitution](WARP.md)**: Core development principles and workflows
+- **[Product Specification](documentation/product_specification.md)**: Complete feature requirements and user journeys
+- **[Implementation Status](documentation/legacy_implementation_log.md)**: Current development progress with test coverage
 
-### Review System Testing
-1. **Login** as `frequent@eatfair.nl` (has delivered orders)
-2. **Submit reviews** - only allowed after order completion
-3. **View restaurant ratings** - average ratings update automatically
-4. **Test authorization** - cannot review without completing orders
+## Contributing
 
-### Night Owl Express Order Processing Testing
-**Restaurant Owner**: Night Owl Manager (`owner@nightowl.nl` / `password123456`)
+EatFair follows strict Test-Driven Development practices with a comprehensive prompt system for efficient development.
 
-1. **Login** as Night Owl restaurant owner: `owner@nightowl.nl`
-2. **Access restaurant dashboard** at `/restaurant/dashboard`
-3. **Process incoming orders** at `/restaurant/orders` - Night Owl has extensive order history
-4. **Test high-volume order management** - 120+ orders across multiple statuses
-5. **Update order statuses** in real-time - customers receive immediate notifications
-6. **24/7 operations testing** - Night Owl operates around the clock
-7. **Wide delivery coverage** - 49km radius covers most of Netherlands
+### Core Development Principles
 
-**Special Features**:
-- **24/7 Operations**: All operational hours set to 24/7 (00:00 - 24:00)
-- **Nationwide Delivery**: 49km delivery radius for extensive coverage testing
-- **High Volume**: 120+ test orders with realistic status distribution
-- **Comprehensive Menu**: 5 menu categories with 25+ items
-- **Multiple Cuisines**: Late Night, Fast Casual, Pizza, Comfort Food
+- **TDD Required**: Use `#feature_dev` for all new functionality - tests first, always
+- **Prompt-Driven Development**: Use tags like `#debug_bug`, `#test_author` for systematic workflows
+- **Documentation Discipline**: All prompts automatically update project documentation
+- **Zero Commission Mission**: All features must support the commission-free model
+- **Quality Excellence**: Every prompt includes quality gates and validation steps
 
----
+### Getting Started with Development
 
-## Learn more
+1. **Understand the system**: `Use #code_orient to understand EatFair's architecture`
+2. **Set up environment**: `Use #env_setup to establish development environment`
+3. **Pick up work**: `Use #product_strategy to identify next priority`
+4. **Implement features**: `Use #feature_dev following TDD principles`
+5. **Maintain quality**: `Use #run_all_tests and #code_review before committing`
 
-  * Official website: https://www.phoenixframework.org/
-  * Guides: https://hexdocs.pm/phoenix/overview.html
-  * Docs: https://hexdocs.pm/phoenix
-  * Forum: https://elixirforum.com/c/phoenix-forum
-  * Source: https://github.com/phoenixframework/phoenix
+## Mission
+
+EatFair exists to create a more equitable food delivery ecosystem where:
+
+- Restaurant entrepreneurs can build sustainable businesses
+- Consumers get great food at fair prices  
+- Local communities thrive through supporting neighborhood businesses
+- Technology serves people rather than extracting value from them
+
+By taking zero commission, EatFair proves that technology platforms can create value for all stakeholders without exploiting small business owners.
+
+## Technology Stack
+
+- **Backend**: Phoenix/Elixir with LiveView for real-time features
+- **Database**: SQLite (appropriate for current MVP scale)
+- **Authentication**: Phoenix generated auth with scope-based authorization
+- **UI**: Phoenix LiveView components with TailwindCSS styling
+- **Testing**: ExUnit with Phoenix.LiveViewTest for comprehensive coverage
+
+## Learn More
+
+* Official website: https://www.phoenixframework.org/
+* Guides: https://hexdocs.pm/phoenix/overview.html
+* Docs: https://hexdocs.pm/phoenix
+* Forum: https://elixirforum.com/c/phoenix-forum
+* Source: https://github.com/phoenixframework/phoenix
