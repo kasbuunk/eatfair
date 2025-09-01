@@ -9,7 +9,7 @@ Every prompt file must follow this exact Markdown structure:
 
 **Tags**: #{primary_tag} #{secondary_tag}
 **Purpose**: One sentence describing what this prompt does
-**Configurable**: Yes/No - Whether this prompt can be customized via prompts_config/
+**Configurable**: Yes/No - Whether this prompt can be customized via prompts/config/
 
 ## Quick Usage
 
@@ -28,7 +28,7 @@ The complete prompt text that an agent would execute. Should be:
 
 ## Configuration Points
 
-*List any aspects that can be customized via prompts_config/{tag}.md*
+*List any aspects that can be customized via prompts/config/{tag}.md*
 
 - **Technology Stack**: Framework and language specific patterns
 - **Quality Standards**: Testing approaches and code standards  
@@ -78,15 +78,15 @@ Prompts should be **opinionated but configurable**:
 ```markdown
 # feature_dev.md
 Use test-driven development: write failing test, implement minimal code, refactor.
-Technology patterns can be found in: prompts_config/tech_stack.md
+Technology patterns can be found in: prompts/config/tech_stack.md
 ```
 
 **Configuration File**: Overrides defaults with project specifics
 ```markdown  
-# prompts_config/feature_dev.md
+# prompts/config/feature_dev.md
 For Phoenix LiveView features:
 - Use Phoenix.LiveViewTest for UI testing
-- Follow patterns in prompts_config/tech_stack.md#phoenix-patterns
+- Follow patterns in prompts/config/tech_stack.md#phoenix-patterns
 - Update documentation in PROJECT_IMPLEMENTATION.md
 ```
 

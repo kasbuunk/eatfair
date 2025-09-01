@@ -44,8 +44,8 @@ Systematically explore and map an unfamiliar codebase:
 - Identify development tools, linting rules, and formatting standards
 - Find debugging approaches and common development workflows
 
-Technology-specific exploration patterns: See prompts_config/tech_stack.md  
-Project-specific architectural context: See prompts_config/project_context.md
+Technology-specific exploration patterns: See prompts/config/tech_stack.md  
+Project-specific architectural context: See prompts/config/project_context.md
 
 ## Configuration Points
 

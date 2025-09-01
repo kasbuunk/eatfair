@@ -2,7 +2,7 @@
 
 This document defines the global principles and operational rules that govern our entire development system. These principles are universal and must be followed by all agents, regardless of their specialized role.
 
-**Project-Specific Configuration**: For project-specific implementations of these principles (technology stacks, tools, commands), see the `prompts_config/` directory.
+**Project-Specific Configuration**: For project-specific implementations of these principles (technology stacks, tools, commands), see the `prompts/config/` directory.
 
 ## Core Development Principles
 
@@ -158,112 +158,24 @@ This document defines the global principles and operational rules that govern ou
 - Investigation and remediation before proceeding
 - Process improvements to prevent recurrence
 
-## 🎯 Agent Navigation Guide
+## 🎯 Quick Reference
 
-*For comprehensive prompt navigation and agent coordination, see [AGENTS.md](AGENTS.md) which contains the complete tag-based prompt directory and agent interaction patterns.*
+**For comprehensive prompt navigation and agent coordination, see [AGENTS.md](AGENTS.md) and [`prompts/README.md`](prompts/README.md).**
 
-### Tag-Based Prompt System
+### Essential Commands
+- **Work Prioritization**: `Use #product_strategy to determine what work to prioritize next`
+- **Feature Development**: `Use #feature_dev to implement [feature] following TDD principles`
+- **Bug Resolution**: `Use #debug_bug to fix [specific issue]`
+- **Test Coverage**: `Use #test_author for comprehensive testing`
 
-**The prompt system is organized into a modular, tag-based architecture:**
+### Development Checklist (TDD)
+1. **Red**: Write failing test → **Green**: Make it pass → **Refactor**: Improve code
+2. Update backlog status throughout development
+3. Commit code + backlog updates together
+4. Validate with project-specific quality gates
 
-#### Main Task Categories
-Complete workflows for major types of work:
-- **Feature Development** → Use `#feature_dev` for new functionality implementation
-- **Bug Debugging** → Use `#debug_bug` for systematic issue resolution
-- **Product Strategy** → Use `#product_strategy` for planning and prioritization
-- **Test Authoring** → Use `#test_author` for comprehensive test coverage
-- **Support Triage** → Use `#support_triage` for feedback and issue processing
-
-#### Building Blocks
-Composable workflow steps that can be chained:
-- **Context Intake** → Use `#context_intake` to gather requirements
-- **Test Planning** → Use `#test_plan` to design test coverage
-- **Writing Tests** → Use `#write_tests` following TDD principles
-- **Implementation** → Use `#impl_change` with quality safeguards
-- **Running Tests** → Use `#run_all_tests` to validate functionality
-- **Bug Reproduction** → Use `#create_repro` for minimal test cases
-- **Root Cause Analysis** → Use `#isolate_cause` for systematic investigation
-
-**Usage Pattern**: Include hashtags in requests to access specific guidance:
-- `"Use #feature_dev to implement [specific functionality]"`
-- `"Use #debug_bug to fix [specific issue]"`
-- `"Apply #context_intake then #isolate_cause to understand [problem]"`
-
-## Development Workflow
-
-### TDD Development Checklist
-
-**CRITICAL**: Always follow this checklist for any development work:
-
-#### 🚀 **Start Phase**
-- [ ] Check project priority system for current priority
-- [ ] Create todo list for work (if 3+ steps required)
-- [ ] **Add final todo**: "Update backlog item status with progress"
-
-#### 🔄 **During Development**
-- [ ] Write failing tests first
-- [ ] Implement minimum code to make tests pass
-- [ ] Update backlog item status when significant progress made
-- [ ] Refactor while keeping tests green
-
-#### ✅ **Completion Phase** 
-- [ ] All tests pass
-- [ ] **Update backlog item status**:
-  - [ ] Mark item as #status/done if complete
-  - [ ] Update priority system if priorities changed
-  - [ ] Document any architectural decisions in ADRs
-- [ ] Mark todos as complete
-
-### Project Quick Start
-
-**New to the project?** Start here:
-```
-# Check project setup instructions
-# Navigation guide is built into this WARP.md file (see Agent Navigation Guide above)
-```
-
-**Daily development session:**
-```
-# Check current priorities
-"Use #product_strategy to determine what work to prioritize next"
-# Then implement using TDD
-"Use #feature_dev to implement the next priority feature"
-```
-
-**Need specific guidance?**
-- 🎯 **What to work on**: Use `#product_strategy` for work prioritization
-- 📋 **Feature development**: Use `#feature_dev` for TDD implementation
-- 🔧 **Fix issues**: Use `#support_triage` or `#debug_bug` for systematic issue resolution
-- 🧪 **Test problems**: Use `#test_author` for comprehensive testing
-
-## Development Principles
-
-- **TDD is non-negotiable** - write tests first for every feature
-- **Backlog management is non-negotiable** - priority system and individual backlog items must be kept current
-- Use project-specific validation commands before committing changes
-- Follow established technology patterns (see project configuration)
-- Use the Agent Navigation Guide (above) when you need to find specific project information
-
-## Backlog Management Workflow
-
-**The project priority system is the single source of truth** for work prioritization and must be updated:
-
-### When to Update Backlog Items
-- **During development**: Update status tags as work progresses
-- **At completion**: Mark items as #status/done when meeting Definition of Done
-- **When blocked**: Update status to #status/blocked with blocker details
-- **When pivoting**: Update priority system order
-
-### Status Management
-- **Status Tags**: Use #status/todo, #status/in_progress, #status/blocked, #status/done
-- **Priority Order**: Update priority system when priorities change
-- **New Items**: Add detailed specifications in backlog directory
-- **Technical Notes**: Document architectural decisions in ADRs
-
-### Update Pattern
-```
-1. Complete development work
-2. Ensure all tests pass
-3. Update backlog item status and priority order if needed
-4. Commit both code and backlog updates together
-```
+### Non-Negotiable Principles
+- **TDD is mandatory** - tests before implementation, always
+- **Backlog management is mandatory** - status must reflect reality
+- **Single source of truth** - avoid information duplication
+- **Atomic commits** - each commit is complete and self-contained

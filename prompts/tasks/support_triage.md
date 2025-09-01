@@ -44,8 +44,8 @@ Process user feedback and support requests systematically to ensure appropriate 
 - Schedule follow-up communications and progress reviews
 - Close loop with original reporter once issue is resolved
 
-Customer communication templates: See prompts_config/support_templates.md  
-Escalation rules and SLA definitions: See prompts_config/support_workflows.md
+Customer communication templates: See prompts/config/support_templates.md  
+Escalation rules and SLA definitions: See prompts/config/support_workflows.md
 
 ## Configuration Points
 

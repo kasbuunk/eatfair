@@ -50,8 +50,8 @@ Conduct thorough code review to ensure quality, security, and maintainability:
 - Assess code maintainability and future extensibility
 - Ensure changes align with architectural decisions and patterns
 
-Technology-specific review criteria: See prompts_config/tech_stack.md  
-Quality standards and checklists: See prompts_config/quality_standards.md
+Technology-specific review criteria: See prompts/config/tech_stack.md  
+Quality standards and checklists: See prompts/config/quality_standards.md
 
 ## Configuration Points
 

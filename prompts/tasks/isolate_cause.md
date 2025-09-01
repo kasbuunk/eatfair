@@ -44,7 +44,7 @@ Apply systematic elimination to identify the root cause of an issue:
 - Ensure the cause is truly root (not just a symptom of something deeper)
 - Consider why this cause wasn't caught earlier and how to prevent similar issues
 
-Technology-specific debugging approaches: See prompts_config/tech_stack.md
+Technology-specific debugging approaches: See prompts/config/tech_stack.md
 
 ## Configuration Points
 

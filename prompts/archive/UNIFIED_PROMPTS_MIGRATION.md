@@ -88,7 +88,7 @@ prompts/                           # ONE unified directory for everything
 ## 🗂️ **What Was Moved**
 
 ### Eliminated Directories:
-- ❌ `prompts_config/` → Merged into `prompts/config/`
+- ❌ `prompts/config/` → Merged into `prompts/config/`
 - ❌ `docs/` → Merged into `prompts/archive/`  
 - ❌ `documentation/` → Eliminated (was just redirects)
 

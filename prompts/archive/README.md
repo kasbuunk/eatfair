@@ -1,6 +1,6 @@
 # EatFair Documentation Archive
 
-This directory contains historical and reference documentation that has been moved out of the main `prompts_config/` structure to avoid polluting prompt context while preserving important historical value.
+This directory contains historical and reference documentation that has been moved out of the main `prompts/config/` structure to avoid polluting prompt context while preserving important historical value.
 
 ## Directory Structure
 
@@ -14,12 +14,12 @@ Historical documentation that was too large for prompt integration but provides 
 ### `adr/`
 Architectural Decision Records chronology moved from `documentation/architectural_decision_records.md`:
 - Individual ADR files for each major architectural decision
-- Referenced by `prompts_config/architecture.md` for template and patterns
+- Referenced by `prompts/config/architecture.md` for template and patterns
 
 ### `security_incidents/`
 Security incident reports and post-mortems:
 - `google_maps_api_key_exposure_2025-08-28.md` - Complete incident report
-- Referenced by `prompts_config/security.md` for patterns and checklists
+- Referenced by `prompts/config/security.md` for patterns and checklists
 
 ## Usage
 
@@ -31,7 +31,7 @@ These archives provide:
 
 ### For AI Agents
 - **Do not load these files directly** - They exceed token budgets
-- **Reference summaries** in `prompts_config/` files instead
+- **Reference summaries** in `prompts/config/` files instead
 - **Link to specific sections** when deep historical context is needed
 
 ## Maintenance
@@ -44,7 +44,7 @@ These files should be:
 
 ## Quick Navigation
 
-- **Current system guidance** → Use `prompts_config/` files
+- **Current system guidance** → Use `prompts/config/` files
 - **Historical context** → Use `docs/archive/` files  
 - **Architecture decisions** → Use `docs/adr/` files
 - **Security patterns** → Use `docs/security_incidents/` files

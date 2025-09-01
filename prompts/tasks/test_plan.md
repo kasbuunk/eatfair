@@ -2,7 +2,7 @@
 
 **Tags**: #test_plan #tdd  
 **Purpose**: Plan comprehensive test coverage for any feature before implementation begins  
-**Configurable**: Yes - Testing frameworks, patterns, and standards via prompts_config/
+**Configurable**: Yes - Testing frameworks, patterns, and standards via prompts/config/
 
 ## Quick Usage
 
@@ -38,8 +38,8 @@ Plan comprehensive test coverage following test-driven development principles:
 - Check that tests actually prove the feature works
 - Confirm tests would fail if feature was broken
 
-Technology-specific testing patterns: See prompts_config/tech_stack.md
-Quality standards and expectations: See prompts_config/quality_standards.md
+Technology-specific testing patterns: See prompts/config/tech_stack.md
+Quality standards and expectations: See prompts/config/quality_standards.md
 
 ## Configuration Points
 

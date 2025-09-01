@@ -44,8 +44,8 @@ Set up reliable, reproducible environments for development and deployment:
 - Document common issues and their resolutions
 - Establish environment refresh and update procedures
 
-Technology-specific setup patterns: See prompts_config/tech_stack.md  
-Infrastructure and deployment approaches: See prompts_config/infrastructure.md
+Technology-specific setup patterns: See prompts/config/tech_stack.md  
+Infrastructure and deployment approaches: See prompts/config/infrastructure.md
 
 ## Configuration Points
 

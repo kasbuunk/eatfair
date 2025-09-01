@@ -44,8 +44,8 @@ Design and implement comprehensive test coverage to ensure system reliability an
 - Address flaky or unreliable tests that reduce confidence
 - Continuously improve test performance and maintainability
 
-Testing framework patterns: See prompts_config/tech_stack.md  
-Coverage standards and quality requirements: See prompts_config/quality_standards.md
+Testing framework patterns: See prompts/config/tech_stack.md  
+Coverage standards and quality requirements: See prompts/config/quality_standards.md
 
 ## Configuration Points
 

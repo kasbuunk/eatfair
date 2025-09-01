@@ -1,7 +1,7 @@
-# Documentation Migration Plan: documentation/ → prompts_config/
+# Documentation Migration Plan: documentation/ → prompts/config/
 
 ## Overview
-This document provides the master plan for reorganizing `documentation/` files into the `prompts_config/` directory structure according to WARP.md principles of Single Source of Truth and modular prompt architecture.
+This document provides the master plan for reorganizing `documentation/` files into the `prompts/config/` directory structure according to WARP.md principles of Single Source of Truth and modular prompt architecture.
 
 ## File Inventory and Analysis
 
@@ -21,7 +21,7 @@ This document provides the master plan for reorganizing `documentation/` files i
 | `security_incident_google_maps_api_key_exposure.md` | Medium (102 lines) | Incident Report | Security incident post-mortem | None |
 | `skipped_tests_audit.md` | Small (66 lines) | Quality/Process | Analysis of skipped tests in codebase | Some overlap with quality_standards.md |
 
-### Current prompts_config/ Files (6 files)
+### Current prompts/config/ Files (6 files)
 
 | File | Purpose | Status |
 |------|---------|---------|
@@ -37,15 +37,15 @@ This document provides the master plan for reorganizing `documentation/` files i
 | Source File | Content Type | Integration Mode | Target Location(s) | Rationale |
 |-------------|--------------|-------------------|-------------------|-----------|
 | `admin_schema_analysis.md` | Technical Reference | **Partial Extract** | `tech_stack.md` + archive | Extract reusable DB schema patterns; archive full analysis |
-| `architectural_decision_records.md` | Architecture | **New File + Archive** | `prompts_config/architecture.md` + `docs/adr/` | Create ADR template; move chronology to docs/adr/ |
+| `architectural_decision_records.md` | Architecture | **New File + Archive** | `prompts/config/architecture.md` + `docs/adr/` | Create ADR template; move chronology to docs/adr/ |
 | `definition_of_done.md` | Process | **Merge** | `quality_standards.md` + `workflows.md` | Small checklist integrates well |
 | `development_interaction_notes.md` | Process/Philosophy | **Merge** | `workflows.md` | Contributor interaction guidance |
 | `development_log.md` | Project Status | **Archive** | `docs/archive/` | Too large for prompts; historical value only |
 | `features_completed.md` | Project Status | **Archive** | `docs/archive/` | Too large for prompts; historical value only |
 | `legacy_implementation_log.md` | Project Status | **Summarize + Archive** | `project_context.md` + `docs/archive/` | Extract key metrics; archive details |
 | `phoenix_elixir_reference.md` | Technical Reference | **Merge** | `tech_stack.md` | Major overlap; consolidate technical patterns |
-| `product_specification.md` | Product | **Split** | `project_context.md` + `prompts_config/product_requirements.md` | Vision vs. detailed requirements |
-| `security_incident_google_maps_api_key_exposure.md` | Incident Report | **New File + Archive** | `prompts_config/security.md` + `docs/security_incidents/` | Extract security patterns; archive incident |
+| `product_specification.md` | Product | **Split** | `project_context.md` + `prompts/config/product_requirements.md` | Vision vs. detailed requirements |
+| `security_incident_google_maps_api_key_exposure.md` | Incident Report | **New File + Archive** | `prompts/config/security.md` + `docs/security_incidents/` | Extract security patterns; archive incident |
 | `skipped_tests_audit.md` | Quality/Process | **Merge** | `quality_standards.md` | Test audit rules fit quality standards |
 
 ## Implementation Plan
@@ -79,11 +79,11 @@ This document provides the master plan for reorganizing `documentation/` files i
    - Update test management standards
 
 ### Phase 4: Architecture and Security
-1. **Create prompts_config/architecture.md**
+1. **Create prompts/config/architecture.md**
    - Extract ADR template from architectural_decision_records.md
    - Add architectural guidance for prompts
    - Move full ADR chronology to `docs/adr/`
-2. **Create prompts_config/security.md**
+2. **Create prompts/config/security.md**
    - Extract security patterns from incident report
    - Add security regression checklist
    - Archive incident in `docs/security_incidents/`
@@ -93,7 +93,7 @@ This document provides the master plan for reorganizing `documentation/` files i
    - Add product vision from product_specification.md
    - Summarize key metrics from legacy_implementation_log.md
    - Keep business context focused
-2. **Create prompts_config/product_requirements.md**
+2. **Create prompts/config/product_requirements.md**
    - Extract detailed requirements from product_specification.md
    - Structure for reference by #context_intake and #feature_dev prompts
    - Link to backlog items for Single Source of Truth
@@ -146,7 +146,7 @@ This document provides the master plan for reorganizing `documentation/` files i
 
 ### File Count Changes
 - **documentation/ files**: 11 → 0 (all migrated or archived)  
-- **prompts_config/ files**: 6 → 8-10 (new architecture.md, security.md, product_requirements.md)
+- **prompts/config/ files**: 6 → 8-10 (new architecture.md, security.md, product_requirements.md)
 - **docs/ files**: 0 → 15+ (archives, ADRs, incident reports)
 
 This plan maintains historical value while optimizing for prompt effectiveness and WARP.md compliance.

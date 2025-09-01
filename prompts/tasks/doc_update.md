@@ -44,8 +44,8 @@ Update documentation systematically to maintain accuracy and usefulness:
 - Ensure consistent tone, style, and formatting across documentation
 - Validate documentation works for intended audience skill levels
 
-Documentation standards and templates: See prompts_config/documentation.md  
-Content review and maintenance workflows: See prompts_config/workflows.md
+Documentation standards and templates: See prompts/config/documentation.md  
+Content review and maintenance workflows: See prompts/config/workflows.md
 
 ## Configuration Points
 

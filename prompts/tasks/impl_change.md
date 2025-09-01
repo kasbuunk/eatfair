@@ -44,8 +44,8 @@ Implement code changes systematically while maintaining system quality:
 - Check performance impact of changes
 - Ensure no unintended side effects or regressions
 
-Technology-specific patterns: See prompts_config/tech_stack.md  
-Code quality standards: See prompts_config/quality_standards.md
+Technology-specific patterns: See prompts/config/tech_stack.md  
+Code quality standards: See prompts/config/quality_standards.md
 
 ## Configuration Points
 

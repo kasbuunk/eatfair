@@ -44,8 +44,8 @@ Execute comprehensive test suite to ensure system integrity:
 - Check that tests actually validate intended functionality
 - Confirm no warnings or deprecation notices
 
-Test execution commands: See prompts_config/tech_stack.md  
-Quality standards and thresholds: See prompts_config/quality_standards.md
+Test execution commands: See prompts/config/tech_stack.md  
+Quality standards and thresholds: See prompts/config/quality_standards.md
 
 ## Configuration Points
 

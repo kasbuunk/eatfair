@@ -44,8 +44,8 @@ Systematically gather and analyze all relevant context:
 - Plan how progress and completion will be validated
 - Consider both immediate and longer-term success measures
 
-Project-specific information sources: See prompts_config/project_context.md  
-Technical context sources: See prompts_config/tech_stack.md
+Project-specific information sources: See prompts/config/project_context.md  
+Technical context sources: See prompts/config/tech_stack.md
 
 ## Configuration Points
 

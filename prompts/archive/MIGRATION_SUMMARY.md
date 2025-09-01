@@ -7,14 +7,14 @@ All documentation files from `documentation/` have been successfully reorganized
 ## What Was Accomplished
 
 ### ✅ **Major Consolidations**
-1. **phoenix_elixir_reference.md** → Merged comprehensive Phoenix/Elixir patterns into `prompts_config/tech_stack.md`
-2. **development_interaction_notes.md** → Integrated contributor interaction guidance into `prompts_config/workflows.md`
-3. **definition_of_done.md** → Merged checklist into `prompts_config/quality_standards.md`
-4. **skipped_tests_audit.md** → Added test audit rules to `prompts_config/quality_standards.md`
+1. **phoenix_elixir_reference.md** → Merged comprehensive Phoenix/Elixir patterns into `prompts/config/tech_stack.md`
+2. **development_interaction_notes.md** → Integrated contributor interaction guidance into `prompts/config/workflows.md`
+3. **definition_of_done.md** → Merged checklist into `prompts/config/quality_standards.md`
+4. **skipped_tests_audit.md** → Added test audit rules to `prompts/config/quality_standards.md`
 
 ### ✅ **New Configuration Files Created**
-- `prompts_config/security.md` - Security patterns and incident response procedures
-- `prompts_config/architecture.md` - Architectural guidance and ADR templates
+- `prompts/config/security.md` - Security patterns and incident response procedures
+- `prompts/config/architecture.md` - Architectural guidance and ADR templates
 
 ### ✅ **Archive Organization**
 - `docs/archive/` - Large historical documents (development_log.md, legacy_implementation_log.md, features_completed.md, etc.)
@@ -24,7 +24,7 @@ All documentation files from `documentation/` have been successfully reorganized
 
 ### ✅ **Documentation Structure**
 ```
-prompts_config/           # ← Active development guidance
+prompts/config/           # ← Active development guidance
 ├── architecture.md       # NEW: ADR templates, architectural patterns
 ├── backlog_management.md # Existing backlog workflow
 ├── project_context.md    # Enhanced with current project status

@@ -70,13 +70,13 @@ This file provides business domain context for all EatFair prompts.
 ## Documentation References
 
 ### Active Configuration
-- **Prompt Configurations**: `prompts_config/` directory
+- **Prompt Configurations**: `prompts/config/` directory
 - **Current Prompts**: `prompts/` directory  
-- **Development Workflows**: `prompts_config/workflows.md`
-- **Quality Standards**: `prompts_config/quality_standards.md`
-- **Technical Stack**: `prompts_config/tech_stack.md`
-- **Security Guidelines**: `prompts_config/security.md`
-- **Architecture Decisions**: `prompts_config/architecture.md`
+- **Development Workflows**: `prompts/config/workflows.md`
+- **Quality Standards**: `prompts/config/quality_standards.md`
+- **Technical Stack**: `prompts/config/tech_stack.md`
+- **Security Guidelines**: `prompts/config/security.md`
+- **Architecture Decisions**: `prompts/config/architecture.md`
 
 ### Archived Documentation
 - **Complete Project History**: `docs/archive/` directory

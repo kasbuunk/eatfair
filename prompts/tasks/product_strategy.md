@@ -44,8 +44,8 @@ Develop comprehensive product strategy and feature prioritization:
 - Set up feedback loops for continuous strategy refinement
 - Establish regular review and adjustment cycles
 
-Business domain context: See prompts_config/project_context.md  
-Market analysis frameworks: See prompts_config/business_frameworks.md
+Business domain context: See prompts/config/project_context.md  
+Market analysis frameworks: See prompts/config/business_frameworks.md
 
 ## Configuration Points
 

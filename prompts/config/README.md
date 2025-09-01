@@ -21,9 +21,9 @@ Configuration files correspond to prompts in `prompts/`:
 
 When you use `#feature_dev`, the prompt will:
 1. Load the generic methodology from `prompts/feature_dev.md`  
-2. Apply project-specific customizations from `prompts_config/feature_dev.md`
-3. Reference technology patterns from `prompts_config/tech_stack.md`
-4. Include business context from `prompts_config/project_context.md`
+2. Apply project-specific customizations from `prompts/config/feature_dev.md`
+3. Reference technology patterns from `prompts/config/tech_stack.md`
+4. Include business context from `prompts/config/project_context.md`
 
 ## Configuration Files
 

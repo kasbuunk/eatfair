@@ -44,8 +44,8 @@ Implement small changes efficiently while maintaining quality and safety:
 - Apply #monitoring_watch for any unexpected impacts
 - Have rollback plan ready if issues arise
 
-Change approval workflows: See prompts_config/workflows.md  
-Technology-specific quick change patterns: See prompts_config/tech_stack.md
+Change approval workflows: See prompts/config/workflows.md  
+Technology-specific quick change patterns: See prompts/config/tech_stack.md
 
 ## Configuration Points
 

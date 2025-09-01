@@ -44,8 +44,8 @@ Write comprehensive tests that prove functionality works correctly:
 - Check tests run quickly (target <1 second each) and reliably
 - Review test readability and maintainability
 
-Testing framework specifics: See prompts_config/tech_stack.md  
-Test organization patterns: See prompts_config/quality_standards.md
+Testing framework specifics: See prompts/config/tech_stack.md  
+Test organization patterns: See prompts/config/quality_standards.md
 
 ## Configuration Points
 

@@ -45,8 +45,8 @@ Systematically debug and resolve software issues:
 - Apply #code_review to validate fix quality and consider similar potential issues
 - Update monitoring or alerting to catch similar issues earlier
 
-Use technology-specific debugging tools from: prompts_config/tech_stack.md  
-Follow project debugging workflows from: prompts_config/workflows.md
+Use technology-specific debugging tools from: prompts/config/tech_stack.md  
+Follow project debugging workflows from: prompts/config/workflows.md
 
 ## Configuration Points
 

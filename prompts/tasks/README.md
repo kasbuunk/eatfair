@@ -20,10 +20,10 @@ For example:
 
 ## Configuration
 
-Project-specific customizations are handled through corresponding files in `prompts_config/`:
-- `prompts_config/feature_dev.md` - Project-specific feature development preferences
-- `prompts_config/debug_bug.md` - Project-specific debugging workflows
-- `prompts_config/tech_stack.md` - Technology stack specific patterns
+Project-specific customizations are handled through corresponding files in `prompts/config/`:
+- `prompts/config/feature_dev.md` - Project-specific feature development preferences
+- `prompts/config/debug_bug.md` - Project-specific debugging workflows
+- `prompts/config/tech_stack.md` - Technology stack specific patterns
 
 ## Usage
 

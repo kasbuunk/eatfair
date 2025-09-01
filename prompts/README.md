@@ -112,16 +112,155 @@ This unified structure maintains principles:
 
 - **Product Specification** - Single source for product vision and feature guidance
 - **Task Prompts** - Reusable methodologies without duplication
-- **Configuration** - Project-specific context that customizes generic prompts
+- **Configuration** - Project-specific context that customizes generic prompts  
 - **Archives** - Historical preservation without active development pollution
+
+## 🔄 **Configuration Override System**
+
+The prompt system operates on a **layered approach** for maximum reusability:
+
+### Core Principle
+1. **Generic Foundation** (`prompts/tasks/`) - Universal best practices and methodologies
+2. **Project Configuration** (`prompts/config/`) - Specific overrides, patterns, and context
+3. **Product Context** (`prompts/product_specification.md`) - Business domain and feature guidance
+
+### How Overrides Work
+When an agent processes a tagged prompt request:
+
+1. **Load Generic Prompt** - Read the base methodology from `prompts/tasks/[prompt_name].md`
+2. **Apply Configuration** - Layer in project-specific context from `prompts/config/` files  
+3. **Context Integration** - Combine both to create the final, contextualized guidance
+
+### Configuration Integration Points
+Each generic prompt includes **Configuration References** that specify which config files to consider:
+
+```markdown
+Apply technology-specific patterns from: prompts/config/tech_stack.md  
+Follow project quality standards from: prompts/config/quality_standards.md  
+Integrate with project workflows from: prompts/config/workflows.md
+```
+
+### Configuration File Types
+
+**Cross-Cutting Configuration Files** (apply across multiple prompt types):
+- **`tech_stack.md`** - Technology patterns, frameworks, libraries, coding conventions
+- **`project_context.md`** - Business domain, user journeys, product requirements  
+- **`quality_standards.md`** - Testing standards, Definition of Done, audit checklists
+- **`workflows.md`** - Development processes, git workflows, backlog management
+- **`security.md`** - Security patterns, vulnerability procedures, compliance requirements
+
+**Prompt-Specific Overrides** (specialized configuration):
+- **`prompts/config/feature_dev.md`** - Project-specific feature development patterns
+- **`prompts/config/debug_bug.md`** - Technology-specific debugging approaches
+- **`prompts/config/test_author.md`** - Project testing frameworks and patterns
+
+## 🚀 **Team Bootstrap Instructions**
+
+### For New Projects Using This System
+
+#### Step 1: Copy Generic Foundation
+```bash
+# Copy the generic prompts from company repository
+cp -r /path/to/company-prompts/tasks ./prompts/
+cp /path/to/company-prompts/AGENTS.md ./
+cp /path/to/company-prompts/scripts/validate_prompts.sh ./scripts/
+```
+
+#### Step 2: Create Project Configuration
+```bash
+# Create your project-specific configuration directory
+mkdir -p prompts/config
+
+# Create core configuration files (customize these templates)
+touch prompts/config/tech_stack.md
+touch prompts/config/project_context.md  
+touch prompts/config/quality_standards.md
+touch prompts/config/workflows.md
+touch prompts/config/security.md
+```
+
+#### Step 3: Customize Configuration Files
+Each configuration file should follow this structure:
+
+```markdown
+# [Configuration Area] Configuration
+
+**Project**: [Your Project Name]  
+**Last Updated**: [Date]
+
+## Overview
+Brief description of what this configuration covers.
+
+## [Project Name] Specifics
+Project-specific implementations, patterns, and requirements.
+
+### Technology Stack
+- Framework: [specific framework + version]
+- Libraries: [specific choices and versions]
+- Patterns: [architectural patterns used]
+
+### Quality Standards  
+- Testing: [specific testing approaches]
+- Performance: [specific thresholds]
+- Security: [specific requirements]
+
+## Examples
+Concrete examples of how to apply these configurations.
+
+## Related Generic Prompts
+List which `prompts/tasks/` files reference this configuration.
+```
+
+#### Step 4: Create Product Specification
+```bash
+# Create your product specification (the most important document)
+touch prompts/product_specification.md
+```
+
+#### Step 5: Validate Your Setup
+```bash
+# Run validation to ensure everything is properly configured
+./scripts/validate_prompts.sh
+```
+
+### Usage Examples
+
+#### Basic Usage
+```
+Use #feature_dev to implement user authentication
+```
+→ Loads `prompts/tasks/feature_dev.md` + applies all referenced config files
+
+#### Explicit Configuration Reference  
+```
+Use #debug_bug with technology-specific patterns for database issues
+```
+→ Emphasizes applying `prompts/config/tech_stack.md` for database debugging
+
+#### Multi-Configuration Integration
+```
+Use #test_author with project testing standards and security requirements
+```
+→ Applies both `prompts/config/quality_standards.md` and `prompts/config/security.md`
+
+### Implementation Guidelines
+
+**For Generic Prompts** (`prompts/tasks/`):
+✅ **DO include**: Universal methodologies, technology-agnostic workflows, generic quality gates
+❌ **NEVER include**: Specific technology stacks, product-specific business logic, particular tool names
+
+**For Configuration Files** (`prompts/config/`):
+✅ **DO include**: Technology-specific patterns, project business context, specific tools and frameworks
+❌ **AVOID duplicating**: Generic methodologies (keep those in `prompts/tasks/`)
 
 ## 🚀 Getting Started
 
 **For any development task:**
 
-1. Read `product_specification.md` for product vision and feature context
-2. Choose appropriate task prompt from `tasks/` directory
-3. Apply relevant configurations from `config/` directory  
-4. Reference `archive/` for historical context if needed
+1. **Read `product_specification.md`** for product vision and feature context
+2. **Choose appropriate task prompt** from `tasks/` directory
+3. **Apply relevant configurations** from `config/` directory  
+4. **Reference `archive/`** for historical context if needed
+5. **Run validation** with `./scripts/validate_prompts.sh` to ensure system integrity
 
-This structure provides both the flexibility of generic prompts and the specificity of project context while keeping the product specification at the center of all decision-making.
+This layered system provides the flexibility of customization with the consistency of shared best practices.

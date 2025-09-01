@@ -21,6 +21,11 @@ graph TD
         PS[#product_strategy]
         TA[#test_author]
         ST[#support_triage]
+        CO[#code_orient]
+        QF[#quick_fix]
+        RF[#refactor]
+        IR[#incident_resp]
+        ES[#env_setup]
     end
     
     subgraph "Building Blocks"
@@ -31,6 +36,11 @@ graph TD
         RAT[#run_all_tests]
         CR[#create_repro]
         ISO[#isolate_cause]
+        RT[#route_task]
+        DU[#doc_update]
+        CLR[#clarify_requirements]
+        SS[#scope_shaping]
+        MD[#merge_deploy]
     end
     
     %% Feature Development Flow
@@ -148,10 +158,10 @@ Repeat building blocks until success:
 
 ### With Configuration System
 Every prompt references:
-- `prompts_config/tech_stack.md` - Technology-specific patterns
-- `prompts_config/project_context.md` - Business domain context  
-- `prompts_config/quality_standards.md` - Quality and testing standards
-- `prompts_config/workflows.md` - Project-specific processes
+- `prompts/config/tech_stack.md` - Technology-specific patterns
+- `prompts/config/project_context.md` - Business domain context  
+- `prompts/config/quality_standards.md` - Quality and testing standards
+- `prompts/config/workflows.md` - Project-specific processes
 
 ### With External Systems
 Prompts may reference:

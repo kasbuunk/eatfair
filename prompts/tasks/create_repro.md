@@ -44,8 +44,8 @@ Create a minimal reproduction case that reliably demonstrates the issue:
 - Check that test will pass once bug is fixed
 - Consider adding assertions for related functionality that should remain working
 
-Testing framework patterns: See prompts_config/tech_stack.md  
-Bug tracking workflows: See prompts_config/workflows.md
+Testing framework patterns: See prompts/config/tech_stack.md  
+Bug tracking workflows: See prompts/config/workflows.md
 
 ## Configuration Points
 

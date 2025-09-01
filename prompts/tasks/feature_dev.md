@@ -37,12 +37,12 @@ Implement a new feature using test-driven development:
 - Apply #run_all_tests to check for regressions across entire system
 - Manually test feature in realistic application context
 - Verify feature works with related functionality and doesn't break existing flows
-- Confirm performance meets standards defined in prompts_config/quality_standards.md
+- Confirm performance meets standards defined in prompts/config/quality_standards.md
 - Apply #code_review to ensure code quality before integration
 
-Apply technology-specific patterns from: prompts_config/tech_stack.md  
-Follow project quality standards from: prompts_config/quality_standards.md  
-Integrate with project workflows from: prompts_config/workflows.md
+Apply technology-specific patterns from: prompts/config/tech_stack.md  
+Follow project quality standards from: prompts/config/quality_standards.md  
+Integrate with project workflows from: prompts/config/workflows.md
 
 ## Configuration Points
 

@@ -53,8 +53,8 @@ Apply classification framework to categorize the work:
 - Note cross-team dependencies or external stakeholder involvement
 - Suggest timeline and resource allocation considerations
 
-Project-specific routing rules: See prompts_config/routing_rules.md  
-Task category definitions: See prompts/prompt_network.md
+Project-specific routing rules: See prompts/config/routing_rules.md  
+Task category definitions: See prompts/tasks/prompt_network.md
 
 ## Configuration Points
 

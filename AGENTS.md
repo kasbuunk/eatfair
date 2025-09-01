@@ -22,11 +22,13 @@ This document defines the roles, responsibilities, and capabilities of different
 - Maintain code quality through proper error handling and validation
 
 **Required Knowledge**:
-- Project framework patterns and architecture (see prompts_config/tech_stack.md)
+- Project framework patterns and architecture (see prompts/config/tech_stack.md)
 - Language fundamentals and architectural principles
 - Database operations and schema management patterns
-- Template systems and component-based UI development
+- UI development patterns and component architectures
 - Testing patterns and frameworks
+
+**Project Configuration**: See prompts/config/agent_workflows.md for project-specific specialization areas.
 
 ### 2. Reviewer Mode
 **Primary Role**: Code review and quality assurance
@@ -149,34 +151,34 @@ All agent types must:
 
 #### Main Task Categories (Complete Workflows)
 Use these for end-to-end work processes:
-- **#feature_dev** → `prompts/feature_dev.md` - Implement new features using TDD
-- **#debug_bug** → `prompts/debug_bug.md` - Systematically investigate and fix bugs  
-- **#product_strategy** → `prompts/product_strategy.md` - Plan product direction and prioritization
-- **#test_author** → `prompts/test_author.md` - Create comprehensive test coverage
-- **#support_triage** → `prompts/support_triage.md` - Process user feedback and issues
-- **#code_orient** → `prompts/code_orient.md` - Understand unfamiliar codebase structure
-- **#env_setup** → `prompts/env_setup.md` - Set up development environments
-- **#quick_fix** → `prompts/quick_fix.md` - Implement small, low-risk changes
-- **#refactor** → `prompts/refactor.md` - Improve code quality without changing behavior
-- **#incident_resp** → `prompts/incident_resp.md` - Handle production incidents
+- **#feature_dev** → `prompts/tasks/feature_dev.md` - Implement new features using TDD
+- **#debug_bug** → `prompts/tasks/debug_bug.md` - Systematically investigate and fix bugs  
+- **#product_strategy** → `prompts/tasks/product_strategy.md` - Plan product direction and prioritization
+- **#test_author** → `prompts/tasks/test_author.md` - Create comprehensive test coverage
+- **#support_triage** → `prompts/tasks/support_triage.md` - Process user feedback and issues
+- **#code_orient** → `prompts/tasks/code_orient.md` - Understand unfamiliar codebase structure
+- **#env_setup** → `prompts/tasks/env_setup.md` - Set up development environments
+- **#quick_fix** → `prompts/tasks/quick_fix.md` - Implement small, low-risk changes
+- **#refactor** → `prompts/tasks/refactor.md` - Improve code quality without changing behavior
+- **#incident_resp** → `prompts/tasks/incident_resp.md` - Handle production incidents
 
 #### Building Blocks (Composable Steps)
 Use these for specific workflow steps:
-- **#context_intake** → `prompts/context_intake.md` - Gather requirements and understand work
-- **#test_plan** → `prompts/test_plan.md` - Design comprehensive test coverage
-- **#write_tests** → `prompts/write_tests.md` - Create tests following TDD principles
-- **#impl_change** → `prompts/impl_change.md` - Make code changes with quality safeguards
-- **#run_all_tests** → `prompts/run_all_tests.md` - Execute and validate test suite
-- **#create_repro** → `prompts/create_repro.md` - Create bug reproduction test cases
-- **#isolate_cause** → `prompts/isolate_cause.md` - Systematically find root causes
-- **#route_task** → `prompts/route_task.md` - Classify and route incoming work requests
-- **#doc_update** → `prompts/doc_update.md` - Update project documentation
+- **#context_intake** → `prompts/tasks/context_intake.md` - Gather requirements and understand work
+- **#test_plan** → `prompts/tasks/test_plan.md` - Design comprehensive test coverage
+- **#write_tests** → `prompts/tasks/write_tests.md` - Create tests following TDD principles
+- **#impl_change** → `prompts/tasks/impl_change.md` - Make code changes with quality safeguards
+- **#run_all_tests** → `prompts/tasks/run_all_tests.md` - Execute and validate test suite
+- **#create_repro** → `prompts/tasks/create_repro.md` - Create bug reproduction test cases
+- **#isolate_cause** → `prompts/tasks/isolate_cause.md` - Systematically find root causes
+- **#route_task** → `prompts/tasks/route_task.md` - Classify and route incoming work requests
+- **#doc_update** → `prompts/tasks/doc_update.md` - Update project documentation
 
 ### 🔍 Prompt Discovery and Usage
 
 #### When User Includes Tags
 1. **Identify Tags**: Look for `#tag` patterns in user requests
-2. **Find Prompt Files**: Tags map directly to filenames: `#feature_dev` → `prompts/feature_dev.md`
+2. **Find Prompt Files**: Tags map directly to filenames: `#feature_dev` → `prompts/tasks/feature_dev.md`
 3. **Read Full Prompt**: Load the complete prompt content and follow its guidance
 4. **Apply Configuration**: Reference `prompts/config/` files for project-specific customizations
 3. **Recursively unfold**: Where more context is relevant, recursively read any prompt referenced by tag
@@ -214,18 +216,11 @@ Use these for specific workflow steps:
 
 ### ⚙️ Configuration System
 
-#### Project-Specific Customizations
-Important prompts reference configuration files in `prompts/config/`:
-- **tech_stack.md** - Technology patterns and conventions
-- **project_context.md** - Business domain and requirements  
-- **workflows.md** - Development processes and backlog management
-- **quality_standards.md** - Testing approaches and quality gates
+The prompt system uses a **layered approach**: generic methodologies (`prompts/tasks/`) + project-specific configuration (`prompts/config/`) = contextualized guidance.
 
-#### How Configuration Works
-1. **Generic Prompt**: Provides methodology and universal best practices
-2. **Configuration Override**: Adds project-specific patterns and requirements
-3. **Context Integration**: Applies business domain knowledge and constraints
-4. **Workflow Alignment**: Ensures consistency with project development processes
+**Key Configuration Files**: `tech_stack.md`, `project_context.md`, `workflows.md`, `quality_standards.md`
+
+📖 **See More**: Complete configuration documentation in [`prompts/README.md`](prompts/README.md#-configuration-override-system)
 
 ### 🚀 Usage Examples
 
@@ -249,7 +244,7 @@ Important prompts reference configuration files in `prompts/config/`:
 
 ### 🔗 Prompt Network
 
-**Complete workflow map**: See `prompts/prompt_network.md` for visual dependency mapping
+**Complete workflow map**: See `prompts/tasks/prompt_network.md` for visual dependency mapping
 
 **Cross-references**: Each prompt includes "Related Prompts" section showing:
 - **Prerequisites**: What to use before this prompt
