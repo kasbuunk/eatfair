@@ -1,10 +1,10 @@
 # Agent System and Tag-Based Prompts
 
-This document defines the roles, responsibilities, and capabilities of different agent types in our development system, and how they interact with the modular tag-based prompt system.
+This document defines the roles, responsibilities, and capabilities of different agent modes in our development system, and how they interact with the modular tag-based prompt system.
 
-## Core Agent Types
+## Core Agent Modes
 
-### 1. Developer Agent
+### 1. Developer Mode
 **Primary Role**: Feature implementation and code development
 
 **Core Capabilities**:
@@ -28,7 +28,7 @@ This document defines the roles, responsibilities, and capabilities of different
 - Template systems and component-based UI development
 - Testing patterns and frameworks
 
-### 2. Reviewer Agent
+### 2. Reviewer Mode
 **Primary Role**: Code review and quality assurance
 
 **Core Capabilities**:
@@ -52,7 +52,7 @@ This document defines the roles, responsibilities, and capabilities of different
 - Security best practices are followed
 - Performance implications are considered
 
-### 3. Orchestrator Agent
+### 3. Orchestrator Mode
 **Primary Role**: Workflow coordination and task management
 
 **Core Capabilities**:
@@ -75,7 +75,7 @@ This document defines the roles, responsibilities, and capabilities of different
 - Escalation of blockers and dependency issues
 - Integration of feedback loops and learning
 
-### 4. Documentation Agent
+### 4. Documentation Mode
 **Primary Role**: Information architecture and knowledge management
 
 **Core Capabilities**:
@@ -95,14 +95,13 @@ This document defines the roles, responsibilities, and capabilities of different
 ## Agent Interaction Patterns
 
 ### Standard Development Flow
-1. **Orchestrator** identifies next priority from backlog
-2. **Developer** implements feature following TDD practices
-3. **Reviewer** validates implementation against quality criteria
+1. **Developer** implements feature following way of working
+2. **Reviewer** validates implementation against quality criteria
+3. **Orchestrator** marks work complete and identifies next priority
 4. **Documentation** updates relevant docs and logs progress
-5. **Orchestrator** marks work complete and identifies next priority
 
 ### Quality Gates
-Each agent type has specific quality gates that must be satisfied:
+Each agent mode has specific quality gates that must be satisfied:
 
 - **Developer**: All tests pass, feature meets acceptance criteria
 - **Reviewer**: Code quality standards met, security validated
@@ -112,8 +111,7 @@ Each agent type has specific quality gates that must be satisfied:
 ## Cross-Cutting Concerns
 
 All agent types must:
-- Adhere to the global principles defined in [System Constitution](WARP.md)
-- Maintain atomic commits with descriptive messages
+- Maintain appropriate version control
 - Follow the established information architecture
 - Contribute to the continuous improvement feedback loop
 - Respect the single source of truth for prioritization
@@ -180,7 +178,8 @@ Use these for specific workflow steps:
 1. **Identify Tags**: Look for `#tag` patterns in user requests
 2. **Find Prompt Files**: Tags map directly to filenames: `#feature_dev` → `prompts/feature_dev.md`
 3. **Read Full Prompt**: Load the complete prompt content and follow its guidance
-4. **Apply Configuration**: Reference `prompts_config/` files for project-specific customizations
+4. **Apply Configuration**: Reference `prompts/config/` files for project-specific customizations
+3. **Recursively unfold**: Where more context is relevant, recursively read any prompt referenced by tag
 
 #### When No Tags Present
 1. **Apply Classification**: Use `#route_task` to classify the type of work
@@ -216,7 +215,7 @@ Use these for specific workflow steps:
 ### ⚙️ Configuration System
 
 #### Project-Specific Customizations
-All prompts reference configuration files in `prompts_config/`:
+Important prompts reference configuration files in `prompts/config/`:
 - **tech_stack.md** - Technology patterns and conventions
 - **project_context.md** - Business domain and requirements  
 - **workflows.md** - Development processes and backlog management
@@ -257,26 +256,7 @@ All prompts reference configuration files in `prompts_config/`:
 - **Complements**: What works alongside this prompt  
 - **Follows**: What to use after this prompt
 
-### 📖 Legacy Prompt Migration
-
-**Old System** (Deprecated):
-- File-based references like `prioritize_work.md`
-- Monolithic prompts with mixed concerns
-- Project-specific content mixed with generic guidance
-
-**New System** (Current):
-- Tag-based references like `#product_strategy`
-- Modular prompts with single responsibilities
-- Clean separation of generic methodology and project configuration
-
-**Migration Guide**:
-- Replace file references with tag references
-- Use building block composition instead of monolithic prompts
-- Apply configuration system for project-specific customization
-
 ---
 
 **Related Documents**:
-- [System Constitution (WARP.md)](WARP.md) - Global principles and operational rules
-- [Backlog Dashboard](backlog_dashboard.md) - Current work prioritization
 - [Definition of Done](documentation/definition_of_done.md) - Quality criteria for completion

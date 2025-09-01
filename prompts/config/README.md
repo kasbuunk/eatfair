@@ -52,3 +52,9 @@ Use #feature_dev with EatFair business context for the restaurant discovery feat
 2. **Reference generic prompts** - Don't duplicate methodology, just customize it  
 3. **Include concrete examples** - Use actual EatFair features and requirements
 4. **Update regularly** - Keep configuration current with project evolution
+
+---
+
+**Related Documents**:
+- [System Constitution (WARP.md)](WARP.md) - Global principles and operational rules
+- [Backlog Dashboard](backlog_dashboard.md) - Current work prioritization

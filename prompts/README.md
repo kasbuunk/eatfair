@@ -1,4 +1,4 @@
-# EatFair Prompts Directory
+# Prompts Directory
 
 **Unified prompt system containing both generic methodologies and project-specific configurations.**
 
@@ -9,7 +9,7 @@
 
 ### **For AI Agents**
 - **`tasks/`** - Generic prompt methodologies (reusable across projects)
-- **`config/`** - EatFair-specific configurations and context
+- **`config/`** - Product-specific configurations and context
 
 ### **For Historical Reference**  
 - **`archive/`** - Complete project history and archived documentation
@@ -26,9 +26,9 @@ prompts/
 │   ├── context_intake.md     # Requirements gathering
 │   ├── product_strategy.md   # Strategic planning
 │   └── [20+ other task prompts...]
-├── config/                   # EatFair-specific configurations
+├── config/                   # Product-specific configurations
 │   ├── project_context.md    # Business domain and current status
-│   ├── tech_stack.md         # Phoenix/Elixir patterns and conventions
+│   ├── tech_stack.md         # Product-specific patterns and conventions
 │   ├── quality_standards.md  # Testing and quality requirements
 │   ├── workflows.md          # Development processes
 │   ├── security.md          # Security patterns and procedures
@@ -47,7 +47,7 @@ prompts/
 
 **`product_specification.md` is the foundational document** that should inform ALL development decisions. Reference it whenever you need guidance on:
 
-- **Product vision and mission** - What EatFair exists to accomplish
+- **Product vision and mission** - What the product exists to accomplish
 - **Target audience and user journeys** - Who we're building for and how they use the platform  
 - **Feature priorities and requirements** - What to build and why
 - **Design philosophy and values** - How to make decisions about UX, features, and behavior
@@ -57,20 +57,20 @@ prompts/
 
 ## 📝 Using Task Prompts
 
-Task prompts in `tasks/` are **generic methodologies** that work across projects. To use them with EatFair context:
+Task prompts in `tasks/` are **generic methodologies** that work across projects. To use them with the product's context:
 
 ```
-Use #feature_dev with EatFair product specification for implementing restaurant discovery
-Use #debug_bug with EatFair tech stack patterns for Phoenix LiveView issues
-Use #test_author with EatFair quality standards for comprehensive test coverage
+Use #feature_dev with the product specification for implementing a new feature
+Use #debug_bug with the tech stack patterns for troubleshooting issues
+Use #test_author with our quality standards for comprehensive test coverage
 ```
 
 ## ⚙️ Project Configuration
 
-Files in `config/` provide **EatFair-specific context** that customizes the generic task prompts:
+Files in `config/` provide **Product-specific context** that customizes the generic task prompts:
 
 - **`project_context.md`** - Current project status, user journeys, success metrics
-- **`tech_stack.md`** - Phoenix/Elixir patterns, database schemas, testing approaches
+- **`tech_stack.md`** - Tech stack, patterns, database schemas, design philosophy
 - **`quality_standards.md`** - Definition of done, security checklists, test audit rules
 - **`workflows.md`** - Development processes and contributor interaction guidelines
 - **`security.md`** - Security patterns, incident response, vulnerability management
@@ -91,24 +91,24 @@ The `archive/` directory preserves complete project history:
 ### For Feature Development
 1. **Start with product specification** - Understand the vision and requirements
 2. **Use `#feature_dev` task prompt** - Follow systematic development methodology  
-3. **Reference config files** - Apply EatFair-specific patterns and standards
+3. **Reference config files** - Apply product-specific patterns and standards
 4. **Update progress** - Keep backlog and implementation status current
 
-### For Bug Debugging  
+### For Debugging  
 1. **Use `#debug_bug` task prompt** - Follow systematic debugging methodology
 2. **Reference `config/security.md`** - Check for security implications
-3. **Reference `config/tech_stack.md`** - Apply Phoenix/Elixir debugging patterns
+3. **Reference `config/tech_stack.md`** - Apply Tech specific debugging patterns
 4. **Document learnings** - Update relevant configuration or archive docs
 
 ### For Testing and Quality
 1. **Use `#test_author` task prompt** - Follow comprehensive testing methodology
 2. **Reference `config/quality_standards.md`** - Apply DoD checklist and audit rules
-3. **Reference `config/tech_stack.md`** - Use Phoenix LiveView testing patterns
+3. **Reference `config/tech_stack.md`** - Use our chosen testing patterns
 4. **Validate completeness** - Ensure all quality gates are met
 
 ## 🔄 Single Source of Truth
 
-This unified structure maintains WARP.md principles:
+This unified structure maintains principles:
 
 - **Product Specification** - Single source for product vision and feature guidance
 - **Task Prompts** - Reusable methodologies without duplication
