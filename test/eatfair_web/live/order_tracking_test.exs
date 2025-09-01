@@ -490,7 +490,7 @@ defmodule EatfairWeb.OrderTrackingTest do
       # 📊 Should show order counts (flexible matching for numbers)
       assert html =~ ~r/1.*new/i
       assert html =~ ~r/1.*(preparing|progress)/i
-      assert html =~ ~r/1.*ready/i
+      assert html =~ ~r/ready.*1/i  # 'Ready' text appears before the count '1'
 
       # ⚡ Test basic functionality rather than real-time updates (which may depend on LiveView pubsub)
       {:ok, _new_order} =

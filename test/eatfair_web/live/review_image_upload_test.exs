@@ -162,13 +162,15 @@ defmodule EatfairWeb.ReviewImageUploadTest do
 
       # Create review with images directly via context (bypassing UI for now)
       assert_raise UndefinedFunctionError, fn ->
-        Reviews.create_review_with_images(%{
-          rating: 5,
-          comment: "Amazing food! The presentation was beautiful.",
-          user_id: customer.id,
-          restaurant_id: restaurant.id,
-          order_id: order.id,
-          images: [
+        Reviews.create_review_with_images(
+          %{
+            rating: 5,
+            comment: "Amazing food! The presentation was beautiful.",
+            user_id: customer.id,
+            restaurant_id: restaurant.id,
+            order_id: order.id
+          },
+          [
             %{
               name: "test_dish.jpg",
               content: create_test_image_binary(),
@@ -176,7 +178,7 @@ defmodule EatfairWeb.ReviewImageUploadTest do
               type: "image/jpeg"
             }
           ]
-        })
+        )
       end
 
       # Should validate:

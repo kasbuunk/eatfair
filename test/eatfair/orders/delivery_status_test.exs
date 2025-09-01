@@ -31,7 +31,7 @@ defmodule Eatfair.Orders.DeliveryStatusTest do
     test "delivery_status can be set to valid values" do
       customer = user_fixture(%{role: "customer"})
       restaurant = restaurant_fixture()
-      
+
       # Create a minimal valid order to test delivery_status
       base_order_attrs = %{
         customer_id: customer.id,
@@ -39,13 +39,16 @@ defmodule Eatfair.Orders.DeliveryStatusTest do
         delivery_address: "Test Address",
         total_price: Decimal.new("10.00")
       }
-      
+
       order = %Order{}
       valid_statuses = ["not_ready", "staged", "scheduled", "in_transit", "delivered"]
 
       Enum.each(valid_statuses, fn status ->
         changeset = Order.changeset(order, Map.put(base_order_attrs, :delivery_status, status))
-        assert changeset.valid?, "#{status} should be valid, but got errors: #{inspect(changeset.errors)}"
+
+        assert changeset.valid?,
+               "#{status} should be valid, but got errors: #{inspect(changeset.errors)}"
+
         assert Ecto.Changeset.get_field(changeset, :delivery_status) == status
       end)
     end
@@ -53,7 +56,7 @@ defmodule Eatfair.Orders.DeliveryStatusTest do
     test "delivery_status rejects invalid values" do
       customer = user_fixture(%{role: "customer"})
       restaurant = restaurant_fixture()
-      
+
       # Create a minimal valid order to test delivery_status
       base_order_attrs = %{
         customer_id: customer.id,
@@ -61,16 +64,18 @@ defmodule Eatfair.Orders.DeliveryStatusTest do
         delivery_address: "Test Address",
         total_price: Decimal.new("10.00")
       }
-      
+
       order = %Order{}
       invalid_statuses = ["invalid_status", "unknown", "bad_status"]
 
       Enum.each(invalid_statuses, fn status ->
         changeset = Order.changeset(order, Map.put(base_order_attrs, :delivery_status, status))
         refute changeset.valid?, "#{status} should be invalid"
-        assert changeset.errors[:delivery_status] != nil, "Should have error for delivery_status when status is #{inspect(status)}"
+
+        assert changeset.errors[:delivery_status] != nil,
+               "Should have error for delivery_status when status is #{inspect(status)}"
       end)
-      
+
       # Test nil separately as it should use the default value
       changeset = Order.changeset(order, base_order_attrs)
       assert changeset.valid?, "nil delivery_status should use default and be valid"
@@ -90,8 +95,10 @@ defmodule Eatfair.Orders.DeliveryStatusTest do
             restaurant_id: restaurant.id,
             total_price: meal.price,
             delivery_address: "Test Address",
-            status: "preparing",  # preparation status
-            delivery_status: "not_ready"  # delivery status
+            # preparation status
+            status: "preparing",
+            # delivery status
+            delivery_status: "not_ready"
           },
           [%{meal_id: meal.id, quantity: 1}]
         )
@@ -118,10 +125,11 @@ defmodule Eatfair.Orders.DeliveryStatusTest do
         )
 
       # Update delivery status while keeping preparation status
-      {:ok, updated_order} = 
+      {:ok, updated_order} =
         Orders.update_order(order, %{delivery_status: "staged"})
 
-      assert updated_order.status == "ready"  # preparation unchanged
+      # preparation unchanged
+      assert updated_order.status == "ready"
       assert updated_order.delivery_status == "staged"
     end
 
@@ -143,20 +151,24 @@ defmodule Eatfair.Orders.DeliveryStatusTest do
         )
 
       # Progression: not_ready -> staged -> scheduled -> in_transit -> delivered
-      {:ok, staged_order} = 
+      {:ok, staged_order} =
         Orders.update_order(order, %{delivery_status: "staged"})
+
       assert staged_order.delivery_status == "staged"
 
-      {:ok, scheduled_order} = 
+      {:ok, scheduled_order} =
         Orders.update_order(staged_order, %{delivery_status: "scheduled"})
+
       assert scheduled_order.delivery_status == "scheduled"
 
-      {:ok, in_transit_order} = 
+      {:ok, in_transit_order} =
         Orders.update_order(scheduled_order, %{delivery_status: "in_transit"})
+
       assert in_transit_order.delivery_status == "in_transit"
 
-      {:ok, delivered_order} = 
+      {:ok, delivered_order} =
         Orders.update_order(in_transit_order, %{delivery_status: "delivered"})
+
       assert delivered_order.delivery_status == "delivered"
     end
   end
@@ -202,5 +214,4 @@ defmodule Eatfair.Orders.DeliveryStatusTest do
       assert Enum.any?(staged_orders, fn o -> o.id == staged_order.id end)
     end
   end
-
 end

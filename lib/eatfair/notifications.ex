@@ -15,6 +15,10 @@ defmodule Eatfair.Notifications do
   """
 
   import Ecto.Query, warn: false
+
+  # Import Phoenix.VerifiedRoutes for URL generation
+  use Phoenix.VerifiedRoutes, endpoint: EatfairWeb.Endpoint, router: EatfairWeb.Router
+
   alias Eatfair.Repo
   alias Eatfair.Notifications.{Event, UserPreference}
 
@@ -197,13 +201,13 @@ defmodule Eatfair.Notifications do
   defp maybe_add_donation_aware_data(event_data, _order, _status), do: event_data
 
   defp generate_social_share_url(order) do
-    # Generate a social sharing URL - in production this would be a real URL
-    "https://eatfair.com/share/order/#{order.id}"
+    # Generate social sharing URL using restaurant detail page
+    url(~p"/restaurants/#{order.restaurant_id}?shared=#{order.id}")
   end
 
   defp generate_donation_url(order) do
-    # Generate a donation URL - in production this would be a real donation flow
-    "https://eatfair.com/donate/restaurant/#{order.restaurant_id}"
+    # Generate donation URL using restaurant page with donation focus
+    url(~p"/restaurants/#{order.restaurant_id}?donate=true")
   end
 
   defp priority_for_status("confirmed"), do: "normal"

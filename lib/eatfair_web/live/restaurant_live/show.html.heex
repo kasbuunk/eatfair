@@ -312,6 +312,7 @@
                 <h3 class="text-lg font-semibold text-gray-900 mb-4">Share your experience</h3>
                 <.form
                   for={@review_form}
+                  id="review-form"
                   phx-submit="submit_review"
                   phx-change="validate_review"
                   class="space-y-4"
@@ -342,6 +343,98 @@
                       placeholder="Tell others about your experience..."
                       class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
                     ></textarea>
+                  </div>
+                  
+<!-- Image Upload Section -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      📸 Upload photos (optional)
+                    </label>
+                    <p class="text-xs text-gray-500 mb-3">
+                      Share photos of your meal! Accept up to 3 images (JPEG, PNG, WebP), max 5MB each.
+                    </p>
+                    
+<!-- Upload Area -->
+                    <div
+                      class="mt-2"
+                      phx-drop-target={@uploads.review_images.ref}
+                    >
+                      <label
+                        for={@uploads.review_images.ref}
+                        class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
+                      >
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                          <svg
+                            class="w-8 h-8 mb-4 text-gray-500"
+                            aria-hidden="true"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 20 16"
+                          >
+                            <path
+                              stroke="currentColor"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
+                            />
+                          </svg>
+                          <p class="mb-2 text-sm text-gray-500">
+                            <span class="font-semibold">Click to upload</span> or drag and drop
+                          </p>
+                          <p class="text-xs text-gray-500">PNG, JPG, WebP up to 5MB</p>
+                        </div>
+                        <.live_file_input upload={@uploads.review_images} class="sr-only" />
+                      </label>
+                    </div>
+                    
+<!-- Upload Progress and Preview -->
+                    <%= for entry <- @uploads.review_images.entries do %>
+                      <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div class="flex items-center justify-between mb-2">
+                          <div class="flex items-center">
+                            <.icon name="hero-photo" class="w-4 h-4 text-blue-600 mr-2" />
+                            <span class="text-sm font-medium text-blue-900">
+                              {entry.client_name}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            phx-click="cancel-upload"
+                            phx-value-ref={entry.ref}
+                            aria-label="cancel"
+                            class="text-red-600 hover:text-red-800"
+                          >
+                            <.icon name="hero-x-mark" class="w-4 h-4" />
+                          </button>
+                        </div>
+                        
+<!-- Progress Bar -->
+                        <div class="w-full bg-blue-200 rounded-full h-2">
+                          <div
+                            class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                            style={"width: #{entry.progress}%"}
+                          >
+                          </div>
+                        </div>
+                        
+<!-- Validation Errors -->
+                        <%= for err <- upload_errors(@uploads.review_images, entry) do %>
+                          <div class="mt-2 text-sm text-red-600 flex items-center">
+                            <.icon name="hero-exclamation-triangle" class="w-4 h-4 mr-1" />
+                            {error_to_string(err)}
+                          </div>
+                        <% end %>
+                      </div>
+                    <% end %>
+                    
+<!-- General Upload Errors -->
+                    <%= for err <- upload_errors(@uploads.review_images) do %>
+                      <div class="mt-2 text-sm text-red-600 flex items-center">
+                        <.icon name="hero-exclamation-triangle" class="w-4 h-4 mr-1" />
+                        {error_to_string(err)}
+                      </div>
+                    <% end %>
                   </div>
 
                   <div class="flex items-center space-x-3">
@@ -411,6 +504,34 @@
                         <p class="text-gray-700 leading-relaxed" data-testid="review-comment">
                           {review.comment}
                         </p>
+                      <% end %>
+                      
+<!-- Review Images -->
+                      <%= if review.review_images && !Enum.empty?(review.review_images) do %>
+                        <div class="mt-4">
+                          <div class="flex flex-wrap gap-2">
+                            <%= for image <- review.review_images do %>
+                              <div class="relative group cursor-pointer">
+                                <img
+                                  src={image.compressed_path || image.image_path}
+                                  alt="Review image"
+                                  class="w-20 h-20 object-cover rounded-lg border border-gray-200 hover:border-indigo-300 transition-colors"
+                                  loading="lazy"
+                                />
+                                <!-- Lightbox overlay on hover -->
+                                <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                                  <.icon
+                                    name="hero-magnifying-glass-plus"
+                                    class="w-6 h-6 text-white"
+                                  />
+                                </div>
+                              </div>
+                            <% end %>
+                          </div>
+                          <p class="text-xs text-gray-500 mt-2">
+                            📸 {length(review.review_images)} photo(s) shared by customer
+                          </p>
+                        </div>
                       <% end %>
                     </div>
                   <% end %>

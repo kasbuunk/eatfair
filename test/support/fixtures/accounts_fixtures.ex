@@ -47,13 +47,13 @@ defmodule Eatfair.AccountsFixtures do
           {:ok, updated_user} = Eatfair.Repo.update(changeset)
           updated_user
       end
-    
+
     # Update name and phone_number if specified
     user =
       case Map.take(attrs, [:name, :phone_number]) do
         empty when map_size(empty) == 0 ->
           user
-          
+
         updates ->
           changeset = Ecto.Changeset.change(user, updates)
           {:ok, updated_user} = Eatfair.Repo.update(changeset)

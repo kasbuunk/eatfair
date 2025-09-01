@@ -13,34 +13,39 @@ defmodule EatfairWeb.RestaurantOrderProcessingTest do
       # 🎯 Setup: Restaurant owner accessing order management
       restaurant_owner = user_fixture(%{role: "restaurant_owner"})
       _restaurant = restaurant_fixture(%{owner_id: restaurant_owner.id})
-      
+
       conn = log_in_user(conn, restaurant_owner)
-      
+
       # 🏪 Restaurant owner visits order management page
       {:ok, orders_live, html} = live(conn, "/restaurant/orders")
-      
+
       # ✅ Must have navbar with navigation links
       assert has_element?(orders_live, "nav", "Navigation bar")
       assert has_element?(orders_live, "a[href='/restaurant/dashboard']", "My Restaurant")
       assert has_element?(orders_live, "a[href='/']", "Eatfair")
-      
+
       # ✅ Navbar should be part of main layout, not just order page
       assert html =~ "nav"
       # Check for typical navbar content
       assert html =~ "Eatfair" || html =~ "My Restaurant" || html =~ "Track Orders"
-      
+
       # ✅ Navigation links should be functional
       # Test clicking dashboard link takes user to dashboard (select desktop version)
-      result = orders_live |> element(".hidden.md\\:flex a[href='/restaurant/dashboard']") |> render_click()
-      
+      result =
+        orders_live
+        |> element(".hidden.md\\:flex a[href='/restaurant/dashboard']")
+        |> render_click()
+
       # Should redirect or navigate to dashboard
       case result do
-        {:error, {:redirect, %{to: "/restaurant/dashboard"}}} -> 
+        {:error, {:redirect, %{to: "/restaurant/dashboard"}}} ->
           # Good - proper redirect
           assert true
+
         {:error, {:live_redirect, %{to: "/restaurant/dashboard"}}} ->
           # Also good - live redirect  
           assert true
+
         _ ->
           # Should at least have redirect behavior
           assert false, "Dashboard navigation should redirect to /restaurant/dashboard"
@@ -412,7 +417,8 @@ defmodule EatfairWeb.RestaurantOrderProcessingTest do
 
       # ✅ Should now see historic orders
       html = render(orders_live)
-      refute html =~ "Active Order Address"  # Active orders hidden
+      # Active orders hidden
+      refute html =~ "Active Order Address"
       assert html =~ "Delivered Order Address"
       assert html =~ "Cancelled Order Address"
       assert html =~ "Delivered"
@@ -526,57 +532,63 @@ defmodule EatfairWeb.RestaurantOrderProcessingTest do
   describe "🚚 Courier Integration: Missing Critical Features" do
     test "Night Owl couriers can login and access delivery dashboard", %{conn: conn} do
       # 🎯 Setup: Test specific Night Owl couriers from seeds
-      max_courier = user_fixture(%{
-        email: "max.speedman@courier.nightowl.nl",
-        name: "Max Speedman", 
-        role: "courier",
-        phone_number: "+31612345001"
-      })
-      
-      _lisa_courier = user_fixture(%{
-        email: "lisa.lightning@courier.nightowl.nl", 
-        name: "Lisa Lightning",
-        role: "courier",
-        phone_number: "+31612345002" 
-      })
+      max_courier =
+        user_fixture(%{
+          email: "max.speedman@courier.nightowl.nl",
+          name: "Max Speedman",
+          role: "courier",
+          phone_number: "+31612345001"
+        })
+
+      _lisa_courier =
+        user_fixture(%{
+          email: "lisa.lightning@courier.nightowl.nl",
+          name: "Lisa Lightning",
+          role: "courier",
+          phone_number: "+31612345002"
+        })
 
       # 🚚 Max courier logs in and accesses dashboard
       conn = log_in_user(conn, max_courier)
-      
+
       # ✅ Should be able to access courier dashboard
       {:ok, courier_live, html} = live(conn, "/courier/dashboard")
-      
+
       assert html =~ "Courier Dashboard"
-      assert html =~ "Max Speedman"  # Courier name displayed
-      assert html =~ "Available Delivery Batches"  # Core courier functionality
-      
+      # Courier name displayed
+      assert html =~ "Max Speedman"
+      # Core courier functionality
+      assert html =~ "Available Delivery Batches"
+
       # ✅ Should have logout functionality
       assert has_element?(courier_live, "[data-test='logout-link']", "Log out")
     end
 
-    test "courier role authorization prevents non-couriers from accessing courier dashboard", %{conn: conn} do
+    test "courier role authorization prevents non-couriers from accessing courier dashboard", %{
+      conn: conn
+    } do
       # 🎯 Setup: Regular customer tries to access courier dashboard
       customer = user_fixture(%{role: "customer"})
       conn = log_in_user(conn, customer)
-      
+
       # ❌ Should be redirected and see error message
-      {:error, {:redirect, %{to: redirect_path, flash: %{"error" => error_message}}}} = 
+      {:error, {:redirect, %{to: redirect_path, flash: %{"error" => error_message}}}} =
         live(conn, "/courier/dashboard")
-      
+
       assert redirect_path == "/courier/login"
       assert error_message =~ "You must be a courier"
     end
-    
+
     test "restaurant owners cannot access courier features", %{conn: conn} do
       # 🎯 Setup: Restaurant owner tries courier access
       restaurant_owner = user_fixture(%{role: "restaurant_owner"})
       conn = log_in_user(conn, restaurant_owner)
-      
+
       # ❌ Should be denied access
-      {:error, {:redirect, %{to: redirect_path, flash: %{"error" => error_message}}}} = 
+      {:error, {:redirect, %{to: redirect_path, flash: %{"error" => error_message}}}} =
         live(conn, "/courier/dashboard")
-      
-      assert redirect_path == "/courier/login" 
+
+      assert redirect_path == "/courier/login"
       assert error_message =~ "You must be a courier"
     end
   end

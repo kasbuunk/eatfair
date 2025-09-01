@@ -36,7 +36,8 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
           socket
           |> assign(:restaurant, restaurant)
           |> assign(:orders_by_status, orders_by_status)
-          |> assign(:orders_filter, :active)  # Track current filter
+          # Track current filter
+          |> assign(:orders_filter, :active)
           |> assign(:history_orders, [])
           |> assign(:page_title, "Order Management - #{restaurant.name}")
           |> assign(:notifications, notifications)
@@ -340,30 +341,37 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
 
     {:noreply, socket}
   end
-  
+
   @impl true
   def handle_event("switch_to_active", _params, socket) do
     orders_by_status = Orders.list_restaurant_orders(socket.assigns.restaurant.id, :active)
-    
-    socket = 
+
+    socket =
       socket
       |> assign(:orders_filter, :active)
       |> assign(:orders_by_status, orders_by_status)
       |> assign(:history_orders, [])
-    
+
     {:noreply, socket}
   end
-  
+
   @impl true
   def handle_event("switch_to_history", _params, socket) do
     history_orders = Orders.list_restaurant_orders(socket.assigns.restaurant.id, :history)
-    
-    socket = 
+
+    socket =
       socket
       |> assign(:orders_filter, :history)
-      |> assign(:orders_by_status, %{pending: [], confirmed: [], preparing: [], ready: [], out_for_delivery: []})  # Empty for history view
+      # Empty for history view
+      |> assign(:orders_by_status, %{
+        pending: [],
+        confirmed: [],
+        preparing: [],
+        ready: [],
+        out_for_delivery: []
+      })
       |> assign(:history_orders, history_orders)
-    
+
     {:noreply, socket}
   end
 
@@ -371,279 +379,268 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
   def render(assigns) do
     ~H"""
     <Layouts.app flash={assigns[:flash] || %{}} current_scope={assigns[:current_scope]}>
-    <div class="max-w-7xl mx-auto p-6">
-      <.header>
-        Order Management - {@restaurant.name}
-        <:subtitle>Manage all incoming orders and update their status in real-time</:subtitle>
-        <:actions>
-          <div class="relative">
+      <div class="max-w-7xl mx-auto p-6">
+        <.header>
+          Order Management - {@restaurant.name}
+          <:subtitle>Manage all incoming orders and update their status in real-time</:subtitle>
+          <:actions>
+            <div class="relative">
+              <button
+                phx-click="toggle_notification_center"
+                class="p-2 rounded-full hover:bg-gray-100 relative"
+                aria-label="Notifications"
+              >
+                <.icon name="hero-bell" class="h-6 w-6 text-gray-700" />
+                <%= if @unread_count > 0 do %>
+                  <span
+                    class="absolute top-0 right-0 -mt-1 -mr-1 px-2 py-1 text-xs font-bold rounded-full bg-red-500 text-white notification-count"
+                    data-testid="notification-count"
+                  >
+                    {@unread_count}
+                  </span>
+                <% end %>
+              </button>
+            </div>
+          </:actions>
+        </.header>
+        
+    <!-- Notification Center (Always visible for TDD tests) -->
+        <div
+          data-testid="notification-center"
+          class="fixed top-4 right-4 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto"
+        >
+          <div class="p-3 border-b border-gray-200 flex justify-between items-center">
+            <h3 class="font-semibold text-gray-800">Notifications</h3>
             <button
-              phx-click="toggle_notification_center"
-              class="p-2 rounded-full hover:bg-gray-100 relative"
-              aria-label="Notifications"
+              phx-click="mark_all_notifications_read"
+              class="text-xs text-blue-600 hover:text-blue-800"
             >
-              <.icon name="hero-bell" class="h-6 w-6 text-gray-700" />
-              <%= if @unread_count > 0 do %>
-                <span
-                  class="absolute top-0 right-0 -mt-1 -mr-1 px-2 py-1 text-xs font-bold rounded-full bg-red-500 text-white notification-count"
-                  data-testid="notification-count"
-                >
-                  {@unread_count}
-                </span>
-              <% end %>
+              Mark all as read
             </button>
           </div>
-        </:actions>
-      </.header>
-      
-    <!-- Notification Center (Always visible for TDD tests) -->
-      <div
-        data-testid="notification-center"
-        class="fixed top-4 right-4 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto"
-      >
-        <div class="p-3 border-b border-gray-200 flex justify-between items-center">
-          <h3 class="font-semibold text-gray-800">Notifications</h3>
-          <button
-            phx-click="mark_all_notifications_read"
-            class="text-xs text-blue-600 hover:text-blue-800"
-          >
-            Mark all as read
-          </button>
-        </div>
 
-        <div id="notifications-list">
-          <%= if Enum.empty?(@notifications) do %>
-            <div class="p-4 text-center text-gray-500">
-              <p>No notifications</p>
-            </div>
-          <% else %>
-            <%= for notification <- @notifications do %>
-              <div
-                id={"notification-#{notification.id}"}
-                data-testid="notification-item"
-                data-priority={if(notification.priority == :critical, do: "high", else: "normal")}
-                data-auto-hide={if(notification.priority != :critical, do: "true", else: "false")}
+          <div id="notifications-list">
+            <%= if Enum.empty?(@notifications) do %>
+              <div class="p-4 text-center text-gray-500">
+                <p>No notifications</p>
+              </div>
+            <% else %>
+              <%= for notification <- @notifications do %>
+                <div
+                  id={"notification-#{notification.id}"}
+                  data-testid="notification-item"
+                  data-priority={if(notification.priority == :critical, do: "high", else: "normal")}
+                  data-auto-hide={if(notification.priority != :critical, do: "true", else: "false")}
+                  class={[
+                    "p-3 border-b border-gray-100 relative hover:bg-gray-50",
+                    if(notification.read, do: "bg-gray-50", else: "bg-white"),
+                    if(notification.priority == :critical,
+                      do: "border-l-4 border-l-red-500",
+                      else: ""
+                    )
+                  ]}
+                >
+                  <button
+                    phx-click="dismiss_notification"
+                    phx-value-id={notification.id}
+                    data-testid="dismiss-notification"
+                    class="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+                    aria-label="Dismiss"
+                  >
+                    <.icon name="hero-x-mark" class="h-4 w-4" />
+                  </button>
+
+                  <div class="pr-5">
+                    <p class={[
+                      "font-medium",
+                      if(notification.priority == :critical,
+                        do: "text-red-700",
+                        else: "text-gray-800"
+                      )
+                    ]}>
+                      {notification.title}
+                    </p>
+                    <p class="text-sm text-gray-600 mt-1">{notification.message}</p>
+                    <p class="text-xs text-gray-400 mt-1">
+                      {format_time_ago(notification.timestamp)}
+                    </p>
+                  </div>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+        </div>
+        
+    <!-- Active/History Tabs -->
+        <div class="mt-6">
+          <div class="border-b border-gray-200">
+            <nav class="-mb-px flex space-x-8" aria-label="Tabs">
+              <button
+                phx-click="switch_to_active"
+                data-test="active-tab"
                 class={[
-                  "p-3 border-b border-gray-100 relative hover:bg-gray-50",
-                  if(notification.read, do: "bg-gray-50", else: "bg-white"),
-                  if(notification.priority == :critical, do: "border-l-4 border-l-red-500", else: "")
+                  "whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors",
+                  if(@orders_filter == :active,
+                    do: "border-blue-500 text-blue-600",
+                    else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  )
                 ]}
               >
-                <button
-                  phx-click="dismiss_notification"
-                  phx-value-id={notification.id}
-                  data-testid="dismiss-notification"
-                  class="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
-                  aria-label="Dismiss"
-                >
-                  <.icon name="hero-x-mark" class="h-4 w-4" />
-                </button>
+                Active
+                <%= if @orders_filter == :active do %>
+                  <span class="ml-2 bg-blue-100 text-blue-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
+                    {length(@orders_by_status.pending) + length(@orders_by_status.confirmed) +
+                      length(@orders_by_status.preparing) + length(@orders_by_status.ready) +
+                      length(@orders_by_status.out_for_delivery)}
+                  </span>
+                <% end %>
+              </button>
 
-                <div class="pr-5">
-                  <p class={[
-                    "font-medium",
-                    if(notification.priority == :critical, do: "text-red-700", else: "text-gray-800")
-                  ]}>
-                    {notification.title}
-                  </p>
-                  <p class="text-sm text-gray-600 mt-1">{notification.message}</p>
-                  <p class="text-xs text-gray-400 mt-1">{format_time_ago(notification.timestamp)}</p>
-                </div>
-              </div>
-            <% end %>
-          <% end %>
+              <button
+                phx-click="switch_to_history"
+                data-test="history-tab"
+                class={[
+                  "whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors",
+                  if(@orders_filter == :history,
+                    do: "border-blue-500 text-blue-600",
+                    else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  )
+                ]}
+              >
+                History
+                <%= if @orders_filter == :history do %>
+                  <span class="ml-2 bg-blue-100 text-blue-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
+                    {length(@history_orders)}
+                  </span>
+                <% end %>
+              </button>
+            </nav>
+          </div>
         </div>
-      </div>
-      
-    <!-- Active/History Tabs -->
-      <div class="mt-6">
-        <div class="border-b border-gray-200">
-          <nav class="-mb-px flex space-x-8" aria-label="Tabs">
-            <button
-              phx-click="switch_to_active"
-              data-test="active-tab"
-              class={[
-                "whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors",
-                if(@orders_filter == :active,
-                  do: "border-blue-500 text-blue-600",
-                  else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                )
-              ]}
-            >
-              Active
-              <%= if @orders_filter == :active do %>
-                <span class="ml-2 bg-blue-100 text-blue-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
-                  {length(@orders_by_status.pending) + length(@orders_by_status.confirmed) + length(@orders_by_status.preparing) + length(@orders_by_status.ready) + length(@orders_by_status.out_for_delivery)}
-                </span>
-              <% end %>
-            </button>
-            
-            <button
-              phx-click="switch_to_history"
-              data-test="history-tab"
-              class={[
-                "whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors",
-                if(@orders_filter == :history,
-                  do: "border-blue-500 text-blue-600",
-                  else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                )
-              ]}
-            >
-              History
-              <%= if @orders_filter == :history do %>
-                <span class="ml-2 bg-blue-100 text-blue-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
-                  {length(@history_orders)}
-                </span>
-              <% end %>
-            </button>
-          </nav>
-        </div>
-      </div>
-      
+        
     <!-- Order Statistics -->
-      <div class="mt-6 grid grid-cols-1 md:grid-cols-4 gap-6">
-        <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
-          <div class="flex items-center">
-            <.icon name="hero-bell-alert" class="h-8 w-8 text-blue-600 mr-3" />
-            <div>
-              <p class="text-sm font-medium text-blue-600">New Orders</p>
-              <p class="text-2xl font-bold text-blue-900">{length(@orders_by_status.confirmed)}</p>
+        <div class="mt-6 grid grid-cols-1 md:grid-cols-4 gap-6">
+          <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+            <div class="flex items-center">
+              <.icon name="hero-bell-alert" class="h-8 w-8 text-blue-600 mr-3" />
+              <div>
+                <p class="text-sm font-medium text-blue-600">New Orders</p>
+                <p class="text-2xl font-bold text-blue-900">{length(@orders_by_status.confirmed)}</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
-          <div class="flex items-center">
-            <.icon name="hero-fire" class="h-8 w-8 text-orange-600 mr-3" />
-            <div>
-              <p class="text-sm font-medium text-orange-600">In Progress</p>
-              <p class="text-2xl font-bold text-orange-900">{length(@orders_by_status.preparing)}</p>
+          <div class="bg-orange-50 border border-orange-200 rounded-lg p-4">
+            <div class="flex items-center">
+              <.icon name="hero-fire" class="h-8 w-8 text-orange-600 mr-3" />
+              <div>
+                <p class="text-sm font-medium text-orange-600">In Progress</p>
+                <p class="text-2xl font-bold text-orange-900">
+                  {length(@orders_by_status.preparing)}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="bg-green-50 border border-green-200 rounded-lg p-4">
-          <div class="flex items-center">
-            <.icon name="hero-check-circle" class="h-8 w-8 text-green-600 mr-3" />
-            <div>
-              <p class="text-sm font-medium text-green-600">Ready</p>
-              <p class="text-2xl font-bold text-green-900">{length(@orders_by_status.ready)}</p>
+          <div class="bg-green-50 border border-green-200 rounded-lg p-4">
+            <div class="flex items-center">
+              <.icon name="hero-check-circle" class="h-8 w-8 text-green-600 mr-3" />
+              <div>
+                <p class="text-sm font-medium text-green-600">Ready</p>
+                <p class="text-2xl font-bold text-green-900">{length(@orders_by_status.ready)}</p>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
-          <div class="flex items-center">
-            <.icon name="hero-truck" class="h-8 w-8 text-purple-600 mr-3" />
-            <div>
-              <p class="text-sm font-medium text-purple-600">Out for Delivery</p>
-              <p class="text-2xl font-bold text-purple-900">
-                {length(@orders_by_status.out_for_delivery)}
-              </p>
+          <div class="bg-purple-50 border border-purple-200 rounded-lg p-4">
+            <div class="flex items-center">
+              <.icon name="hero-truck" class="h-8 w-8 text-purple-600 mr-3" />
+              <div>
+                <p class="text-sm font-medium text-purple-600">Out for Delivery</p>
+                <p class="text-2xl font-bold text-purple-900">
+                  {length(@orders_by_status.out_for_delivery)}
+                </p>
+              </div>
             </div>
           </div>
         </div>
-      </div>
-      
+        
     <!-- Order Sections -->
-      <div class="mt-8 space-y-8">
-        <!-- Pending Orders -->
-        <%= if length(@orders_by_status.pending) > 0 do %>
-          <div>
-            <h2 class="text-xl font-bold text-gray-900 mb-4">Pending Orders</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <%= for order <- @orders_by_status.pending do %>
-                {render_order_card(order, "pending")}
-              <% end %>
-            </div>
-          </div>
-        <% end %>
-        
-    <!-- New Orders -->
-        <%= if length(@orders_by_status.confirmed) > 0 do %>
-          <div>
-            <h2 class="text-xl font-bold text-gray-900 mb-4">New Orders</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <%= for order <- @orders_by_status.confirmed do %>
-                {render_order_card(order, "confirmed")}
-              <% end %>
-            </div>
-          </div>
-        <% end %>
-        
-    <!-- In Progress -->
-        <%= if length(@orders_by_status.preparing) > 0 do %>
-          <div>
-            <h2 class="text-xl font-bold text-gray-900 mb-4">In Progress</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <%= for order <- @orders_by_status.preparing do %>
-                {render_order_card(order, "preparing")}
-              <% end %>
-            </div>
-          </div>
-        <% end %>
-        
-    <!-- Ready for Delivery -->
-        <%= if length(@orders_by_status.ready) > 0 do %>
-          <div>
-            <h2 class="text-xl font-bold text-gray-900 mb-4">Ready for Delivery</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <%= for order <- @orders_by_status.ready do %>
-                {render_order_card(order, "ready")}
-              <% end %>
-            </div>
-          </div>
-        <% end %>
-        
-    <!-- Out for Delivery -->
-        <%= if length(@orders_by_status.out_for_delivery) > 0 do %>
-          <div>
-            <h2 class="text-xl font-bold text-gray-900 mb-4">Out for Delivery</h2>
-            <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <%= for order <- @orders_by_status.out_for_delivery do %>
-                {render_order_card(order, "out_for_delivery")}
-              <% end %>
-            </div>
-          </div>
-        <% end %>
-        
-    <!-- History Orders -->
-        <%= if @orders_filter == :history do %>
-          <%= if length(@history_orders) > 0 do %>
+        <div class="mt-8 space-y-8">
+          <!-- Pending Orders -->
+          <%= if length(@orders_by_status.pending) > 0 do %>
             <div>
-              <h2 class="text-xl font-bold text-gray-900 mb-4">Order History</h2>
-              <div class="bg-white shadow overflow-hidden sm:rounded-md">
-                <ul class="divide-y divide-gray-200">
-                  <%= for order <- @history_orders do %>
-                    <li class="px-6 py-4">
-                      <div class="flex items-center justify-between">
-                        <div class="flex items-center">
-                          <div class="flex-shrink-0">
-                            <div class={[
-                              "w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium",
-                              case order.status do
-                                "delivered" -> "bg-green-100 text-green-800"
-                                "cancelled" -> "bg-red-100 text-red-800"
-                                "delivery_failed" -> "bg-yellow-100 text-yellow-800"
-                                _ -> "bg-gray-100 text-gray-800"
-                              end
-                            ]}>
-                              <%= case order.status do %>
-                                <% "delivered" -> %> ✓
-                                <% "cancelled" -> %> ✗
-                                <% "delivery_failed" -> %> ⚠
-                                <% _ -> %> ?
-                              <% end %>
-                            </div>
-                          </div>
-                          
-                          <div class="ml-4">
-                            <div class="flex items-center">
-                              <p class="text-sm font-medium text-gray-900">
-                                Order #{order.id}
-                              </p>
-                              <span class={[
-                                "ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full",
+              <h2 class="text-xl font-bold text-gray-900 mb-4">Pending Orders</h2>
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <%= for order <- @orders_by_status.pending do %>
+                  {render_order_card(order, "pending")}
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+          
+    <!-- New Orders -->
+          <%= if length(@orders_by_status.confirmed) > 0 do %>
+            <div>
+              <h2 class="text-xl font-bold text-gray-900 mb-4">New Orders</h2>
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <%= for order <- @orders_by_status.confirmed do %>
+                  {render_order_card(order, "confirmed")}
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+          
+    <!-- In Progress -->
+          <%= if length(@orders_by_status.preparing) > 0 do %>
+            <div>
+              <h2 class="text-xl font-bold text-gray-900 mb-4">In Progress</h2>
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <%= for order <- @orders_by_status.preparing do %>
+                  {render_order_card(order, "preparing")}
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+          
+    <!-- Ready for Delivery -->
+          <%= if length(@orders_by_status.ready) > 0 do %>
+            <div>
+              <h2 class="text-xl font-bold text-gray-900 mb-4">Ready for Delivery</h2>
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <%= for order <- @orders_by_status.ready do %>
+                  {render_order_card(order, "ready")}
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+          
+    <!-- Out for Delivery -->
+          <%= if length(@orders_by_status.out_for_delivery) > 0 do %>
+            <div>
+              <h2 class="text-xl font-bold text-gray-900 mb-4">Out for Delivery</h2>
+              <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                <%= for order <- @orders_by_status.out_for_delivery do %>
+                  {render_order_card(order, "out_for_delivery")}
+                <% end %>
+              </div>
+            </div>
+          <% end %>
+          
+    <!-- History Orders -->
+          <%= if @orders_filter == :history do %>
+            <%= if length(@history_orders) > 0 do %>
+              <div>
+                <h2 class="text-xl font-bold text-gray-900 mb-4">Order History</h2>
+                <div class="bg-white shadow overflow-hidden sm:rounded-md">
+                  <ul class="divide-y divide-gray-200">
+                    <%= for order <- @history_orders do %>
+                      <li class="px-6 py-4">
+                        <div class="flex items-center justify-between">
+                          <div class="flex items-center">
+                            <div class="flex-shrink-0">
+                              <div class={[
+                                "w-8 h-8 rounded-full flex items-center justify-center text-xs font-medium",
                                 case order.status do
                                   "delivered" -> "bg-green-100 text-green-800"
                                   "cancelled" -> "bg-red-100 text-red-800"
@@ -651,88 +648,119 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
                                   _ -> "bg-gray-100 text-gray-800"
                                 end
                               ]}>
-                                {String.replace(order.status, "_", " ")}
-                              </span>
-                            </div>
-                            <div class="mt-1 flex items-center text-sm text-gray-500">
-                              <p>
-                                {order.delivery_address} • 
-                                <%= if order.delivered_at do %>
-                                  Completed {format_time_ago(order.delivered_at)}
-                                <% else %>
-                                  Completed {format_time_ago(order.updated_at)}
+                                <%= case order.status do %>
+                                  <% "delivered" -> %>
+                                    ✓
+                                  <% "cancelled" -> %>
+                                    ✗
+                                  <% "delivery_failed" -> %>
+                                    ⚠
+                                  <% _ -> %>
+                                    ?
                                 <% end %>
+                              </div>
+                            </div>
+
+                            <div class="ml-4">
+                              <div class="flex items-center">
+                                <p class="text-sm font-medium text-gray-900">
+                                  Order #{order.id}
+                                </p>
+                                <span class={[
+                                  "ml-2 inline-flex px-2 py-1 text-xs font-semibold rounded-full",
+                                  case order.status do
+                                    "delivered" -> "bg-green-100 text-green-800"
+                                    "cancelled" -> "bg-red-100 text-red-800"
+                                    "delivery_failed" -> "bg-yellow-100 text-yellow-800"
+                                    _ -> "bg-gray-100 text-gray-800"
+                                  end
+                                ]}>
+                                  {String.replace(order.status, "_", " ")}
+                                </span>
+                              </div>
+                              <div class="mt-1 flex items-center text-sm text-gray-500">
+                                <p>
+                                  {order.delivery_address} •
+                                  <%= if order.delivered_at do %>
+                                    Completed {format_time_ago(order.delivered_at)}
+                                  <% else %>
+                                    Completed {format_time_ago(order.updated_at)}
+                                  <% end %>
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div class="flex items-center">
+                            <div class="text-right mr-4">
+                              <p class="text-sm font-medium text-gray-900">€{order.total_price}</p>
+                              <p class="text-sm text-gray-500">
+                                {Enum.reduce(order.order_items, 0, fn item, acc ->
+                                  acc + item.quantity
+                                end)} items
                               </p>
+                            </div>
+
+                            <div class="flex-shrink-0">
+                              <.icon name="hero-chevron-right" class="h-5 w-5 text-gray-400" />
                             </div>
                           </div>
                         </div>
                         
-                        <div class="flex items-center">
-                          <div class="text-right mr-4">
-                            <p class="text-sm font-medium text-gray-900">€{order.total_price}</p>
-                            <p class="text-sm text-gray-500">
-                              {Enum.reduce(order.order_items, 0, fn item, acc -> acc + item.quantity end)} items
-                            </p>
-                          </div>
-                          
-                          <div class="flex-shrink-0">
-                            <.icon name="hero-chevron-right" class="h-5 w-5 text-gray-400" />
-                          </div>
+    <!-- Order Items Summary -->
+                        <div class="mt-3 text-sm text-gray-600">
+                          <%= for item <- Enum.take(order.order_items, 3) do %>
+                            <span class="mr-4">
+                              {item.quantity}× {item.meal.name}
+                            </span>
+                          <% end %>
+                          <%= if length(order.order_items) > 3 do %>
+                            <span class="text-gray-400">
+                              and {length(order.order_items) - 3} more...
+                            </span>
+                          <% end %>
                         </div>
-                      </div>
-                      
-                      <!-- Order Items Summary -->
-                      <div class="mt-3 text-sm text-gray-600">
-                        <%= for item <- Enum.take(order.order_items, 3) do %>
-                          <span class="mr-4">
-                            {item.quantity}× {item.meal.name}
-                          </span>
-                        <% end %>
-                        <%= if length(order.order_items) > 3 do %>
-                          <span class="text-gray-400">
-                            and {length(order.order_items) - 3} more...
-                          </span>
-                        <% end %>
-                      </div>
-                    </li>
-                  <% end %>
-                </ul>
+                      </li>
+                    <% end %>
+                  </ul>
+                </div>
               </div>
-            </div>
+            <% else %>
+              <div class="text-center py-12">
+                <.icon name="hero-clock" class="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No Order History</h3>
+                <p class="text-gray-500">Completed and cancelled orders will appear here.</p>
+              </div>
+            <% end %>
           <% else %>
-            <div class="text-center py-12">
-              <.icon name="hero-clock" class="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 class="text-lg font-medium text-gray-900 mb-2">No Order History</h3>
-              <p class="text-gray-500">Completed and cancelled orders will appear here.</p>
-            </div>
+            <!-- Empty State for Active Orders -->
+            <%= if Enum.all?(@orders_by_status, fn {_status, orders} -> length(orders) == 0 end) do %>
+              <div class="text-center py-12">
+                <.icon name="hero-shopping-bag" class="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                <h3 class="text-lg font-medium text-gray-900 mb-2">No Active Orders</h3>
+                <p class="text-gray-500">
+                  When you receive orders, they'll appear here for management.
+                </p>
+              </div>
+            <% end %>
           <% end %>
-        <% else %>
-          <!-- Empty State for Active Orders -->
-          <%= if Enum.all?(@orders_by_status, fn {_status, orders} -> length(orders) == 0 end) do %>
-            <div class="text-center py-12">
-              <.icon name="hero-shopping-bag" class="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <h3 class="text-lg font-medium text-gray-900 mb-2">No Active Orders</h3>
-              <p class="text-gray-500">When you receive orders, they'll appear here for management.</p>
-            </div>
-          <% end %>
-        <% end %>
+        </div>
       </div>
-    </div>
-
+      
     <!-- Modal placeholders for TDD tests -->
-    <div data-modal="rejection-modal" style="display: none;">
-      <form id="rejection-form" phx-submit="submit_rejection">
-        <input name="rejection_reason" type="text" value="" />
-        <input name="rejection_notes" type="text" value="" />
-      </form>
-    </div>
+      <div data-modal="rejection-modal" style="display: none;">
+        <form id="rejection-form" phx-submit="submit_rejection">
+          <input name="rejection_reason" type="text" value="" />
+          <input name="rejection_notes" type="text" value="" />
+        </form>
+      </div>
 
-    <div data-modal="delivery-failure-modal" style="display: none;">
-      <form id="delivery-failure-form" phx-submit="submit_delivery_failure">
-        <input name="failure_reason" type="text" value="" />
-        <input name="failure_notes" type="text" value="" />
-      </form>
-    </div>
+      <div data-modal="delivery-failure-modal" style="display: none;">
+        <form id="delivery-failure-form" phx-submit="submit_delivery_failure">
+          <input name="failure_reason" type="text" value="" />
+          <input name="failure_notes" type="text" value="" />
+        </form>
+      </div>
     </Layouts.app>
     """
   end
@@ -829,44 +857,60 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
           </div>
         </div>
         
-        <!-- Delivery Context Information -->
+    <!-- Delivery Context Information -->
         <div class="mt-2 pt-2 border-t border-gray-200">
           <h5 class="font-medium text-gray-800 text-xs mb-1">Delivery Status</h5>
           <div class="flex items-center justify-between">
             <%= if @order.delivery_status do %>
-              <span class={[
-                "inline-flex px-2 py-1 rounded-full text-xs font-medium",
-                case @order.delivery_status do
-                  "scheduled" -> "bg-blue-100 text-blue-800"
-                  "assigned" -> "bg-purple-100 text-purple-800"
-                  "in_transit" -> "bg-orange-100 text-orange-800"
-                  "delivered" -> "bg-green-100 text-green-800"
-                  _ -> "bg-gray-100 text-gray-800"
-                end
-              ]} data-test="delivery-status-badge">
+              <span
+                class={[
+                  "inline-flex px-2 py-1 rounded-full text-xs font-medium",
+                  case @order.delivery_status do
+                    "scheduled" -> "bg-blue-100 text-blue-800"
+                    "assigned" -> "bg-purple-100 text-purple-800"
+                    "in_transit" -> "bg-orange-100 text-orange-800"
+                    "delivered" -> "bg-green-100 text-green-800"
+                    _ -> "bg-gray-100 text-gray-800"
+                  end
+                ]}
+                data-test="delivery-status-badge"
+              >
                 {String.replace(@order.delivery_status || "unscheduled", "_", " ")}
               </span>
             <% else %>
-              <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800" data-test="delivery-status-badge">
+              <span
+                class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                data-test="delivery-status-badge"
+              >
                 unscheduled
               </span>
             <% end %>
-            
+
             <%= if @order.delivery_batch do %>
-              <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800" data-test="batch-status-chip">
+              <span
+                class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                data-test="batch-status-chip"
+              >
                 Batched
               </span>
             <% else %>
-              <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600" data-test="batch-status-chip">
+              <span
+                class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600"
+                data-test="batch-status-chip"
+              >
                 Unbatched
               </span>
             <% end %>
           </div>
-          
+
           <%= if @order.delivery_batch do %>
             <div class="mt-1 text-xs text-gray-600">
               <span class="font-medium">Batch:</span>
-              <a href={"#"} class="text-blue-600 hover:text-blue-800 underline" data-test="batch-code-link">
+              <a
+                href="#"
+                class="text-blue-600 hover:text-blue-800 underline"
+                data-test="batch-code-link"
+              >
                 {@order.delivery_batch.batch_code}
               </a>
               <%= if @order.delivery_batch.courier do %>

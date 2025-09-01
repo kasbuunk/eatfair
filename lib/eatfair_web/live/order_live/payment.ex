@@ -72,22 +72,11 @@ defmodule EatfairWeb.OrderLive.Payment do
   end
 
   def handle_event("update_donation", %{"donation" => %{"amount" => amount_str}}, socket) do
-    case parse_donation_amount(amount_str) do
-      {:ok, donation_amount} ->
-        total_with_donation = Decimal.add(socket.assigns.cart_total, donation_amount)
+    update_donation_amount(socket, amount_str)
+  end
 
-        socket =
-          socket
-          |> assign(:donation_amount, donation_amount)
-          |> assign(:total_with_donation, total_with_donation)
-          |> assign(:payment_error, nil)
-
-        {:noreply, socket}
-
-      {:error, reason} ->
-        socket = assign(socket, :payment_error, reason)
-        {:noreply, socket}
-    end
+  def handle_event("update_donation", %{"donation-amount" => amount_str}, socket) do
+    update_donation_amount(socket, amount_str)
   end
 
   def handle_event("process_payment", _params, socket) do
@@ -110,6 +99,25 @@ defmodule EatfairWeb.OrderLive.Payment do
       ~p"/order/#{restaurant_id}/confirm?cart=#{cart_encoded}&order_details=#{order_encoded}"
 
     {:noreply, push_navigate(socket, to: confirm_url)}
+  end
+
+  defp update_donation_amount(socket, amount_str) do
+    case parse_donation_amount(amount_str) do
+      {:ok, donation_amount} ->
+        total_with_donation = Decimal.add(socket.assigns.cart_total, donation_amount)
+
+        socket =
+          socket
+          |> assign(:donation_amount, donation_amount)
+          |> assign(:total_with_donation, total_with_donation)
+          |> assign(:payment_error, nil)
+
+        {:noreply, socket}
+
+      {:error, reason} ->
+        socket = assign(socket, :payment_error, reason)
+        {:noreply, socket}
+    end
   end
 
   @impl true
@@ -321,13 +329,13 @@ defmodule EatfairWeb.OrderLive.Payment do
     end)
   end
 
-  defp find_meal(restaurant, meal_id) do
+  def find_meal(restaurant, meal_id) when is_integer(meal_id) do
     restaurant.menus
     |> Enum.flat_map(& &1.meals)
     |> Enum.find(&(&1.id == meal_id))
   end
 
-  defp format_price(price) do
+  def format_price(price) do
     "€#{Decimal.to_float(price) |> :erlang.float_to_binary(decimals: 2)}"
   end
 

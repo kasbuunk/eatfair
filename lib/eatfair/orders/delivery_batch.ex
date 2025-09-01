@@ -7,13 +7,20 @@ defmodule Eatfair.Orders.DeliveryBatch do
   alias Eatfair.Orders.Order
 
   @valid_statuses [
-    "draft",      # Being created by restaurant owner
-    "proposed",   # Proposed to courier, awaiting acceptance
-    "accepted",   # Courier accepted
-    "scheduled",  # Final schedule confirmed
-    "in_progress", # Courier is picking up/delivering
-    "completed",  # All orders delivered
-    "cancelled"   # Batch cancelled
+    # Being created by restaurant owner
+    "draft",
+    # Proposed to courier, awaiting acceptance
+    "proposed",
+    # Courier accepted
+    "accepted",
+    # Final schedule confirmed
+    "scheduled",
+    # Courier is picking up/delivering
+    "in_progress",
+    # All orders delivered
+    "completed",
+    # Batch cancelled
+    "cancelled"
   ]
 
   schema "delivery_batches" do
@@ -22,7 +29,7 @@ defmodule Eatfair.Orders.DeliveryBatch do
     field :scheduled_pickup_time, :naive_datetime
     field :estimated_delivery_time, :naive_datetime
     field :notes, :string
-    
+
     belongs_to :courier, User
     belongs_to :restaurant, Restaurant
     has_many :orders, Order, foreign_key: :delivery_batch_id
@@ -35,7 +42,15 @@ defmodule Eatfair.Orders.DeliveryBatch do
   @doc false
   def changeset(delivery_batch, attrs) do
     delivery_batch
-    |> cast(attrs, [:name, :status, :scheduled_pickup_time, :estimated_delivery_time, :notes, :courier_id, :restaurant_id])
+    |> cast(attrs, [
+      :name,
+      :status,
+      :scheduled_pickup_time,
+      :estimated_delivery_time,
+      :notes,
+      :courier_id,
+      :restaurant_id
+    ])
     |> validate_required([:name, :restaurant_id])
     |> validate_inclusion(:status, @valid_statuses)
     |> validate_length(:name, min: 3, max: 100)
@@ -47,7 +62,9 @@ defmodule Eatfair.Orders.DeliveryBatch do
 
   defp validate_future_pickup_time(changeset) do
     case get_change(changeset, :scheduled_pickup_time) do
-      nil -> changeset
+      nil ->
+        changeset
+
       pickup_time ->
         if NaiveDateTime.compare(pickup_time, NaiveDateTime.utc_now()) != :gt do
           add_error(changeset, :scheduled_pickup_time, "must be in the future")

@@ -228,7 +228,8 @@ defmodule EatfairWeb.RestaurantLive.Discovery do
     search_filtered_restaurants = filter_by_search_query(base_restaurants, query)
 
     # Apply all current filters on top of search results
-    final_restaurants = filter_by_current_filters(search_filtered_restaurants, socket.assigns.filters)
+    final_restaurants =
+      filter_by_current_filters(search_filtered_restaurants, socket.assigns.filters)
 
     socket
     |> assign(:restaurants, final_restaurants)

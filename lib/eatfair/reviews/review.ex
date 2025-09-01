@@ -14,7 +14,7 @@ defmodule Eatfair.Reviews.Review do
     belongs_to :user, User
     belongs_to :restaurant, Restaurant
     belongs_to :order, Order
-    has_many :images, ReviewImage, preload_order: [asc: :position]
+    has_many :review_images, ReviewImage, preload_order: [asc: :position]
 
     timestamps(type: :utc_datetime)
   end

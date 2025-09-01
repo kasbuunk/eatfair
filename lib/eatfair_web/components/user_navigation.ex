@@ -12,7 +12,10 @@ defmodule EatfairWeb.UserNavigation do
 
   def user_nav(assigns) do
     ~H"""
-    <nav aria-label="Navigation bar" class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200">
+    <nav
+      aria-label="Navigation bar"
+      class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200"
+    >
       <span class="sr-only">Navigation bar</span>
       <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
@@ -39,6 +42,14 @@ defmodule EatfairWeb.UserNavigation do
             </.link>
 
             <%= if @current_scope && @current_scope.user do %>
+              <!-- Dashboard -->
+              <.link
+                navigate={~p"/users/dashboard"}
+                class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+              >
+                Dashboard
+              </.link>
+              
               <!-- Order Tracking -->
               <.link
                 navigate={~p"/orders/track"}
@@ -46,7 +57,7 @@ defmodule EatfairWeb.UserNavigation do
               >
                 Track Orders
               </.link>
-              
+
               <%= if @current_scope.user.role == "restaurant_owner" do %>
                 <.link
                   navigate={~p"/restaurant/dashboard"}
@@ -162,6 +173,13 @@ defmodule EatfairWeb.UserNavigation do
             </.link>
 
             <%= if @current_scope && @current_scope.user do %>
+              <.link
+                navigate={~p"/users/dashboard"}
+                class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
+              >
+                <.icon name="hero-squares-2x2" class="w-4 h-4 mr-2 inline" /> Dashboard
+              </.link>
+              
               <.link
                 navigate={~p"/orders/track"}
                 class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"

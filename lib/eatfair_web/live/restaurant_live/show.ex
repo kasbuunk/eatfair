@@ -66,6 +66,11 @@ defmodule EatfairWeb.RestaurantLive.Show do
       |> assign(:show_location_refinement, false)
       |> assign(:review_form, to_form(Reviews.change_review(%Review{})))
       |> assign(:show_review_form, false)
+      |> allow_upload(:review_images,
+        accept: ~w(.jpg .jpeg .png .webp),
+        max_entries: 3,
+        max_file_size: 5_000_000
+      )
 
     {:ok, socket}
   end
@@ -210,29 +215,67 @@ defmodule EatfairWeb.RestaurantLive.Show do
                 "order_id" => order.id
               })
 
-            case Reviews.create_review(attrs) do
-              {:ok, _review} ->
-                # Refresh review data
-                restaurant_id = socket.assigns.restaurant.id
-                reviews = Reviews.list_reviews_for_restaurant(restaurant_id)
-                average_rating = Reviews.get_average_rating(restaurant_id)
-                review_count = Reviews.get_review_count(restaurant_id)
+            # Process uploaded images
+            image_uploads =
+              consume_uploaded_entries(socket, :review_images, fn %{path: path}, entry ->
+                # Use FileUpload service to save and compress images
+                {:ok, relative_path} =
+                  Eatfair.FileUpload.save_upload(socket, :review_images, entry, "reviews")
 
-                socket =
-                  socket
-                  |> assign(:reviews, reviews)
-                  |> assign(:average_rating, average_rating)
-                  |> assign(:review_count, review_count)
-                  # User can no longer review
-                  |> assign(:user_can_review, false)
-                  |> assign(:show_review_form, false)
-                  |> assign(:review_form, to_form(Reviews.change_review(%Review{})))
-                  |> put_flash(:info, "Review submitted successfully!")
+                # Read the file content for compression
+                case File.read(path) do
+                  {:ok, image_binary} ->
+                    {:ok, compressed_binary} = Eatfair.FileUpload.compress_image(image_binary)
 
-                {:noreply, socket}
+                    compressed_path = String.replace(relative_path, ".jpg", "_compressed.jpg")
+                    compressed_full_path = "priv/static" <> compressed_path
+                    File.mkdir_p!(Path.dirname(compressed_full_path))
+                    File.write!(compressed_full_path, compressed_binary)
 
-              {:error, changeset} ->
-                {:noreply, assign(socket, :review_form, to_form(changeset))}
+                    {:ok,
+                     %{
+                       image_path: relative_path,
+                       compressed_path: compressed_path,
+                       file_size: entry.client_size,
+                       mime_type: entry.client_type
+                     }}
+
+                  {:error, reason} ->
+                    {:error, "File reading failed: #{inspect(reason)}"}
+                end
+              end)
+
+            # Check for upload errors
+            case Enum.find(image_uploads, &match?({:error, _}, &1)) do
+              {:error, error_message} ->
+                {:noreply, put_flash(socket, :error, error_message)}
+
+              nil ->
+                # All uploads succeeded, create review with images
+                case Reviews.create_review_with_images(attrs, image_uploads) do
+                  {:ok, _review} ->
+                    # Refresh review data
+                    restaurant_id = socket.assigns.restaurant.id
+                    reviews = Reviews.list_reviews_for_restaurant(restaurant_id)
+                    average_rating = Reviews.get_average_rating(restaurant_id)
+                    review_count = Reviews.get_review_count(restaurant_id)
+
+                    socket =
+                      socket
+                      |> assign(:reviews, reviews)
+                      |> assign(:average_rating, average_rating)
+                      |> assign(:review_count, review_count)
+                      # User can no longer review
+                      |> assign(:user_can_review, false)
+                      |> assign(:show_review_form, false)
+                      |> assign(:review_form, to_form(Reviews.change_review(%Review{})))
+                      |> put_flash(:info, "Review submitted successfully!")
+
+                    {:noreply, socket}
+
+                  {:error, changeset} ->
+                    {:noreply, assign(socket, :review_form, to_form(changeset))}
+                end
             end
         end
 
@@ -283,6 +326,10 @@ defmodule EatfairWeb.RestaurantLive.Show do
     {:noreply, socket}
   end
 
+  def handle_event("cancel-upload", %{"ref" => ref}, socket) do
+    {:noreply, cancel_upload(socket, :review_images, ref)}
+  end
+
   defp find_meal(restaurant, meal_id) do
     restaurant.menus
     |> Enum.flat_map(& &1.meals)
@@ -329,4 +376,10 @@ defmodule EatfairWeb.RestaurantLive.Show do
     )
     |> Eatfair.Repo.exists?()
   end
+
+  # Helper function for upload error messages
+  def error_to_string(:too_large), do: "File is too large (max 5MB)"
+  def error_to_string(:not_accepted), do: "File type not allowed (JPEG, PNG, WebP only)"
+  def error_to_string(:too_many_files), do: "Too many files (max 3 images)"
+  def error_to_string(error), do: "Upload error: #{inspect(error)}"
 end

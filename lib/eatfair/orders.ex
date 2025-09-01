@@ -487,27 +487,31 @@ defmodule Eatfair.Orders do
 
   @doc """
   Lists orders for a restaurant with filtering support.
-  
+
   ## Parameters
   - restaurant_id: The ID of the restaurant
   - filter: :active (default) for pending/confirmed/preparing/ready/out_for_delivery, or :history for delivered/cancelled
   """
   def list_restaurant_orders(restaurant_id, filter) when filter in [:active, :history] do
-    statuses = case filter do
-      :active -> ["pending", "confirmed", "preparing", "ready", "out_for_delivery"]
-      :history -> ["delivered", "cancelled", "delivery_failed"]
-    end
-    
-    orders = Order
-    |> where([o], o.restaurant_id == ^restaurant_id)
-    |> where([o], o.status in ^statuses)
-    |> preload([:customer, order_items: :meal, delivery_batch: :courier])
-    |> order_by([o], desc: :inserted_at)  # History shows most recent first
-    |> Repo.all()
-    
+    statuses =
+      case filter do
+        :active -> ["pending", "confirmed", "preparing", "ready", "out_for_delivery"]
+        :history -> ["delivered", "cancelled", "delivery_failed"]
+      end
+
+    orders =
+      Order
+      |> where([o], o.restaurant_id == ^restaurant_id)
+      |> where([o], o.status in ^statuses)
+      |> preload([:customer, order_items: :meal, delivery_batch: :courier])
+      # History shows most recent first
+      |> order_by([o], desc: :inserted_at)
+      |> Repo.all()
+
     case filter do
       :active -> group_orders_by_status(orders)
-      :history -> orders  # History returns flat list, not grouped
+      # History returns flat list, not grouped
+      :history -> orders
     end
   end
 
@@ -1320,13 +1324,15 @@ defmodule Eatfair.Orders do
   def assign_orders_to_batch(batch_id, order_ids) do
     Repo.transaction(fn ->
       # Update all orders to be assigned to this batch
-      {count, _} = 
+      {count, _} =
         from(o in Order, where: o.id in ^order_ids)
-        |> Repo.update_all(set: [
-          delivery_batch_id: batch_id,
-          delivery_status: "scheduled",
-          updated_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
-        ])
+        |> Repo.update_all(
+          set: [
+            delivery_batch_id: batch_id,
+            delivery_status: "scheduled",
+            updated_at: NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+          ]
+        )
 
       if count == length(order_ids) do
         # Get the updated batch
@@ -1364,5 +1370,70 @@ defmodule Eatfair.Orders do
     |> where([b], b.status == "completed")
     |> where([b], b.updated_at >= ^today_start and b.updated_at < ^today_end)
     |> Repo.aggregate(:count, :id)
+  end
+
+  # Donation calculation functions for admin dashboard
+
+  @doc """
+  Calculates total donations based on optional filters.
+
+  ## Options
+
+    * `:all_time` - Total donations (ignores other filters)
+    * `:since` - Donations since given date
+    * `:status` - Only count orders with specific status (defaults to delivered)
+
+  ## Examples
+
+      iex> total_donations(all_time: true)
+      #Decimal<125.50>
+
+      iex> total_donations(since: Date.utc_today())
+      #Decimal<25.00>
+  """
+  def total_donations(opts \\ []) do
+    query =
+      Order
+      |> select([o], coalesce(sum(o.donation_amount), 0))
+      |> where([o], not is_nil(o.donation_amount))
+      |> maybe_filter_order_date(opts[:date])
+      |> maybe_filter_order_since(unless(opts[:all_time], do: opts[:since]))
+      |> maybe_filter_order_status(opts[:status] || "delivered")
+
+    Repo.one(query) || Decimal.new("0.00")
+  end
+
+  @doc """
+  Counts unique donors (customers who have made donations).
+
+  ## Examples
+
+      iex> count_unique_donors()
+      42
+  """
+  def count_unique_donors do
+    Order
+    |> select([o], count(o.customer_id, :distinct))
+    |> where([o], not is_nil(o.donation_amount))
+    |> where([o], o.donation_amount > 0)
+    |> where([o], o.status == "delivered")
+    |> Repo.one()
+  end
+
+  @doc """
+  Calculates average donation amount.
+
+  ## Examples
+
+      iex> average_donation_amount()
+      #Decimal<3.75>
+  """
+  def average_donation_amount do
+    Order
+    |> select([o], avg(o.donation_amount))
+    |> where([o], not is_nil(o.donation_amount))
+    |> where([o], o.donation_amount > 0)
+    |> where([o], o.status == "delivered")
+    |> Repo.one()
   end
 end

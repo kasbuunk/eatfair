@@ -387,7 +387,7 @@ defmodule EatfairWeb.RestaurantLive.DashboardTest do
         )
 
       conn = log_in_user(build_conn(), user)
-{:ok, dashboard_live, html} = live(conn, "/restaurant/dashboard")
+      {:ok, dashboard_live, html} = live(conn, "/restaurant/dashboard")
 
       # Verify correct counts are displayed
       # Check pending count: should be 2

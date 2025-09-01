@@ -15,7 +15,7 @@ defmodule Eatfair.Reviews do
     from(r in Review,
       where: r.restaurant_id == ^restaurant_id,
       order_by: [desc: r.inserted_at],
-      preload: [:user]
+      preload: [:user, :review_images]
     )
     |> Repo.all()
   end
@@ -37,11 +37,44 @@ defmodule Eatfair.Reviews do
   @doc """
   Creates a review with associated images.
   """
-  def create_review_with_images(attrs) do
-    # This is a placeholder. You'll need to implement the actual logic
-    # for handling image associations here, likely by calling create_review
-    # and then processing and linking images.
-    create_review(attrs)
+  def create_review_with_images(attrs, image_uploads) do
+    Repo.transaction(fn ->
+      case create_review(attrs) do
+        {:ok, review} ->
+          # Create image records for each uploaded image
+          image_results =
+            Enum.with_index(image_uploads, 1)
+            |> Enum.map(fn {image_data, position} ->
+              case image_data do
+                {:ok, image_attrs} ->
+                  %Eatfair.Reviews.ReviewImage{}
+                  |> Eatfair.Reviews.ReviewImage.changeset(
+                    Map.merge(image_attrs, %{
+                      review_id: review.id,
+                      position: position
+                    })
+                  )
+                  |> Repo.insert()
+
+                {:error, _reason} = error ->
+                  error
+              end
+            end)
+
+          # Check if any image creation failed
+          case Enum.find(image_results, &match?({:error, _}, &1)) do
+            {:error, _changeset} = error ->
+              Repo.rollback(error)
+
+            nil ->
+              # All images created successfully
+              review
+          end
+
+        {:error, changeset} ->
+          Repo.rollback(changeset)
+      end
+    end)
   end
 
   @doc """

@@ -13,11 +13,14 @@ defmodule EatfairWeb.RestaurantLive.FilterCompositionBugTest do
       current_minute = current_time.hour * 60 + current_time.minute
       current_day = Date.day_of_week(current_time)
       operating_days_bitmask = :math.pow(2, current_day - 1) |> round()
-      
+
       # Set wide operational hours to ensure restaurants are open now
-      order_open = max(0, current_minute - 60)  # Started 1 hour ago
-      order_close = min(1410, current_minute + 120)  # Closes in 2 hours
-      kitchen_close = min(1440, order_close + 30)  # Kitchen closes 30 min after orders
+      # Started 1 hour ago
+      order_open = max(0, current_minute - 60)
+      # Closes in 2 hours
+      order_close = min(1410, current_minute + 120)
+      # Kitchen closes 30 min after orders
+      kitchen_close = min(1440, order_close + 30)
 
       # Create restaurants in different locations to test filtering
       laren_restaurant =
