@@ -66,6 +66,15 @@ defmodule EatfairWeb.UserNavigation do
                   My Restaurant
                 </.link>
               <% end %>
+
+              <%= if @current_scope.user.role == "courier" do %>
+                <.link
+                  navigate={~p"/courier/dashboard"}
+                  class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                >
+                  Courier Dashboard
+                </.link>
+              <% end %>
               
     <!-- User Greeting -->
               <span class="text-gray-700 dark:text-gray-300 text-sm">
@@ -193,6 +202,15 @@ defmodule EatfairWeb.UserNavigation do
                   class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
                 >
                   My Restaurant
+                </.link>
+              <% end %>
+
+              <%= if @current_scope.user.role == "courier" do %>
+                <.link
+                  navigate={~p"/courier/dashboard"}
+                  class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
+                >
+                  <.icon name="hero-truck" class="w-4 h-4 mr-2 inline" /> Courier Dashboard
                 </.link>
               <% end %>
 

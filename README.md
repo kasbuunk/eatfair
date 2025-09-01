@@ -185,9 +185,7 @@ mix ecto.migrate
 ## 📚 Documentation & Development System
 
 - **[Development Guide](AGENTS.md)**: Complete prompt system documentation and usage patterns
-- **[System Constitution](WARP.md)**: Core development principles and workflows
-- **[Product Specification](documentation/product_specification.md)**: Complete feature requirements and user journeys
-- **[Implementation Status](documentation/legacy_implementation_log.md)**: Current development progress with test coverage
+- **[Product Specification](prompts/product_specification.md)**: Complete feature requirements and user journeys
 
 ## Contributing
 
