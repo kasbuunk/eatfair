@@ -2,6 +2,8 @@
 
 This document defines the global principles and operational rules that govern our entire development system. These principles are universal and must be followed by all agents, regardless of their specialized role.
 
+**Project-Specific Configuration**: For project-specific implementations of these principles (technology stacks, tools, commands), see the `prompts_config/` directory.
+
 ## Core Development Principles
 
 ### 1. Atomic Commits
@@ -32,16 +34,16 @@ This document defines the global principles and operational rules that govern ou
 **Principle**: Each piece of information has one authoritative location.
 
 **Rules**:
-- The [Backlog Dashboard](backlog_dashboard.md) is the single source of truth for work prioritization
-- The [Development Log](documentation/development_log.md) is the single source of truth for progress tracking
-- The [Definition of Done](documentation/definition_of_done.md) defines completion criteria
+- Work prioritization has one authoritative source (see project workflows)
+- Progress tracking has one authoritative location  
+- Completion criteria are defined in one place
 - Avoid duplicating information across multiple documents
 
 ### 4. Continuous Integration
 **Principle**: Changes are integrated frequently and validated automatically.
 
 **Rules**:
-- Use `mix precommit` before every commit to validate changes
+- Use project-specific validation commands before every commit
 - All quality gates must pass before merging
 - Broken builds must be fixed immediately
 - Changes should be small, frequent, and incremental
@@ -49,25 +51,25 @@ This document defines the global principles and operational rules that govern ou
 ## Operational Rules
 
 ### Information Architecture
-**Directory Structure**:
-- `documentation/` - Authoritative project documentation
-- `prompts/` - Agent prompts and workflow definitions  
-- `backlog/` - Individual backlog items with detailed specifications
-- `backlog_dashboard.md` - Ordered priority list (single source of truth)
+**Directory Structure Principles**:
+- Separate documentation from implementation code
+- Agent prompts and workflow definitions have dedicated location
+- Individual work items have detailed specifications
+- Work prioritization has a single source of truth
 
 **Naming Conventions**:
-- All directories and markdown files use `lowercase_with_underscores`
+- All directories and files use consistent naming patterns
 - File names should be descriptive and indicate their purpose
 - Avoid abbreviations unless they are widely understood
 
 ### Status Management
-**Status Tags**: All backlog items must have one status tag:
+**Status Tags**: All work items must have one status tag:
 - `#status/todo` - Not yet started
 - `#status/in_progress` - Currently being worked on
 - `#status/blocked` - Waiting on external dependencies
-- `#status/done` - Meets all Definition of Done criteria
+- `#status/done` - Meets all completion criteria
 
-**Priority Order**: The order of items in the [Backlog Dashboard](backlog_dashboard.md) defines their priority. No other priority indicators are needed.
+**Priority Order**: Work prioritization follows a single source of truth principle.
 
 ### Documentation Requirements
 **Living Documentation**: Documentation must always reflect the current state of the system.
@@ -104,7 +106,7 @@ This document defines the global principles and operational rules that govern ou
 ## Quality Assurance
 
 ### Code Quality
-- Follow established patterns and conventions (see [Technical Reference](documentation/phoenix_elixir_reference.md))
+- Follow established patterns and conventions (see project configuration)
 - Maintain or improve test coverage with each change
 - Use static analysis tools and linting
 - Address technical debt proactively
@@ -160,38 +162,32 @@ This document defines the global principles and operational rules that govern ou
 
 *For comprehensive prompt navigation and agent coordination, see [AGENTS.md](AGENTS.md) which contains the complete tag-based prompt directory and agent interaction patterns.*
 
-### 📋 **New Tag-Based Prompt System**
+### Tag-Based Prompt System
 
-**Our prompts have been reorganized into a modular, tag-based system:**
+**The prompt system is organized into a modular, tag-based architecture:**
 
 #### Main Task Categories
-- **Feature Development** → Use `#feature_dev` to implement new functionality
-- **Bug Debugging** → Use `#debug_bug` to systematically find and fix issues
+Complete workflows for major types of work:
+- **Feature Development** → Use `#feature_dev` for new functionality implementation
+- **Bug Debugging** → Use `#debug_bug` for systematic issue resolution
 - **Product Strategy** → Use `#product_strategy` for planning and prioritization
-- **Test Authoring** → Use `#test_author` to create comprehensive test coverage
-- **Support Triage** → Use `#support_triage` to process feedback and issues
+- **Test Authoring** → Use `#test_author` for comprehensive test coverage
+- **Support Triage** → Use `#support_triage` for feedback and issue processing
 
-#### Building Blocks (Composable Workflow Steps)
-- **Context Intake** → Use `#context_intake` to gather requirements and understand work
-- **Test Planning** → Use `#test_plan` to design comprehensive test coverage
-- **Writing Tests** → Use `#write_tests` to create tests following TDD principles
-- **Implementation** → Use `#impl_change` to write code with quality safeguards
-- **Running Tests** → Use `#run_all_tests` to validate all functionality works
-- **Bug Reproduction** → Use `#create_repro` to create minimal test cases for bugs
-- **Root Cause Analysis** → Use `#isolate_cause` to systematically find issue sources
+#### Building Blocks
+Composable workflow steps that can be chained:
+- **Context Intake** → Use `#context_intake` to gather requirements
+- **Test Planning** → Use `#test_plan` to design test coverage
+- **Writing Tests** → Use `#write_tests` following TDD principles
+- **Implementation** → Use `#impl_change` with quality safeguards
+- **Running Tests** → Use `#run_all_tests` to validate functionality
+- **Bug Reproduction** → Use `#create_repro` for minimal test cases
+- **Root Cause Analysis** → Use `#isolate_cause` for systematic investigation
 
-**Prompt Network Map**: See [prompts/PROMPT_NETWORK.md](prompts/PROMPT_NETWORK.md) for complete workflow diagrams
-
-**Key Documents:**
-- **Project Vision** → [product_specification.md](documentation/product_specification.md) (What we're building and why)
-- **Current Status** → [backlog_dashboard.md](backlog_dashboard.md) (Work priorities and progress)
-- **Technology Patterns** → [prompts_config/tech_stack.md](prompts_config/tech_stack.md) (EatFair-specific patterns)
-
-**Using Tags in Requests:**
-Include hashtags in your requests to access specific guidance:
-- `"Use #feature_dev to implement user authentication system"`
-- `"Use #debug_bug to fix the payment calculation error"`
-- `"Apply #context_intake then #isolate_cause to understand the performance issue"`
+**Usage Pattern**: Include hashtags in requests to access specific guidance:
+- `"Use #feature_dev to implement [specific functionality]"`
+- `"Use #debug_bug to fix [specific issue]"`
+- `"Apply #context_intake then #isolate_cause to understand [problem]"`
 
 ## Development Workflow
 
@@ -200,7 +196,7 @@ Include hashtags in your requests to access specific guidance:
 **CRITICAL**: Always follow this checklist for any development work:
 
 #### 🚀 **Start Phase**
-- [ ] Check backlog_dashboard.md for current priority
+- [ ] Check project priority system for current priority
 - [ ] Create todo list for work (if 3+ steps required)
 - [ ] **Add final todo**: "Update backlog item status with progress"
 
@@ -214,16 +210,15 @@ Include hashtags in your requests to access specific guidance:
 - [ ] All tests pass
 - [ ] **Update backlog item status**:
   - [ ] Mark item as #status/done if complete
-  - [ ] Update backlog_dashboard.md if priorities changed
+  - [ ] Update priority system if priorities changed
   - [ ] Document any architectural decisions in ADRs
 - [ ] Mark todos as complete
 
-### 🚀 Quick Start Commands (Most Common)
+### Project Quick Start
 
 **New to the project?** Start here:
-```bash
-# First time setup
-mix setup
+```
+# Check project setup instructions
 # Navigation guide is built into this WARP.md file (see Agent Navigation Guide above)
 ```
 
@@ -241,31 +236,28 @@ mix setup
 - 🔧 **Fix issues**: Use `#support_triage` or `#debug_bug` for systematic issue resolution
 - 🧪 **Test problems**: Use `#test_author` for comprehensive testing
 
-## Important Notes
+## Development Principles
 
-- Always use `mix precommit` before committing changes
-- Follow the detailed Phoenix/Elixir guidelines in AGENTS.md for development patterns
-- The authentication system uses scopes - access user data via `@current_scope.user`, not `@current_user`
-- Prefer LiveView streams over assigns for collections to avoid memory issues
-- Use the built-in `<.input>` and `<.icon>` components instead of external alternatives
 - **TDD is non-negotiable** - write tests first for every feature
-- **Backlog management is non-negotiable** - backlog_dashboard.md and individual backlog items must be kept current
+- **Backlog management is non-negotiable** - priority system and individual backlog items must be kept current
+- Use project-specific validation commands before committing changes
+- Follow established technology patterns (see project configuration)
 - Use the Agent Navigation Guide (above) when you need to find specific project information
 
 ## Backlog Management Workflow
 
-**backlog_dashboard.md is the single source of truth** for work prioritization and must be updated:
+**The project priority system is the single source of truth** for work prioritization and must be updated:
 
 ### When to Update Backlog Items
 - **During development**: Update status tags as work progresses
 - **At completion**: Mark items as #status/done when meeting Definition of Done
 - **When blocked**: Update status to #status/blocked with blocker details
-- **When pivoting**: Update backlog_dashboard.md priority order
+- **When pivoting**: Update priority system order
 
 ### Status Management
 - **Status Tags**: Use #status/todo, #status/in_progress, #status/blocked, #status/done
-- **Priority Order**: Update backlog_dashboard.md when priorities change
-- **New Items**: Add detailed specifications in backlog/ directory
+- **Priority Order**: Update priority system when priorities change
+- **New Items**: Add detailed specifications in backlog directory
 - **Technical Notes**: Document architectural decisions in ADRs
 
 ### Update Pattern

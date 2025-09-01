@@ -54,7 +54,7 @@ Apply classification framework to categorize the work:
 - Suggest timeline and resource allocation considerations
 
 Project-specific routing rules: See prompts_config/routing_rules.md  
-Task category definitions: See prompts/PROMPT_NETWORK.md
+Task category definitions: See prompts/prompt_network.md
 
 ## Configuration Points
 

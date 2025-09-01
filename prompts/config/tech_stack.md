@@ -1,4 +1,6 @@
-# EatFair Technology Stack Configuration
+# EatFair Technical Stack Configuration
+
+**Reference**: This file is referenced from WARP.md and AGENTS.md
 
 This file provides technology-specific patterns and conventions for EatFair development.
 
@@ -47,10 +49,17 @@ live_session :current_user,
 end
 ```
 
+#### Authentication Guidelines
+- **Always** handle authentication flow at the router level with proper redirects
+- **Always** be mindful of where to place routes - `phx.gen.auth` creates multiple router plugs and `live_session` scopes
+- **Never** duplicate `live_session` names (must be grouped in a single block)
+- For controller routes that require authentication, use `pipe_through [:browser, :require_authenticated_user]`
+
 #### User Context Access
 - **Always use**: `@current_scope.user` in templates and LiveView
 - **Never use**: `@current_user` (does not exist)
 - **Context**: Authentication provides `current_scope` assign
+- When you hit `current_scope` errors, check your router configuration and ensure correct `live_session` usage
 
 #### LiveView Memory Management
 ```elixir
@@ -69,6 +78,85 @@ assign(socket, :restaurants, restaurants) # ❌ Memory heavy
 
 # Avoid external component libraries
 <custom-input />  # ❌ Avoid
+```
+
+#### HEEx Template Patterns
+```heex
+<!-- Always begin LiveView templates with layout wrapper -->
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <!-- Template content -->
+</Layouts.app>
+
+<!-- Use list syntax for conditional classes -->
+<a class={[
+  "px-2 text-white",
+  @active && "bg-blue-500",
+  if(@error, do: "border-red-500", else: "border-gray-200")
+]}>
+  Link
+</a>
+
+<!-- Interpolation patterns -->
+<div id={@element_id}>
+  {@content}
+  <%= if @show_content do %>
+    More content
+  <% end %>
+</div>
+
+<!-- Never use these patterns -->
+<!-- <div id="<%= @invalid %>"> INVALID -->
+<!-- <% Enum.each(@items, fn item -> %> INVALID -->
+```
+
+#### LiveView Streams
+```elixir
+# Always use streams for collections to avoid memory issues
+def handle_event("load_messages", _, socket) do
+  messages = list_messages()
+  {:noreply, stream(socket, :messages, messages)}
+end
+
+def handle_event("filter", %{"filter" => filter}, socket) do
+  messages = list_messages(filter)
+  {:noreply, stream(socket, :messages, messages, reset: true)}
+end
+```
+
+```heex
+<!-- Template for streams -->
+<div id="messages" phx-update="stream">
+  <div class="hidden only:block">No messages yet</div>
+  <div :for={{id, msg} <- @streams.messages} id={id}>
+    {msg.text}
+  </div>
+</div>
+```
+
+#### Form Handling Patterns
+```elixir
+# Always use to_form/2 in LiveView for form assignment
+def mount(_params, _session, socket) do
+  changeset = User.changeset(%User{})
+  {:ok, assign(socket, form: to_form(changeset))}
+end
+
+def handle_event("validate", %{"user" => user_params}, socket) do
+  changeset = User.changeset(%User{}, user_params)
+  {:noreply, assign(socket, form: to_form(changeset))}
+end
+```
+
+```heex
+<!-- Always use @form in templates, never @changeset -->
+<.form for={@form} id="user-form" phx-change="validate" phx-submit="save">
+  <.input field={@form[:email]} type="email" label="Email" />
+  <.input field={@form[:name]} type="text" label="Name" />
+</.form>
+
+<!-- NEVER do this (forbidden) -->
+<!-- <.form for={@changeset}> INVALID -->
+<!-- <.input field={@changeset[:field]}> INVALID -->
 ```
 
 ### Elixir Development Patterns
@@ -100,6 +188,16 @@ if connected?(socket) do
 end
 ```
 
+#### Additional Elixir Guidelines
+- **Never** nest multiple modules in the same file (causes cyclic dependencies)
+- **Never** use `String.to_atom/1` on user input (memory leak risk)
+- **Predicate functions** should end with `?` and not start with `is_`
+- **OTP naming**: Use names in child specs: `{DynamicSupervisor, name: MyApp.MySup}`
+- **Concurrent enumeration**: Use `Task.async_stream/3` with `timeout: :infinity`
+- **Date/time**: Use built-in `Date`, `Time`, `DateTime`, `Calendar` modules
+- **HTTP requests**: Use `:req` library (included), avoid `:httpoison`, `:tesla`
+- **Conditional logic**: Use `cond` or `case` for multiple conditions, never `elsif`
+
 ### Database & Ecto Patterns
 
 #### Schema Fields
@@ -120,6 +218,36 @@ changeset[:field]  # ❌ Don't use Access on changesets
 ```elixir
 # Always preload in queries when accessed in templates
 from(m in Message, preload: [:user])  # ✅ When accessing message.user.email
+```
+
+#### EatFair Schema Patterns
+```elixir
+# Core business entities follow standard patterns:
+# - User management: accounts context with role-based access
+# - Restaurant management: restaurants context with geographic fields
+# - Order management: orders context with status tracking
+# - Supporting entities: addresses, payments, notifications
+
+# Geographic data patterns
+field :latitude, :decimal, precision: 10, scale: 6
+field :longitude, :decimal, precision: 10, scale: 6
+field :delivery_radius_km, :integer
+
+# Status tracking patterns
+field :status, :string  # enum-like: "pending", "confirmed", "delivered"
+field :confirmed_at, :utc_datetime
+field :delivered_at, :utc_datetime
+
+# Financial data patterns
+field :total_price, :decimal, precision: 10, scale: 2
+field :amount, :decimal, precision: 10, scale: 2
+
+# Foreign key relationships
+belongs_to :user, User
+belongs_to :restaurant, Restaurant  
+belongs_to :customer, User, foreign_key: :customer_id
+has_many :addresses, Address
+many_to_many :cuisines, Cuisine, join_through: "restaurant_cuisines"
 ```
 
 ## Testing Patterns

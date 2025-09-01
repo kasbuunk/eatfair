@@ -49,26 +49,41 @@ This file provides business domain context for all EatFair prompts.
 ## Technical Context
 
 ### Current State
-- **Development Stage**: Early-stage MVP (~65% completion)
+- **Development Stage**: Feature-complete MVP (~95% completion)
 - **Technology Stack**: Phoenix LiveView, Elixir, SQLite
-- **User Base**: Pre-launch (no production users yet)
-- **Focus**: Feature completion and production readiness
+- **Test Coverage**: 341 tests, 100% passing, comprehensive quality engineering
+- **User Base**: Pre-launch, ready for production deployment
+- **Focus**: Production deployment and user acquisition
 
 ### Key Features Status
-- ✅ **User Authentication**: Complete with scope-based authorization
-- ✅ **Restaurant Discovery**: Location-based search and filtering  
-- ✅ **Menu Management**: Restaurant owners can manage menu items
-- 🟡 **Order Processing**: Basic ordering flow implemented
-- 🔴 **Payment Integration**: Planned but not implemented
-- 🔴 **Delivery Tracking**: Planned but not implemented
-- 🔴 **Review System**: Needs specification compliance fixes
+- ✅ **User Authentication**: Complete with scope-based authorization and email verification
+- ✅ **Restaurant Discovery**: Complete with location-based search, filtering, and address autocomplete
+- ✅ **Menu Management**: Complete restaurant menu CRUD with real-time updates
+- ✅ **Order Processing**: Complete end-to-end ordering flow with comprehensive tracking
+- ✅ **Real-time Order Tracking**: Complete with Phoenix PubSub and status management
+- ✅ **Restaurant Order Management**: Complete dashboard with order processing workflow
+- ✅ **Review System**: Complete with specification-compliant order-based reviews
+- ✅ **Notification System**: Extensible framework with event logging and preferences
+- 🟡 **Payment Integration**: Framework ready, Stripe integration pending
+- 🟡 **Delivery Coordination**: Foundation complete, courier interface pending
 
 ## Documentation References
 
-- **Product Requirements**: `documentation/product_specification.md`
-- **Implementation Status**: `documentation/legacy_implementation_log.md` 
-- **Architecture Decisions**: `documentation/architectural_decision_records.md`
-- **Feature Completion**: `documentation/features_completed.md`
+### Active Configuration
+- **Prompt Configurations**: `prompts_config/` directory
+- **Current Prompts**: `prompts/` directory  
+- **Development Workflows**: `prompts_config/workflows.md`
+- **Quality Standards**: `prompts_config/quality_standards.md`
+- **Technical Stack**: `prompts_config/tech_stack.md`
+- **Security Guidelines**: `prompts_config/security.md`
+- **Architecture Decisions**: `prompts_config/architecture.md`
+
+### Archived Documentation
+- **Complete Project History**: `docs/archive/` directory
+- **ADR Chronology**: `docs/adr/architectural_decision_records.md`
+- **Security Incidents**: `docs/security_incidents/` directory
+- **Implementation Details**: `docs/archive/legacy_implementation_log.md`
+- **Feature Completion History**: `docs/archive/features_completed.md`
 
 ## Quality Standards
 

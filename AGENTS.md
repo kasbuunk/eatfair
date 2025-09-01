@@ -1,6 +1,6 @@
-# Agent Types and Capabilities
+# Agent System and Tag-Based Prompts
 
-This document defines the roles, responsibilities, and capabilities of different agent types in our development system. Each agent type has specialized knowledge and specific responsibilities within our workflow.
+This document defines the roles, responsibilities, and capabilities of different agent types in our development system, and how they interact with the modular tag-based prompt system.
 
 ## Core Agent Types
 
@@ -8,8 +8,8 @@ This document defines the roles, responsibilities, and capabilities of different
 **Primary Role**: Feature implementation and code development
 
 **Core Capabilities**:
-- Writes and modifies Phoenix/Elixir application code
-- Implements LiveViews, controllers, and business logic
+- Writes and modifies application code using project technology stack
+- Implements user interfaces, controllers, and business logic
 - Creates database migrations and schema definitions
 - Follows TDD practices (test-first development)
 - Handles authentication flows and route configuration
@@ -17,18 +17,16 @@ This document defines the roles, responsibilities, and capabilities of different
 **Key Responsibilities**:
 - Implement features from backlog items according to acceptance criteria
 - Write comprehensive tests before implementing functionality
-- Ensure code follows Phoenix v1.8 and Elixir best practices
+- Ensure code follows established project patterns and best practices
 - Update implementation documentation when completing features
 - Maintain code quality through proper error handling and validation
 
 **Required Knowledge**:
-- Phoenix framework patterns and LiveView architecture
-- Elixir language fundamentals and OTP principles
-- Ecto for database operations and schema management
-- HEEx templating and component-based UI development
-- Testing patterns with Phoenix.LiveViewTest
-
-**Links to Technical Guidelines**: See [Phoenix/Elixir Technical Reference](documentation/phoenix_elixir_reference.md)
+- Project framework patterns and architecture (see prompts_config/tech_stack.md)
+- Language fundamentals and architectural principles
+- Database operations and schema management patterns
+- Template systems and component-based UI development
+- Testing patterns and frameworks
 
 ### 2. Reviewer Agent
 **Primary Role**: Code review and quality assurance
@@ -42,7 +40,7 @@ This document defines the roles, responsibilities, and capabilities of different
 
 **Key Responsibilities**:
 - Review all code changes before they are committed
-- Validate that the [Definition of Done](documentation/definition_of_done.md) criteria are met
+- Validate that completion criteria are met (see project configuration)
 - Ensure atomic commits with clear, descriptive messages
 - Verify that changes align with architectural decisions
 - Check for proper error handling and edge case coverage
@@ -65,7 +63,7 @@ This document defines the roles, responsibilities, and capabilities of different
 - Facilitates communication between agents
 
 **Key Responsibilities**:
-- Maintain the [Backlog Dashboard](backlog_dashboard.md) with current priorities
+- Maintain the project priority system with current work order
 - Assign work to appropriate agent types based on their capabilities
 - Ensure the development workflow follows established principles
 - Monitor for process improvements and system optimization opportunities
@@ -88,7 +86,7 @@ This document defines the roles, responsibilities, and capabilities of different
 - Manages the information flow between different system components
 
 **Key Responsibilities**:
-- Keep [Development Log](documentation/development_log.md) current with progress
+- Keep progress tracking current with development status
 - Update architectural decision records when significant choices are made
 - Ensure consistency between documentation and actual implementation
 - Create and maintain prompts for common development tasks
@@ -118,14 +116,14 @@ All agent types must:
 - Maintain atomic commits with descriptive messages
 - Follow the established information architecture
 - Contribute to the continuous improvement feedback loop
-- Respect the single source of truth for prioritization (Backlog Dashboard)
+- Respect the single source of truth for prioritization
 
 ## Specialization Areas
 
-### Phoenix/Elixir Development
-- Authentication and authorization patterns
-- LiveView and real-time features
-- Database design and Ecto operations
+### Technology Development
+- Authentication and authorization patterns (see project configuration)
+- Framework-specific features and capabilities
+- Database design and data operations
 - Testing strategies and patterns
 - Performance optimization
 
@@ -149,7 +147,7 @@ All agent types must:
 
 ### How to Use the Tag-Based Prompt System
 
-**The EatFair project uses a modular, tag-based prompt system with two types:**
+**The prompt system is organized into a modular, tag-based architecture:**
 
 #### Main Task Categories (Complete Workflows)
 Use these for end-to-end work processes:
@@ -182,7 +180,7 @@ Use these for specific workflow steps:
 1. **Identify Tags**: Look for `#tag` patterns in user requests
 2. **Find Prompt Files**: Tags map directly to filenames: `#feature_dev` → `prompts/feature_dev.md`
 3. **Read Full Prompt**: Load the complete prompt content and follow its guidance
-4. **Apply Configuration**: Reference `prompts_config/` files for EatFair-specific customizations
+4. **Apply Configuration**: Reference `prompts_config/` files for project-specific customizations
 
 #### When No Tags Present
 1. **Apply Classification**: Use `#route_task` to classify the type of work
@@ -211,16 +209,16 @@ Use these for specific workflow steps:
 
 #### Configuration Integration
 ```
-"Use #feature_dev with Phoenix LiveView patterns for real-time notifications"
+"Use #feature_dev with technology-specific patterns for real-time features"
 ```
 → Apply main workflow with technology-specific configuration
 
 ### ⚙️ Configuration System
 
-#### EatFair-Specific Customizations
+#### Project-Specific Customizations
 All prompts reference configuration files in `prompts_config/`:
-- **tech_stack.md** - Phoenix/Elixir patterns and conventions
-- **project_context.md** - EatFair business domain and requirements  
+- **tech_stack.md** - Technology patterns and conventions
+- **project_context.md** - Business domain and requirements  
 - **workflows.md** - Development processes and backlog management
 - **quality_standards.md** - Testing approaches and quality gates
 
@@ -228,15 +226,15 @@ All prompts reference configuration files in `prompts_config/`:
 1. **Generic Prompt**: Provides methodology and universal best practices
 2. **Configuration Override**: Adds project-specific patterns and requirements
 3. **Context Integration**: Applies business domain knowledge and constraints
-4. **Workflow Alignment**: Ensures consistency with EatFair development processes
+4. **Workflow Alignment**: Ensures consistency with project development processes
 
 ### 🚀 Usage Examples
 
 #### Simple Usage
 ```
-"Use #debug_bug to fix the cart calculation error"
+"Use #debug_bug to fix the calculation error"
 ```
-→ Applies complete debugging workflow with EatFair configuration
+→ Applies complete debugging workflow with project configuration
 
 #### Building Block Composition
 ```
@@ -246,13 +244,13 @@ All prompts reference configuration files in `prompts_config/`:
 
 #### Technology Integration
 ```
-"Use #feature_dev with Phoenix LiveView patterns to implement real-time chat"
+"Use #feature_dev with project-specific patterns to implement real-time features"
 ```
 → Applies development workflow with technology-specific guidance
 
 ### 🔗 Prompt Network
 
-**Complete workflow map**: See `prompts/PROMPT_NETWORK.md` for visual dependency mapping
+**Complete workflow map**: See `prompts/prompt_network.md` for visual dependency mapping
 
 **Cross-references**: Each prompt includes "Related Prompts" section showing:
 - **Prerequisites**: What to use before this prompt

@@ -1,10 +1,10 @@
-# EatFair Prompt System Index
+# Prompt Network
 
-This is the **definitive guide** to EatFair's tag-based prompt system. Use this as your primary navigation and reference document for all development workflows.
+This is the **definitive guide** to the tag-based prompt system. Use this as your primary navigation and reference document for all development workflows.
 
 ## 🎯 How to Use This System
 
-**The EatFair prompt system is designed around two types of prompts:**
+**The prompt system is designed around two types of prompts:**
 
 1. **Main Task Categories** - Complete workflows for major types of work
 2. **Building Blocks** - Composable steps that can be chained together
@@ -164,7 +164,7 @@ Prompts may reference:
 
 ### Simple Usage
 ```
-Use #debug_bug to fix the cart calculation error
+Use #debug_bug to fix the calculation error
 ```
 → Automatically applies the complete debugging workflow with all building blocks
 
@@ -176,7 +176,7 @@ Use #context_intake to understand the performance issue, then #isolate_cause to 
 
 ### Configuration Override
 ```
-Use #feature_dev with Phoenix LiveView patterns to implement real-time chat
+Use #feature_dev with technology-specific patterns to implement real-time features
 ```
 → Applies main workflow with specific technology configuration
 

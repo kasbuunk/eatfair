@@ -16,6 +16,27 @@ This file defines EatFair-specific quality standards that customize the behavior
 - **Test Reliability**: Zero flaky tests - all tests must pass consistently
 - **Test Readability**: Tests must read like user stories and serve as living documentation
 
+### Skipped Test Management
+**Criteria for keeping tests skipped:**
+- **Post-MVP Features**: Tests for features not in current MVP scope (tag with `@tag :post_mvp`)
+- **Deprecated APIs**: Tests using outdated APIs like `live_isolated/3` (superseded by integration tests)
+- **Complex UX Decisions**: Tests requiring human design decisions not yet made
+- **Payment Integration**: Tests dependent on payment provider selection
+- **Security Critical**: Tests for features requiring security architecture decisions
+
+**Criteria for un-skipping tests:**
+- **MVP Alignment**: Test covers current MVP functionality
+- **Bug Fixes**: Test reproduces and validates fix for reported bugs
+- **Core User Journey**: Test validates critical user workflow
+- **Straightforward Implementation**: Test implementation is clear and non-controversial
+
+**Skipped Test Audit Process:**
+1. Review all skipped tests quarterly
+2. Categorize by MVP alignment and implementation complexity
+3. Un-skip tests aligned with current development priorities
+4. Document rationale for keeping tests skipped
+5. Create backlog items for deferred test implementation
+
 ### TDD Implementation Requirements
 1. **Red Phase**: Write failing test that describes exact desired behavior
 2. **Green Phase**: Write minimal code to make test pass (no over-engineering)
@@ -89,6 +110,16 @@ This file defines EatFair-specific quality standards that customize the behavior
 
 ## Quality Gates
 
+### Definition of Done
+**For any backlog item to be considered 'done', it must meet ALL of the following criteria:**
+- ✅ All acceptance criteria in the backlog item are met
+- ✅ The solution is reflected in the codebase and/or documentation
+- ✅ All relevant tests are passing
+- ✅ The changes have passed a review cycle
+- ✅ The work is committed to the main branch
+- ✅ Backlog item status updated to `#status/done`
+- ✅ Implementation progress updated in relevant documentation
+
 ### Pre-Commit Quality Gates
 **All code changes must pass:**
 ```bash
@@ -98,6 +129,16 @@ mix compile --warnings-as-errors      # No compilation warnings
 mix credo --strict                    # Static analysis passes
 mix deps.audit                       # No security vulnerabilities
 ```
+
+### Security Quality Gates
+**Before any commit (Security Regression Checklist):**
+- [ ] Run `git diff --cached` to review staged changes
+- [ ] Check for hardcoded secrets in diff output
+- [ ] Verify no log files are being committed
+- [ ] Review error handling to ensure no secret exposure
+- [ ] Confirm all environment variables use secure loading patterns
+- [ ] Validate input sanitization for user-facing changes
+- [ ] Check authentication/authorization for new routes or actions
 
 ### Feature Completion Quality Gates
 **Before marking any feature as complete:**
