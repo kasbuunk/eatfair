@@ -29,8 +29,12 @@ defmodule Eatfair.Orders.DeliveryBatch do
     field :scheduled_pickup_time, :naive_datetime
     field :estimated_delivery_time, :naive_datetime
     field :notes, :string
+    
+    # Auto-assignment fields
+    field :auto_assigned, :boolean, default: false
 
     belongs_to :courier, User
+    belongs_to :suggested_courier, User
     belongs_to :restaurant, Restaurant
     has_many :orders, Order, foreign_key: :delivery_batch_id
 
@@ -49,7 +53,9 @@ defmodule Eatfair.Orders.DeliveryBatch do
       :estimated_delivery_time,
       :notes,
       :courier_id,
-      :restaurant_id
+      :restaurant_id,
+      :auto_assigned,
+      :suggested_courier_id
     ])
     |> validate_required([:name, :restaurant_id])
     |> validate_inclusion(:status, @valid_statuses)

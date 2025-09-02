@@ -68,6 +68,10 @@ defmodule Eatfair.Orders.Order do
     field :eta_accepted, :boolean, default: false
     field :proposed_eta, :naive_datetime
     field :eta_pending, :boolean, default: false
+    
+    # Staging fields for delivery batch management
+    field :staged, :boolean, default: false
+    field :staged_at, :naive_datetime
 
     belongs_to :customer, User
     belongs_to :restaurant, Restaurant
@@ -125,7 +129,9 @@ defmodule Eatfair.Orders.Order do
       :desired_delivery_at,
       :eta_accepted,
       :proposed_eta,
-      :eta_pending
+      :eta_pending,
+      :staged,
+      :staged_at
     ])
     |> validate_required([:restaurant_id, :delivery_address])
     |> validate_customer_info()

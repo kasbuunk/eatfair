@@ -32,6 +32,10 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
         notifications = Enum.map(notification_events, &convert_event_to_notification/1)
         unread_count = Enum.count(notifications, &(!&1.read))
 
+        # Load staged orders and delivery batches
+        staged_orders = Orders.list_staged_orders_for_restaurant(restaurant.id)
+        delivery_batches = Orders.list_restaurant_delivery_batches(restaurant.id)
+
         socket =
           socket
           |> assign(:restaurant, restaurant)
@@ -39,6 +43,10 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
           # Track current filter
           |> assign(:orders_filter, :active)
           |> assign(:history_orders, [])
+          |> assign(:staged_orders, staged_orders)
+          |> assign(:delivery_batches, delivery_batches)
+          |> assign(:selected_orders, MapSet.new())
+          |> assign(:show_batch_modal, false)
           |> assign(:page_title, "Order Management - #{restaurant.name}")
           |> assign(:notifications, notifications)
           |> assign(:unread_count, unread_count)
@@ -376,6 +384,151 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
   end
 
   @impl true
+  def handle_event("switch_to_staging", _params, socket) do
+    staged_orders = Orders.list_staged_orders_for_restaurant(socket.assigns.restaurant.id)
+    delivery_batches = Orders.list_restaurant_delivery_batches(socket.assigns.restaurant.id)
+
+    socket =
+      socket
+      |> assign(:orders_filter, :staging)
+      |> assign(:staged_orders, staged_orders)
+      |> assign(:delivery_batches, delivery_batches)
+      |> assign(:selected_orders, MapSet.new())
+      # Empty for staging view
+      |> assign(:orders_by_status, %{
+        pending: [],
+        confirmed: [],
+        preparing: [],
+        ready: [],
+        out_for_delivery: []
+      })
+      |> assign(:history_orders, [])
+
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("stage_order", %{"order_id" => order_id}, socket) do
+    order = Orders.get_order!(order_id)
+    
+    case Orders.stage_order(order) do
+      {:ok, _staged_order} ->
+        # Refresh staged orders
+        staged_orders = Orders.list_staged_orders_for_restaurant(socket.assigns.restaurant.id)
+        
+        socket =
+          socket
+          |> assign(:staged_orders, staged_orders)
+          |> put_flash(:info, "Order ##{order_id} moved to staging area")
+        
+        {:noreply, socket}
+        
+      {:error, _changeset} ->
+        {:noreply, put_flash(socket, :error, "Could not stage order. Order must be ready first.")}
+    end
+  end
+
+  @impl true
+  def handle_event("toggle_order_selection", %{"order_id" => order_id}, socket) do
+    order_id = String.to_integer(order_id)
+    selected_orders = socket.assigns.selected_orders
+    
+    updated_selection = 
+      if MapSet.member?(selected_orders, order_id) do
+        MapSet.delete(selected_orders, order_id)
+      else
+        MapSet.put(selected_orders, order_id)
+      end
+    
+    socket = assign(socket, :selected_orders, updated_selection)
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("select_all_staged", _params, socket) do
+    all_staged_ids = 
+      socket.assigns.staged_orders
+      |> Enum.map(&(&1.id))
+      |> MapSet.new()
+    
+    socket = assign(socket, :selected_orders, all_staged_ids)
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("clear_selection", _params, socket) do
+    socket = assign(socket, :selected_orders, MapSet.new())
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("create_batch", _params, socket) do
+    socket = assign(socket, :show_batch_modal, true)
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("close_batch_modal", _params, socket) do
+    socket = assign(socket, :show_batch_modal, false)
+    {:noreply, socket}
+  end
+
+  @impl true
+  def handle_event("submit_batch_creation", %{"batch_name" => batch_name}, socket) do
+    selected_order_ids = MapSet.to_list(socket.assigns.selected_orders)
+    
+    if Enum.empty?(selected_order_ids) do
+      {:noreply, put_flash(socket, :error, "Please select at least one order to create a batch")}
+    else
+      case Orders.create_delivery_batch(%{
+             name: batch_name,
+             restaurant_id: socket.assigns.restaurant.id,
+             status: "draft"
+           }) do
+        {:ok, batch} ->
+          # Assign selected orders to the batch
+          case Orders.assign_orders_to_batch(batch.id, selected_order_ids) do
+            {:ok, updated_batch} ->
+              # Try to auto-assign a courier
+              case Orders.suggest_courier(socket.assigns.restaurant.id) do
+                nil ->
+                  # No courier available, keep as draft
+                  refresh_staging_data(socket, "Delivery batch '#{batch_name}' created successfully!")
+                  
+                courier ->
+                  # Auto-assign courier and set to proposed
+                  case Orders.update_delivery_batch(updated_batch, %{
+                         courier_id: courier.id,
+                         status: "proposed",
+                         auto_assigned: true,
+                         suggested_courier_id: courier.id
+                       }) do
+                    {:ok, _final_batch} ->
+                      # Broadcast to courier
+                      Phoenix.PubSub.broadcast(
+                        Eatfair.PubSub,
+                        "courier_batches:#{courier.id}",
+                        {:batch_auto_assigned, updated_batch}
+                      )
+                      
+                      refresh_staging_data(socket, "Delivery batch '#{batch_name}' created and assigned to #{courier.name || "courier"}!")
+                      
+                    {:error, _} ->
+                      refresh_staging_data(socket, "Delivery batch '#{batch_name}' created successfully!")
+                  end
+              end
+              
+            {:error, _reason} ->
+              {:noreply, put_flash(socket, :error, "Failed to assign orders to batch")}
+          end
+          
+        {:error, _changeset} ->
+          {:noreply, put_flash(socket, :error, "Failed to create delivery batch")}
+      end
+    end
+  end
+
+  @impl true
   def render(assigns) do
     ~H"""
     <Layouts.app flash={assigns[:flash] || %{}} current_scope={assigns[:current_scope]}>
@@ -471,7 +624,7 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
           </div>
         </div>
         
-    <!-- Active/History Tabs -->
+    <!-- Active/History/Staging Tabs -->
         <div class="mt-6">
           <div class="border-b border-gray-200">
             <nav class="-mb-px flex space-x-8" aria-label="Tabs">
@@ -492,6 +645,25 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
                     {length(@orders_by_status.pending) + length(@orders_by_status.confirmed) +
                       length(@orders_by_status.preparing) + length(@orders_by_status.ready) +
                       length(@orders_by_status.out_for_delivery)}
+                  </span>
+                <% end %>
+              </button>
+
+              <button
+                phx-click="switch_to_staging"
+                data-test="staging-tab"
+                class={[
+                  "whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors",
+                  if(@orders_filter == :staging,
+                    do: "border-blue-500 text-blue-600",
+                    else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                  )
+                ]}
+              >
+                Staging
+                <%= if @orders_filter == :staging do %>
+                  <span class="ml-2 bg-blue-100 text-blue-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
+                    {length(@staged_orders)}
                   </span>
                 <% end %>
               </button>
@@ -567,6 +739,84 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
         
     <!-- Order Sections -->
         <div class="mt-8 space-y-8">
+          <!-- Staging Section -->
+          <%= if @orders_filter == :staging do %>
+            <div class="space-y-6">
+              <!-- Staging Control Panel -->
+              <div class="bg-blue-50 border border-blue-200 rounded-lg p-4">
+                <div class="flex items-center justify-between">
+                  <div>
+                    <h3 class="text-lg font-semibold text-blue-900">Staging Area</h3>
+                    <p class="text-sm text-blue-700 mt-1">Select ready orders and create delivery batches for couriers</p>
+                  </div>
+                  <div class="flex space-x-3">
+                    <%= if MapSet.size(@selected_orders) > 0 do %>
+                      <button
+                        phx-click="create_batch"
+                        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 font-medium"
+                        data-test="create-batch-button"
+                      >
+                        Create Batch ({MapSet.size(@selected_orders)} orders)
+                      </button>
+                      <button
+                        phx-click="clear_selection"
+                        class="bg-gray-500 text-white px-4 py-2 rounded-lg hover:bg-gray-600 font-medium"
+                        data-test="clear-selection-button"
+                      >
+                        Clear Selection
+                      </button>
+                    <% else %>
+                      <button
+                        phx-click="select_all_staged"
+                        class="bg-gray-600 text-white px-4 py-2 rounded-lg hover:bg-gray-700 font-medium"
+                        data-test="select-all-button"
+                        disabled={length(@staged_orders) == 0}
+                      >
+                        Select All ({length(@staged_orders)})
+                      </button>
+                    <% end %>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Staged Orders -->
+              <%= if length(@staged_orders) > 0 do %>
+                <div>
+                  <h2 class="text-xl font-bold text-gray-900 mb-4">Staged Orders Ready for Delivery</h2>
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <%= for order <- @staged_orders do %>
+                      {render_staged_order_card(order, @selected_orders)}
+                    <% end %>
+                  </div>
+                </div>
+              <% else %>
+                <div class="text-center py-8">
+                  <.icon name="hero-archive-box" class="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 class="text-lg font-medium text-gray-900 mb-2">No Staged Orders</h3>
+                  <p class="text-gray-500">Orders marked as ready will appear here for batching.</p>
+                </div>
+              <% end %>
+
+              <!-- Delivery Batches -->
+              <%= if length(@delivery_batches) > 0 do %>
+                <div>
+                  <h2 class="text-xl font-bold text-gray-900 mb-4">Delivery Batches</h2>
+                  <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                    <%= for batch <- @delivery_batches do %>
+                      {render_batch_card(batch)}
+                    <% end %>
+                  </div>
+                </div>
+              <% else %>
+                <div class="text-center py-8">
+                  <.icon name="hero-truck" class="h-12 w-12 text-gray-400 mx-auto mb-4" />
+                  <h3 class="text-lg font-medium text-gray-900 mb-2">No Delivery Batches</h3>
+                  <p class="text-gray-500">Created batches will appear here for tracking.</p>
+                </div>
+              <% end %>
+            </div>
+          <% end %>
+
           <!-- Pending Orders -->
           <%= if length(@orders_by_status.pending) > 0 do %>
             <div>
@@ -747,7 +997,65 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
         </div>
       </div>
       
-    <!-- Modal placeholders for TDD tests -->
+    <!-- Batch Creation Modal -->
+      <%= if @show_batch_modal do %>
+        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" data-testid="batch-modal">
+          <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
+            <div class="mt-3">
+              <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900">Create Delivery Batch</h3>
+                <button
+                  phx-click="close_batch_modal"
+                  class="text-gray-400 hover:text-gray-600"
+                  data-testid="close-modal-button"
+                >
+                  <.icon name="hero-x-mark" class="h-6 w-6" />
+                </button>
+              </div>
+              
+              <form phx-submit="submit_batch_creation" class="space-y-4">
+                <div>
+                  <label for="batch_name" class="block text-sm font-medium text-gray-700">Batch Name</label>
+                  <input
+                    type="text"
+                    name="batch_name"
+                    id="batch_name"
+                    required
+                    class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                    placeholder="e.g., Evening Delivery #1"
+                    data-testid="batch-name-input"
+                  />
+                </div>
+                
+                <div class="bg-gray-50 p-3 rounded-lg">
+                  <p class="text-sm text-gray-600">Selected Orders: <span class="font-semibold">{MapSet.size(@selected_orders)}</span></p>
+                  <p class="text-xs text-gray-500 mt-1">A courier will be automatically assigned if available.</p>
+                </div>
+                
+                <div class="flex justify-end space-x-3">
+                  <button
+                    type="button"
+                    phx-click="close_batch_modal"
+                    class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-medium py-2 px-4 rounded"
+                    data-testid="cancel-batch-button"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    class="bg-blue-600 hover:bg-blue-700 text-white font-medium py-2 px-4 rounded"
+                    data-testid="submit-batch-button"
+                  >
+                    Create Batch
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      <% end %>
+
+      <!-- Modal placeholders for TDD tests -->
       <div data-modal="rejection-modal" style="display: none;">
         <form id="rejection-form" phx-submit="submit_rejection">
           <input name="rejection_reason" type="text" value="" />
@@ -974,6 +1282,13 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
             </button>
           <% "ready" -> %>
             <button
+              phx-click="stage_order"
+              phx-value-order_id={@order.id}
+              class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+            >
+              Stage for Batch Delivery
+            </button>
+            <button
               phx-click="send_for_delivery"
               phx-value-order_id={@order.id}
               class="bg-purple-600 text-white px-4 py-2 rounded-lg hover:bg-purple-700 text-sm font-medium"
@@ -1069,6 +1384,22 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
     }
   end
 
+  # Helper function to refresh staging data after batch operations
+  defp refresh_staging_data(socket, message) do
+    staged_orders = Orders.list_staged_orders_for_restaurant(socket.assigns.restaurant.id)
+    delivery_batches = Orders.list_restaurant_delivery_batches(socket.assigns.restaurant.id)
+    
+    socket = 
+      socket
+      |> assign(:staged_orders, staged_orders)
+      |> assign(:delivery_batches, delivery_batches)
+      |> assign(:selected_orders, MapSet.new())
+      |> assign(:show_batch_modal, false)
+      |> put_flash(:info, message)
+    
+    {:noreply, socket}
+  end
+
   defp convert_event_to_notification(event) do
     # Convert notification event (from DB) to our notification format
     # Use database ID as string for consistency
@@ -1110,5 +1441,177 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
       read: event.status != "pending",
       order_id: order_id
     }
+  end
+
+  defp render_staged_order_card(order, selected_orders) do
+    is_selected = MapSet.member?(selected_orders, order.id)
+    assigns = %{order: order, selected_orders: selected_orders, is_selected: is_selected}
+
+    ~H"""
+    <div class={[
+      "bg-white shadow-lg rounded-lg border p-6 cursor-pointer transition-colors",
+      if(@is_selected, do: "border-blue-500 bg-blue-50", else: "border-gray-200 hover:border-gray-300")
+    ]}>
+      <!-- Selection Checkbox and Order Header -->
+      <div class="flex items-start justify-between mb-4">
+        <div class="flex items-start space-x-3">
+          <input
+            type="checkbox"
+            phx-click="toggle_order_selection"
+            phx-value-order_id={@order.id}
+            checked={@is_selected}
+            class="h-5 w-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300 mt-1"
+            data-testid={"order-checkbox-#{@order.id}"}
+          />
+          <div>
+            <h3 class="text-lg font-semibold text-gray-900">Order #{@order.id}</h3>
+            <p class="text-sm text-gray-500">
+              Staged {format_time_ago(@order.staged_at)}
+            </p>
+          </div>
+        </div>
+        <div class="text-right">
+          <span class="text-lg font-bold text-gray-900">€{@order.total_price}</span>
+          <div class="mt-1">
+            <span class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+              Staged
+            </span>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Order Items -->
+      <div class="mb-4">
+        <h4 class="font-medium text-gray-900 mb-2">Items</h4>
+        <div class="space-y-1">
+          <%= for item <- @order.order_items do %>
+            <div class="flex justify-between text-sm">
+              <span>{item.quantity}× {item.meal.name}</span>
+              <span class="text-gray-600">€{Decimal.mult(item.meal.price, item.quantity)}</span>
+            </div>
+          <% end %>
+        </div>
+      </div>
+      
+      <!-- Delivery Information -->
+      <div class="p-3 bg-gray-50 rounded-lg">
+        <h4 class="font-medium text-gray-900 mb-1">Delivery Address</h4>
+        <p class="text-sm text-gray-700">{@order.delivery_address}</p>
+        <%= if @order.delivery_notes do %>
+          <p class="text-sm text-gray-600 mt-1"><strong>Notes:</strong> {@order.delivery_notes}</p>
+        <% end %>
+      </div>
+    </div>
+    """
+  end
+
+  defp render_batch_card(batch) do
+    assigns = %{batch: batch}
+
+    ~H"""
+    <div class="bg-white shadow-lg rounded-lg border border-gray-200 p-6">
+      <!-- Batch Header -->
+      <div class="flex justify-between items-start mb-4">
+        <div>
+          <h3 class="text-lg font-semibold text-gray-900">{@batch.name}</h3>
+          <p class="text-sm text-gray-500">
+            Created {format_time_ago(@batch.inserted_at)}
+          </p>
+        </div>
+        <div class="text-right">
+          <span class={[
+            "inline-flex px-3 py-1 rounded-full text-sm font-medium",
+            case @batch.status do
+              "draft" -> "bg-gray-100 text-gray-800"
+              "proposed" -> "bg-yellow-100 text-yellow-800"
+              "accepted" -> "bg-blue-100 text-blue-800"
+              "in_progress" -> "bg-orange-100 text-orange-800"
+              "completed" -> "bg-green-100 text-green-800"
+              "cancelled" -> "bg-red-100 text-red-800"
+              _ -> "bg-gray-100 text-gray-800"
+            end
+          ]}>
+            {String.replace(@batch.status, "_", " ") |> String.capitalize()}
+          </span>
+        </div>
+      </div>
+      
+      <!-- Batch Details -->
+      <div class="space-y-3">
+        <!-- Orders Count -->
+        <div class="flex justify-between items-center">
+          <span class="text-sm font-medium text-gray-700">Orders:</span>
+          <span class="text-sm text-gray-900">{length(@batch.orders)}</span>
+        </div>
+        
+        <!-- Batch Code -->
+        <div class="flex justify-between items-center">
+          <span class="text-sm font-medium text-gray-700">Batch Code:</span>
+          <span class="text-sm font-mono text-gray-900">{@batch.batch_code}</span>
+        </div>
+        
+        <!-- Courier Assignment -->
+        <div class="flex justify-between items-center">
+          <span class="text-sm font-medium text-gray-700">Courier:</span>
+          <%= if @batch.courier do %>
+            <span class="text-sm text-gray-900">{@batch.courier.name || "Courier ##{@batch.courier.id}"}</span>
+          <% else %>
+            <span class="text-sm text-gray-500">Not assigned</span>
+          <% end %>
+        </div>
+        
+        <!-- Auto-assignment Info -->
+        <%= if @batch.auto_assigned do %>
+          <div class="text-xs text-blue-600 bg-blue-50 p-2 rounded">
+            🤖 Auto-assigned to courier
+          </div>
+        <% end %>
+      </div>
+      
+      <!-- Order List -->
+      <%= if length(@batch.orders) > 0 do %>
+        <div class="mt-4">
+          <h4 class="font-medium text-gray-900 mb-2">Orders in Batch</h4>
+          <div class="space-y-1">
+            <%= for order <- Enum.take(@batch.orders, 5) do %>
+              <div class="flex justify-between text-sm bg-gray-50 p-2 rounded">
+                <span>Order #{order.id}</span>
+                <span class="text-gray-600">€{order.total_price}</span>
+              </div>
+            <% end %>
+            <%= if length(@batch.orders) > 5 do %>
+              <div class="text-xs text-gray-500 text-center py-1">
+                ... and {length(@batch.orders) - 5} more orders
+              </div>
+            <% end %>
+          </div>
+        </div>
+      <% end %>
+      
+      <!-- Batch Actions -->
+      <div class="mt-4 flex justify-between items-center">
+        <div class="text-xs text-gray-500">
+          Total Value: €{Enum.reduce(@batch.orders, Decimal.new("0"), fn order, acc ->
+            Decimal.add(acc, order.total_price)
+          end)}
+        </div>
+        
+        <%= case @batch.status do %>
+          <% "draft" -> %>
+            <span class="text-xs text-gray-500">Waiting for courier assignment</span>
+          <% "proposed" -> %>
+            <span class="text-xs text-yellow-600">Proposed to courier</span>
+          <% "accepted" -> %>
+            <span class="text-xs text-blue-600">Accepted by courier</span>
+          <% "in_progress" -> %>
+            <span class="text-xs text-orange-600">In progress</span>
+          <% "completed" -> %>
+            <span class="text-xs text-green-600">Completed</span>
+          <% "cancelled" -> %>
+            <span class="text-xs text-red-600">Cancelled</span>
+        <% end %>
+      </div>
+    </div>
+    """
   end
 end

@@ -1255,6 +1255,170 @@ defmodule Eatfair.Orders do
   defp primary_email(%Order{customer_id: nil, customer_email: email}), do: email
   defp primary_email(%Order{customer: %{email: email}}), do: email
   defp primary_email(_), do: nil
+  
+  # ============================================================================
+  # ORDER STAGING AND DELIVERY MANAGEMENT FUNCTIONS
+  # ============================================================================
+  
+  @doc """
+  Stages an order for delivery batching.
+  
+  An order can only be staged if it's in "ready" status. This transitions
+  the order to "staged" delivery_status and records the staging timestamp.
+  """
+  def stage_order(%Order{status: "ready"} = order) do
+    now = NaiveDateTime.utc_now() |> NaiveDateTime.truncate(:second)
+    
+    order
+    |> Order.changeset(%{
+      staged: true,
+      staged_at: now,
+      delivery_status: "staged"
+    })
+    |> Repo.update()
+    |> case do
+      {:ok, staged_order} ->
+        # Broadcast staging event
+        broadcast_order_staging(staged_order)
+        {:ok, staged_order}
+        
+      error -> error
+    end
+  end
+  
+  def stage_order(order) do
+    changeset = 
+      order
+      |> Ecto.Changeset.change()
+      |> Ecto.Changeset.add_error(:status, "can only stage orders in ready status")
+    
+    {:error, changeset}
+  end
+  
+  @doc """
+  Lists all staged orders for a restaurant.
+  """
+  def list_staged_orders_for_restaurant(restaurant_id) do
+    from(o in Order,
+      where: o.restaurant_id == ^restaurant_id,
+      where: o.staged == true,
+      where: o.delivery_status == "staged",
+      where: is_nil(o.delivery_batch_id),
+      preload: [:customer, order_items: :meal],
+      order_by: [asc: o.staged_at]
+    )
+    |> Repo.all()
+  end
+  
+  @doc """
+  Auto-creates a delivery batch when there are enough staged orders.
+  
+  Returns {:ok, batch} if a batch was created, {:ok, nil} if below threshold.
+  """
+  def autocreate_batch_for_staged_orders(restaurant_id, threshold \\ 3) do
+    staged_orders = list_staged_orders_for_restaurant(restaurant_id)
+    
+    if length(staged_orders) >= threshold do
+      now = DateTime.utc_now()
+      batch_name = "Auto Batch #{DateTime.to_unix(now)}"
+      
+      # Create batch and assign orders in a transaction
+      Repo.transaction(fn ->
+        with {:ok, batch} <- create_delivery_batch(%{
+               name: batch_name,
+               restaurant_id: restaurant_id,
+               status: "draft"
+             }),
+             {:ok, updated_batch} <- assign_orders_to_batch(batch.id, Enum.map(staged_orders, & &1.id)) do
+          
+          # Try to suggest and auto-assign a courier
+          case suggest_courier(restaurant_id) do
+            nil -> 
+              updated_batch
+            courier ->
+              case update_delivery_batch(updated_batch, %{
+                     courier_id: courier.id,
+                     suggested_courier_id: courier.id,
+                     auto_assigned: true,
+                     status: "proposed"
+                   }) do
+                {:ok, batch_with_courier} -> 
+                  broadcast_batch_auto_assigned(batch_with_courier)
+                  batch_with_courier
+                {:error, _} -> 
+                  # If courier assignment fails, keep the batch without courier
+                  updated_batch
+              end
+          end
+        else
+          error -> Repo.rollback(error)
+        end
+      end)
+      |> case do
+        {:ok, batch} -> {:ok, batch}
+        error -> error
+      end
+    else
+      {:ok, nil}
+    end
+  end
+  
+  @doc """
+  Suggests the best available courier for a delivery batch.
+  
+  Currently uses a simple "least loaded" algorithm - finds the courier
+  with the fewest active delivery batches. When multiple couriers have
+  the same workload, selects the one with the highest ID (most recently created).
+  """
+  def suggest_courier(_restaurant_id) do
+    import Ecto.Query
+    
+    # Find couriers ordered by their current workload (active batches)
+    # When workloads are tied, prefer the most recently created courier (highest ID)
+    courier_workloads = 
+      from(u in Eatfair.Accounts.User,
+        where: u.role == "courier",
+        left_join: b in DeliveryBatch,
+        on: b.courier_id == u.id and b.status in ["proposed", "accepted", "scheduled", "in_progress"],
+        group_by: u.id,
+        select: {u, count(b.id)},
+        order_by: [asc: count(b.id), desc: u.id]
+      )
+      |> Repo.all()
+    
+    case courier_workloads do
+      [] -> nil
+      [{courier, _workload} | _] -> courier
+    end
+  end
+  
+  # Private helper functions for staging
+  
+  defp broadcast_order_staging(order) do
+    Phoenix.PubSub.broadcast(
+      Eatfair.PubSub,
+      "restaurant_orders:#{order.restaurant_id}",
+      {:order_staged, order}
+    )
+  end
+  
+  defp broadcast_batch_auto_assigned(batch) do
+    # Broadcast to restaurant
+    Phoenix.PubSub.broadcast(
+      Eatfair.PubSub,
+      "restaurant_batches:#{batch.restaurant_id}",
+      {:batch_auto_assigned, batch}
+    )
+    
+    # Broadcast to courier
+    if batch.courier_id do
+      Phoenix.PubSub.broadcast(
+        Eatfair.PubSub,
+        "courier_batches:#{batch.courier_id}",
+        {:batch_auto_assigned, batch}
+      )
+    end
+  end
 
   # ============================================================================
   # DELIVERY BATCH MANAGEMENT FUNCTIONS

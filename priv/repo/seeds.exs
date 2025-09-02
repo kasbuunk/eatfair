@@ -4043,3 +4043,302 @@ IO.puts("\n✨ ALL PASSWORDS: password123456")
 
 IO.puts("\n🎉 **START TESTING**: mix phx.server")
 IO.puts("✨ ====================================================== ✨\n")
+
+# ============================================================================
+# NIGHT OWL EXPRESS - COMPREHENSIVE DELIVERY LIFECYCLE TEST DATA
+# ============================================================================
+# Creates comprehensive test orders across ALL delivery stages for manual testing
+# Customer: test@eatfair.nl ↔ Restaurant: Night Owl Express NL ↔ Courier: courier.max@eatfair.nl
+
+IO.puts("\n🦉 Creating Night Owl comprehensive delivery test data...")
+IO.puts("=" |> String.duplicate(70))
+
+# Find entities (they should exist from seeds above)
+night_owl_restaurant = 
+  Enum.find(restaurants, &(&1.name == "Night Owl Express NL"))
+
+test_customer = 
+  Enum.find(customers, fn c -> c.email == "test@eatfair.nl" end)
+
+max_courier = 
+  Enum.find(couriers, fn c -> c.email == "courier.max@eatfair.nl" end)
+
+if night_owl_restaurant && test_customer && max_courier do
+  IO.puts("✅ Found Night Owl entities: Restaurant (#{night_owl_restaurant.id}), Customer (#{test_customer.id}), Courier (#{max_courier.id})")
+  
+  # Get Night Owl's menu items
+  night_owl_with_meals = 
+    night_owl_restaurant
+    |> Repo.preload(menus: :meals)
+  
+  night_owl_meals = 
+    night_owl_with_meals.menus
+    |> Enum.flat_map(&(&1.meals))
+    |> Enum.filter(&(&1.is_available))
+  
+  if length(night_owl_meals) > 0 do
+    IO.puts("✅ Found #{length(night_owl_meals)} Night Owl menu items")
+    
+    # Helper function to build proper timestamps for order progression
+    build_night_owl_timestamps = fn status, minutes_ago ->
+      base_time = DateTime.utc_now() |> DateTime.add(-minutes_ago * 60, :second)
+      base_naive = base_time |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+      
+      case status do
+        "pending" ->
+          %{inserted_at: base_naive, updated_at: base_naive}
+          
+        "confirmed" ->
+          confirmed_time = DateTime.add(base_time, -5 * 60, :second) |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+          %{inserted_at: confirmed_time, updated_at: base_naive, confirmed_at: base_naive}
+          
+        "preparing" ->
+          confirmed_time = DateTime.add(base_time, -15 * 60, :second) |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+          %{inserted_at: confirmed_time, updated_at: base_naive, confirmed_at: confirmed_time, preparing_at: base_naive}
+          
+        "ready" ->
+          confirmed_time = DateTime.add(base_time, -25 * 60, :second) |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+          preparing_time = DateTime.add(base_time, -20 * 60, :second) |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+          ready_time = DateTime.add(base_time, -5 * 60, :second) |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+          %{
+            inserted_at: confirmed_time, updated_at: base_naive, confirmed_at: confirmed_time,
+            preparing_at: preparing_time, ready_at: base_naive,
+            courier_id: max_courier.id, courier_assigned_at: ready_time
+          }
+          
+        "out_for_delivery" ->
+          confirmed_time = DateTime.add(base_time, -35 * 60, :second) |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+          preparing_time = DateTime.add(base_time, -30 * 60, :second) |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+          ready_time = DateTime.add(base_time, -15 * 60, :second) |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+          assigned_time = DateTime.add(base_time, -10 * 60, :second) |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+          %{
+            inserted_at: confirmed_time, updated_at: base_naive, confirmed_at: confirmed_time,
+            preparing_at: preparing_time, ready_at: ready_time, out_for_delivery_at: base_naive,
+            courier_id: max_courier.id, courier_assigned_at: assigned_time,
+            estimated_delivery_at: DateTime.add(base_time, 15 * 60, :second) |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+          }
+          
+        "delivered" ->
+          confirmed_time = DateTime.add(base_time, -60 * 60, :second) |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+          preparing_time = DateTime.add(base_time, -55 * 60, :second) |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+          ready_time = DateTime.add(base_time, -35 * 60, :second) |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+          out_time = DateTime.add(base_time, -20 * 60, :second) |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+          assigned_time = DateTime.add(base_time, -30 * 60, :second) |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+          %{
+            inserted_at: confirmed_time, updated_at: base_naive, confirmed_at: confirmed_time,
+            preparing_at: preparing_time, ready_at: ready_time, out_for_delivery_at: out_time,
+            delivered_at: base_naive, courier_id: max_courier.id, courier_assigned_at: assigned_time
+          }
+          
+        "cancelled" ->
+          confirmed_time = DateTime.add(base_time, -15 * 60, :second) |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+          %{inserted_at: confirmed_time, updated_at: base_naive, confirmed_at: confirmed_time, cancelled_at: base_naive}
+          
+        "rejected" ->
+          %{inserted_at: base_naive, updated_at: base_naive}
+          
+        "delivery_failed" ->
+          confirmed_time = DateTime.add(base_time, -90 * 60, :second) |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+          preparing_time = DateTime.add(base_time, -85 * 60, :second) |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+          ready_time = DateTime.add(base_time, -65 * 60, :second) |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+          out_time = DateTime.add(base_time, -45 * 60, :second) |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+          assigned_time = DateTime.add(base_time, -60 * 60, :second) |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+          %{
+            inserted_at: confirmed_time, updated_at: base_naive, confirmed_at: confirmed_time,
+            preparing_at: preparing_time, ready_at: ready_time, out_for_delivery_at: out_time,
+            courier_id: max_courier.id, courier_assigned_at: assigned_time
+          }
+      end
+    end
+    
+    # Helper function to create complete orders
+    create_night_owl_order = fn order_attrs, order_spec ->
+      # Select 1-3 random meals
+      selected_meals = night_owl_meals |> Enum.take_random(Enum.random(1..3))
+      
+      # Calculate total price
+      item_total = 
+        selected_meals
+        |> Enum.reduce(Decimal.new("0"), fn meal, acc ->
+          quantity = Enum.random(1..2)
+          Decimal.add(acc, Decimal.mult(meal.price, quantity))
+        end)
+      
+      # Ensure minimum order value
+      total_price = 
+        if Decimal.compare(item_total, night_owl_restaurant.min_order_value || Decimal.new("12.00")) == :lt do
+          Decimal.add(night_owl_restaurant.min_order_value || Decimal.new("12.00"), Decimal.new("5.00"))
+        else
+          item_total
+        end
+      
+      # Generate tracking token
+      tracking_token = :crypto.strong_rand_bytes(16) |> Base.url_encode64(padding: false)
+      
+      # Build complete order attributes
+      complete_attrs = Map.merge(order_attrs, %{
+        total_price: total_price,
+        tracking_token: tracking_token,
+        delivery_address: test_customer.default_address || "Leidseplein 12, 1017 PT Amsterdam",
+        phone_number: test_customer.phone_number || "+31-20-555-9999",
+        delivery_notes: order_spec[:notes] || "Test order for manual testing"
+      })
+      
+      # Insert order
+      {:ok, order} = 
+        %Order{}
+        |> Order.changeset(complete_attrs)
+        |> Repo.insert()
+      
+      # Insert order items
+      selected_meals
+      |> Enum.each(fn meal ->
+        quantity = Enum.random(1..2)
+        %OrderItem{}
+        |> OrderItem.changeset(%{
+          order_id: order.id,
+          meal_id: meal.id,
+          quantity: quantity,
+          price: meal.price
+        })
+        |> Repo.insert!()
+      end)
+      
+      # Insert payment
+      payment_status = case order_spec[:status] do
+        s when s in ["pending"] -> "pending"
+        s when s in ["cancelled", "rejected"] -> "failed"
+        s when s in ["delivered"] -> "completed"
+        _ -> "processing"
+      end
+      
+      %Payment{}
+      |> Payment.changeset(%{
+        order_id: order.id,
+        amount: total_price,
+        currency: "EUR",
+        status: payment_status,
+        payment_method: "card",
+        provider: "stripe",
+        provider_payment_id: "pi_nightowl_#{System.unique_integer([:positive])}"
+      })
+      |> Repo.insert!()
+      
+      order
+    end
+    
+    # Create 9 core orders covering all statuses
+    night_owl_order_matrix = [
+      %{status: "pending", delivery_status: "not_ready", minutes_ago: 10, notes: "Payment processing", donation_amount: Decimal.new("0.00")},
+      %{status: "confirmed", delivery_status: "not_ready", minutes_ago: 25, notes: "Restaurant accepted", donation_amount: Decimal.new("2.50")},
+      %{status: "preparing", delivery_status: "not_ready", minutes_ago: 40, notes: "Kitchen started", is_delayed: true, delay_reason: "High demand", donation_amount: Decimal.new("1.00")},
+      %{status: "ready", delivery_status: "staged", minutes_ago: 55, notes: "Ready for Max pickup", estimated_prep_time_minutes: 25, actual_prep_time_minutes: 35},
+      %{status: "out_for_delivery", delivery_status: "in_transit", minutes_ago: 70, notes: "Max is delivering", donation_amount: Decimal.new("5.00")},
+      %{status: "delivered", delivery_status: "delivered", minutes_ago: 120, notes: "Successfully delivered", actual_prep_time_minutes: 30, donation_amount: Decimal.new("3.50")},
+      %{status: "cancelled", delivery_status: "not_ready", minutes_ago: 90, notes: "Customer cancelled"},
+      %{status: "rejected", delivery_status: "not_ready", minutes_ago: 5, notes: "Restaurant closed", rejection_reason: "Restaurant temporarily closed"},
+      %{status: "delivery_failed", delivery_status: "scheduled", minutes_ago: 150, notes: "Delivery failed - retry", is_delayed: true, delay_reason: "Customer unavailable", donation_amount: Decimal.new("1.50")}
+    ]
+    
+    IO.puts("🏗️ Creating #{length(night_owl_order_matrix)} core Night Owl orders (all statuses)...")
+    
+    night_owl_core_orders = 
+      night_owl_order_matrix
+      |> Enum.with_index(1)
+      |> Enum.map(fn {order_spec, index} ->
+        timestamps = build_night_owl_timestamps.(order_spec.status, order_spec.minutes_ago)
+        
+        order_attrs = %{
+          customer_id: test_customer.id,
+          restaurant_id: night_owl_restaurant.id,
+          status: order_spec.status,
+          delivery_status: order_spec.delivery_status,
+          is_delayed: order_spec[:is_delayed] || false,
+          delay_reason: order_spec[:delay_reason],
+          rejection_reason: order_spec[:rejection_reason],
+          special_instructions: "Night Owl test order ##{index} - #{order_spec.status}",
+          estimated_prep_time_minutes: order_spec[:estimated_prep_time_minutes],
+          actual_prep_time_minutes: order_spec[:actual_prep_time_minutes],
+          donation_amount: order_spec[:donation_amount] || Decimal.new("0.00"),
+          donation_currency: "EUR"
+        }
+        |> Map.merge(timestamps)
+        
+        order = create_night_owl_order.(order_attrs, order_spec)
+        if rem(index, 3) == 0 or index <= 3, do: IO.puts("✅ Created #{order_spec.status} order ##{order.id}")
+        order
+      end)
+    
+    # Create 10 historical delivered orders for pagination testing
+    IO.puts("📚 Creating 10 historical Night Owl orders...")
+    
+    night_owl_historical_orders = 
+      1..10
+      |> Enum.map(fn i ->
+        days_ago = Enum.random(2..15)
+        hour_offset = Enum.random(18..23) # Night hours for Night Owl
+        
+        historical_time = 
+          DateTime.utc_now()
+          |> DateTime.add(-days_ago * 24 * 60 * 60, :second)
+          |> DateTime.add(-hour_offset * 60 * 60, :second)
+        
+        delivered_time = historical_time |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+        out_time = DateTime.add(historical_time, -20 * 60, :second) |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+        ready_time = DateTime.add(historical_time, -35 * 60, :second) |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+        prep_time = DateTime.add(historical_time, -50 * 60, :second) |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+        confirmed_time = DateTime.add(historical_time, -55 * 60, :second) |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+        assigned_time = DateTime.add(historical_time, -30 * 60, :second) |> DateTime.to_naive() |> NaiveDateTime.truncate(:second)
+        
+        order_attrs = %{
+          customer_id: test_customer.id,
+          restaurant_id: night_owl_restaurant.id,
+          status: "delivered",
+          delivery_status: "delivered",
+          inserted_at: confirmed_time, updated_at: delivered_time,
+          confirmed_at: confirmed_time, preparing_at: prep_time,
+          ready_at: ready_time, out_for_delivery_at: out_time, delivered_at: delivered_time,
+          courier_id: max_courier.id, courier_assigned_at: assigned_time,
+          actual_prep_time_minutes: Enum.random(15..35),
+          donation_amount: if(rem(i, 4) == 0, do: Decimal.new("#{Enum.random(2..5)}.00"), else: Decimal.new("0.00")),
+          donation_currency: "EUR"
+        }
+        
+        order_spec = %{status: "delivered", notes: "Historical Night Owl order - #{days_ago} days ago"}
+        create_night_owl_order.(order_attrs, order_spec)
+      end)
+    
+    # Show summary
+    total_night_owl_orders = length(night_owl_core_orders) + length(night_owl_historical_orders)
+    
+    IO.puts("\n🎉 NIGHT OWL TEST DATA COMPLETE!")
+    IO.puts("   • Total Night Owl orders: #{total_night_owl_orders}")
+    IO.puts("   • Core status orders: #{length(night_owl_core_orders)} (covering ALL 9 statuses)")
+    IO.puts("   • Historical orders: #{length(night_owl_historical_orders)} (last 15 days)")
+    IO.puts("   • Customer: #{test_customer.name} (#{test_customer.email})")
+    IO.puts("   • Restaurant: #{night_owl_restaurant.name}")
+    IO.puts("   • Courier: #{max_courier.name} (#{max_courier.email})")
+    
+    # Show sample tracking URLs
+    sample_tokens = night_owl_core_orders |> Enum.take(3) |> Enum.map(&(&1.tracking_token))
+    IO.puts("\n🎯 SAMPLE TRACKING URLS:")
+    sample_tokens |> Enum.with_index(1) |> Enum.each(fn {token, i} ->
+      IO.puts("   #{i}. http://localhost:4000/track/#{token}")
+    end)
+    
+    IO.puts("\n✨ COMPREHENSIVE TESTING READY!")
+    IO.puts("   • Login as test@eatfair.nl to see order history")
+    IO.puts("   • Login as owner@nightowl.nl for restaurant dashboard")
+    IO.puts("   • Login as courier.max@eatfair.nl for courier view")
+  else
+    IO.puts("⚠️  Night Owl restaurant has no menu items - skipping test orders")
+  end
+else
+  IO.puts("⚠️  Could not find Night Owl entities - skipping comprehensive test data")
+  IO.puts("   Night Owl Restaurant: #{if night_owl_restaurant, do: "✅", else: "❌"}")
+  IO.puts("   Test Customer: #{if test_customer, do: "✅", else: "❌"}")
+  IO.puts("   Max Courier: #{if max_courier, do: "✅", else: "❌"}")
+end
+
+IO.puts("\n🦉 Night Owl comprehensive test data generation complete!")
+IO.puts("=" |> String.duplicate(70))
