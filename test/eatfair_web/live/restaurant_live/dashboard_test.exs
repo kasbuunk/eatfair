@@ -419,7 +419,7 @@ defmodule EatfairWeb.RestaurantLive.DashboardTest do
         |> render_click()
         |> follow_redirect(conn, "/restaurant/orders")
 
-      {:ok, orders_live, orders_html} =
+      {:ok, _orders_live, orders_html} =
         case manage_orders_result do
           {:ok, live, html} -> {:ok, live, html}
           {:ok, %Plug.Conn{} = conn} -> live(conn, "/restaurant/orders")
@@ -428,7 +428,7 @@ defmodule EatfairWeb.RestaurantLive.DashboardTest do
 
       # Verify we're on the order management page
       assert orders_html =~ "Order Management"
-      assert has_element?(orders_live, "[data-testid='notification-center']")
+      # MVP: Notification center is hidden, so we don't test for it
 
       # Test quick access link navigation
       {:ok, dashboard_live2, _html} = live(conn, "/restaurant/dashboard")
