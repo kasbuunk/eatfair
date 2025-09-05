@@ -413,18 +413,29 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
     
     case Orders.stage_order(order) do
       {:ok, _staged_order} ->
-        # Refresh staged orders
+        # Refresh both staged orders AND active orders (since order moved from ready to staged)
         staged_orders = Orders.list_staged_orders_for_restaurant(socket.assigns.restaurant.id)
+        orders_by_status = if socket.assigns.orders_filter == :active do
+          Orders.list_restaurant_orders(socket.assigns.restaurant.id, :active)
+        else
+          socket.assigns.orders_by_status
+        end
         
         socket =
           socket
           |> assign(:staged_orders, staged_orders)
+          |> assign(:orders_by_status, orders_by_status)
           |> put_flash(:info, "Order ##{order_id} moved to staging area")
         
         {:noreply, socket}
         
-      {:error, _changeset} ->
-        {:noreply, put_flash(socket, :error, "Could not stage order. Order must be ready first.")}
+      {:error, changeset} ->
+        # Better error handling - show the actual validation error
+        error_msg = case changeset.errors do
+          [{:status, {message, _}} | _] -> "Cannot stage order: #{message}"
+          _ -> "Could not stage order. Order must be ready first."
+        end
+        {:noreply, put_flash(socket, :error, error_msg)}
     end
   end
 
@@ -537,27 +548,32 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
           Order Management - {@restaurant.name}
           <:subtitle>Manage all incoming orders and update their status in real-time</:subtitle>
           <:actions>
-            <div class="relative">
-              <button
-                phx-click="toggle_notification_center"
-                class="p-2 rounded-full hover:bg-gray-100 relative"
-                aria-label="Notifications"
-              >
-                <.icon name="hero-bell" class="h-6 w-6 text-gray-700" />
-                <%= if @unread_count > 0 do %>
-                  <span
-                    class="absolute top-0 right-0 -mt-1 -mr-1 px-2 py-1 text-xs font-bold rounded-full bg-red-500 text-white notification-count"
-                    data-testid="notification-count"
-                  >
-                    {@unread_count}
-                  </span>
-                <% end %>
-              </button>
-            </div>
+            <%!-- MVP: notifications hidden --%>
+            <%= if false do %>
+              <div class="relative">
+                <button
+                  phx-click="toggle_notification_center"
+                  class="p-2 rounded-full hover:bg-gray-100 relative"
+                  aria-label="Notifications"
+                >
+                  <.icon name="hero-bell" class="h-6 w-6 text-gray-700" />
+                  <%= if @unread_count > 0 do %>
+                    <span
+                      class="absolute top-0 right-0 -mt-1 -mr-1 px-2 py-1 text-xs font-bold rounded-full bg-red-500 text-white notification-count"
+                      data-testid="notification-count"
+                    >
+                      {@unread_count}
+                    </span>
+                  <% end %>
+                </button>
+              </div>
+            <% end %>
           </:actions>
         </.header>
         
-    <!-- Notification Center (Always visible for TDD tests) -->
+    <%!-- MVP: notification center hidden --%>
+    <%= if false do %>
+        <!-- Notification Center (Always visible for TDD tests) -->
         <div
           data-testid="notification-center"
           class="fixed top-4 right-4 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto"
@@ -623,6 +639,7 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
             <% end %>
           </div>
         </div>
+    <% end %>
         
     <!-- Active/History/Staging Tabs -->
         <div class="mt-6">
@@ -649,24 +666,27 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
                 <% end %>
               </button>
 
-              <button
-                phx-click="switch_to_staging"
-                data-test="staging-tab"
-                class={[
-                  "whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors",
-                  if(@orders_filter == :staging,
-                    do: "border-blue-500 text-blue-600",
-                    else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-                  )
-                ]}
-              >
-                Staging
-                <%= if @orders_filter == :staging do %>
-                  <span class="ml-2 bg-blue-100 text-blue-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
-                    {length(@staged_orders)}
-                  </span>
-                <% end %>
-              </button>
+              <%!-- MVP: batch delivery hidden --%>
+              <%= if false do %>
+                <button
+                  phx-click="switch_to_staging"
+                  data-test="staging-tab"
+                  class={[
+                    "whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors",
+                    if(@orders_filter == :staging,
+                      do: "border-blue-500 text-blue-600",
+                      else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                    )
+                  ]}
+                >
+                  Staging
+                  <%= if @orders_filter == :staging do %>
+                    <span class="ml-2 bg-blue-100 text-blue-600 py-0.5 px-2.5 rounded-full text-xs font-medium">
+                      {length(@staged_orders)}
+                    </span>
+                  <% end %>
+                </button>
+              <% end %>
 
               <button
                 phx-click="switch_to_history"
@@ -1165,70 +1185,73 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
           </div>
         </div>
         
-    <!-- Delivery Context Information -->
-        <div class="mt-2 pt-2 border-t border-gray-200">
-          <h5 class="font-medium text-gray-800 text-xs mb-1">Delivery Status</h5>
-          <div class="flex items-center justify-between">
-            <%= if @order.delivery_status do %>
-              <span
-                class={[
-                  "inline-flex px-2 py-1 rounded-full text-xs font-medium",
-                  case @order.delivery_status do
-                    "scheduled" -> "bg-blue-100 text-blue-800"
-                    "assigned" -> "bg-purple-100 text-purple-800"
-                    "in_transit" -> "bg-orange-100 text-orange-800"
-                    "delivered" -> "bg-green-100 text-green-800"
-                    _ -> "bg-gray-100 text-gray-800"
-                  end
-                ]}
-                data-test="delivery-status-badge"
-              >
-                {String.replace(@order.delivery_status || "unscheduled", "_", " ")}
-              </span>
-            <% else %>
-              <span
-                class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
-                data-test="delivery-status-badge"
-              >
-                unscheduled
-              </span>
-            <% end %>
+        <%!-- MVP: batch delivery hidden --%>
+        <%= if false do %>
+          <!-- Delivery Context Information -->
+          <div class="mt-2 pt-2 border-t border-gray-200">
+            <h5 class="font-medium text-gray-800 text-xs mb-1">Delivery Status</h5>
+            <div class="flex items-center justify-between">
+              <%= if @order.delivery_status do %>
+                <span
+                  class={[
+                    "inline-flex px-2 py-1 rounded-full text-xs font-medium",
+                    case @order.delivery_status do
+                      "scheduled" -> "bg-blue-100 text-blue-800"
+                      "assigned" -> "bg-purple-100 text-purple-800"
+                      "in_transit" -> "bg-orange-100 text-orange-800"
+                      "delivered" -> "bg-green-100 text-green-800"
+                      _ -> "bg-gray-100 text-gray-800"
+                    end
+                  ]}
+                  data-test="delivery-status-badge"
+                >
+                  {String.replace(@order.delivery_status || "unscheduled", "_", " ")}
+                </span>
+              <% else %>
+                <span
+                  class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-800"
+                  data-test="delivery-status-badge"
+                >
+                  unscheduled
+                </span>
+              <% end %>
 
-            <%= if @order.delivery_batch do %>
-              <span
-                class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
-                data-test="batch-status-chip"
-              >
-                Batched
-              </span>
-            <% else %>
-              <span
-                class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600"
-                data-test="batch-status-chip"
-              >
-                Unbatched
-              </span>
-            <% end %>
-          </div>
-
-          <%= if @order.delivery_batch do %>
-            <div class="mt-1 text-xs text-gray-600">
-              <span class="font-medium">Batch:</span>
-              <a
-                href="#"
-                class="text-blue-600 hover:text-blue-800 underline"
-                data-test="batch-code-link"
-              >
-                {@order.delivery_batch.batch_code}
-              </a>
-              <%= if @order.delivery_batch.courier do %>
-                <span class="ml-2">
-                  • <span class="font-medium">Courier:</span> {@order.delivery_batch.courier.name}
+              <%= if @order.delivery_batch do %>
+                <span
+                  class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800"
+                  data-test="batch-status-chip"
+                >
+                  Batched
+                </span>
+              <% else %>
+                <span
+                  class="inline-flex px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-600"
+                  data-test="batch-status-chip"
+                >
+                  Unbatched
                 </span>
               <% end %>
             </div>
-          <% end %>
-        </div>
+
+            <%= if @order.delivery_batch do %>
+              <div class="mt-1 text-xs text-gray-600">
+                <span class="font-medium">Batch:</span>
+                <a
+                  href="#"
+                  class="text-blue-600 hover:text-blue-800 underline"
+                  data-test="batch-code-link"
+                >
+                  {"BATCH-#{@order.delivery_batch.id}"}
+                </a>
+                <%= if @order.delivery_batch.courier do %>
+                  <span class="ml-2">
+                    • <span class="font-medium">Courier:</span> {@order.delivery_batch.courier.name}
+                  </span>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
       </div>
       
     <!-- Delay Information -->
@@ -1281,13 +1304,16 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
               Mark Ready
             </button>
           <% "ready" -> %>
-            <button
-              phx-click="stage_order"
-              phx-value-order_id={@order.id}
-              class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
-            >
-              Stage for Batch Delivery
-            </button>
+            <%!-- MVP: batch delivery hidden --%>
+            <%= if false do %>
+              <button
+                phx-click="stage_order"
+                phx-value-order_id={@order.id}
+                class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700 text-sm font-medium"
+              >
+                Stage for Batch Delivery
+              </button>
+            <% end %>
             <button
               phx-click="send_for_delivery"
               phx-value-order_id={@order.id}
@@ -1547,7 +1573,7 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
         <!-- Batch Code -->
         <div class="flex justify-between items-center">
           <span class="text-sm font-medium text-gray-700">Batch Code:</span>
-          <span class="text-sm font-mono text-gray-900">{@batch.batch_code}</span>
+          <span class="text-sm font-mono text-gray-900">{"BATCH-#{@batch.id}"}</span>
         </div>
         
         <!-- Courier Assignment -->
