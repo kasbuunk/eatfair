@@ -169,6 +169,16 @@ defmodule EatfairWeb.CourierLive.Dashboard do
      |> put_flash(:info, "New delivery batch '#{new_batch.name}' has been assigned to you!")}
   end
 
+  # Handle auto-assignment from restaurant
+  def handle_info({:batch_auto_assigned, batch}, socket) do
+    socket = stream_insert(socket, :delivery_batches, batch)
+    socket = refresh_batch_statistics(socket)
+
+    {:noreply,
+     socket
+     |> put_flash(:info, "🤖 Auto-assigned to delivery batch '#{batch.name}' - please accept or decline!")}
+  end
+
   # Fallback for other messages
   def handle_info(_message, socket) do
     {:noreply, socket}
