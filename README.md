@@ -132,6 +132,20 @@ Use #run_all_tests to validate all functionality works
 | **Max Speedman** | `courier.max@eatfair.nl` | **Utrecht** | **🌙 Night Owl Express** |
 | Lisa Lightning | `courier.lisa@eatfair.nl` | West Amsterdam | General |
 
+### 👑 Admin Accounts
+*These accounts have elevated privileges for platform administration and should be used with caution.*
+
+*Admin accounts use different passwords for security:*
+- `admin@eatfair.nl`: `admin123456789`
+- `support@eatfair.nl`: `support123456789`  
+- `sysadmin@eatfair.nl`: `sysadmin123456789`
+
+| Name | Email | Role | Special Access |
+|------|-------|------|----------------|
+| **Admin User** | `admin@eatfair.nl` | **System Administrator** | **Full platform oversight** |
+| Support Manager | `support@eatfair.nl` | Support Administrator | User feedback and issue management |
+| System Administrator | `sysadmin@eatfair.nl` | Technical Administrator | Backend system management |
+
 ## 🧪 Testing & Development
 
 ### Running Tests
@@ -196,6 +210,14 @@ mix ecto.migrate
 3. **Edit menu items** - changes reflect immediately on customer side
 4. **Process orders** at `/restaurant/orders` - organized by status
 5. **Update order status** - customers see real-time updates
+
+### Admin Dashboard Experience
+1. **Login** as `admin@eatfair.nl` (or other admin account)
+2. **Access admin dashboard** at `/admin/dashboard` 
+3. **Monitor platform metrics** - users, restaurants, orders, revenue
+4. **Review user feedback** at `/admin/feedback` - process support requests
+5. **Manage user accounts** at `/admin/users` - user roles and verification
+6. **Monitor community impact** - track zero-commission mission success
 
 ## 📚 Documentation & Development System
 
