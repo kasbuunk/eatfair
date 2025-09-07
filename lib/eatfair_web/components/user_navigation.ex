@@ -50,7 +50,7 @@ defmodule EatfairWeb.UserNavigation do
                 Dashboard
               </.link>
               
-              <!-- Order Tracking -->
+    <!-- Order Tracking -->
               <.link
                 navigate={~p"/orders/track"}
                 class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors"
@@ -188,7 +188,7 @@ defmodule EatfairWeb.UserNavigation do
               >
                 <.icon name="hero-squares-2x2" class="w-4 h-4 mr-2 inline" /> Dashboard
               </.link>
-              
+
               <.link
                 navigate={~p"/orders/track"}
                 class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"

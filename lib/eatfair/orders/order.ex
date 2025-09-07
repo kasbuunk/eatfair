@@ -68,7 +68,7 @@ defmodule Eatfair.Orders.Order do
     field :eta_accepted, :boolean, default: false
     field :proposed_eta, :naive_datetime
     field :eta_pending, :boolean, default: false
-    
+
     # Staging fields for delivery batch management
     field :staged, :boolean, default: false
     field :staged_at, :naive_datetime

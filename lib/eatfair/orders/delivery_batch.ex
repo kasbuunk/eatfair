@@ -29,7 +29,7 @@ defmodule Eatfair.Orders.DeliveryBatch do
     field :scheduled_pickup_time, :naive_datetime
     field :estimated_delivery_time, :naive_datetime
     field :notes, :string
-    
+
     # Auto-assignment fields
     field :auto_assigned, :boolean, default: false
 

@@ -176,7 +176,10 @@ defmodule EatfairWeb.CourierLive.Dashboard do
 
     {:noreply,
      socket
-     |> put_flash(:info, "🤖 Auto-assigned to delivery batch '#{batch.name}' - please accept or decline!")}
+     |> put_flash(
+       :info,
+       "🤖 Auto-assigned to delivery batch '#{batch.name}' - please accept or decline!"
+     )}
   end
 
   # Fallback for other messages

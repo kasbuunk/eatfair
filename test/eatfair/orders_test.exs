@@ -644,7 +644,7 @@ defmodule Eatfair.OrdersTest do
       # All staged orders should be assigned to the batch
       batch_with_orders = Orders.get_delivery_batch_with_orders(batch.id)
       assert length(batch_with_orders.orders) == 3
-      
+
       # Orders should have delivery_status = "scheduled"
       for order <- batch_with_orders.orders do
         assert order.delivery_status == "scheduled"
@@ -683,7 +683,7 @@ defmodule Eatfair.OrdersTest do
       busy_courier = user_fixture(%{role: "courier"})
       free_courier = user_fixture(%{role: "courier"})
       restaurant = restaurant_fixture()
-      
+
       # Give busy_courier an active batch
       {:ok, _busy_batch} =
         Orders.create_delivery_batch(%{
@@ -700,19 +700,21 @@ defmodule Eatfair.OrdersTest do
 
     test "suggest_courier/1 returns courier even if no specific couriers exist" do
       restaurant = restaurant_fixture()
-      
+
       # The function may return existing couriers from other tests
       # This is expected behavior in the least-loaded algorithm
       suggested_courier = Orders.suggest_courier(restaurant.id)
-      
+
       case suggested_courier do
-        nil -> 
+        nil ->
           # This is fine if no couriers exist
           assert true
-        %Eatfair.Accounts.User{role: "courier"} -> 
+
+        %Eatfair.Accounts.User{role: "courier"} ->
           # This is also fine - found an existing courier
           assert true
-        _ -> 
+
+        _ ->
           flunk("Expected nil or a courier user, got: #{inspect(suggested_courier)}")
       end
     end
@@ -779,8 +781,10 @@ defmodule Eatfair.OrdersTest do
       # Traditional flow: pending → confirmed
       {:ok, confirmed_order} = Orders.update_order_status(order, "confirmed", %{})
       assert confirmed_order.status == "confirmed"
-      assert confirmed_order.staged == false  # Should remain false
-      assert confirmed_order.staged_at == nil  # Should remain nil
+      # Should remain false
+      assert confirmed_order.staged == false
+      # Should remain nil
+      assert confirmed_order.staged_at == nil
 
       # confirmed → preparing
       {:ok, preparing_order} = Orders.update_order_status(confirmed_order, "preparing", %{})
@@ -923,16 +927,20 @@ defmodule Eatfair.OrdersTest do
 
       # Legacy dashboard queries should still work
       assert Orders.count_pending_confirmations(restaurant.id) == 1
-      assert Orders.count_active_orders(restaurant.id) == 2  # confirmed + ready
-      
+      # confirmed + ready
+      assert Orders.count_active_orders(restaurant.id) == 2
+
       # Verify that traditional batch and order queries still work
       batches = Orders.list_restaurant_delivery_batches(restaurant.id)
       assert is_list(batches)
-      
+
       orders = Orders.list_restaurant_orders(restaurant.id)
       # list_restaurant_orders returns a grouped map by status
       assert is_map(orders)
-      total_orders = Enum.reduce(orders, 0, fn {_status, order_list}, acc -> acc + length(order_list) end)
+
+      total_orders =
+        Enum.reduce(orders, 0, fn {_status, order_list}, acc -> acc + length(order_list) end)
+
       assert total_orders == 3
     end
   end

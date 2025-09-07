@@ -16,7 +16,7 @@ defmodule Eatfair.Repo.Migrations.AddStagingAndAutoAssignmentFields do
 
     # Create index for staged orders query performance
     create index(:orders, [:restaurant_id, :staged], where: "staged = true")
-    
+
     # Create index for auto-assignment queries
     create index(:delivery_batches, [:suggested_courier_id])
   end

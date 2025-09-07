@@ -9,7 +9,7 @@ defmodule EatfairWeb.NotificationSystemTest do
 
   # MVP: Notification center is hidden for now, so these tests are temporarily disabled
   @moduletag :skip
-  
+
   describe "🔔 Real-time Notification System" do
     test "restaurant owner sees real-time notifications for order updates", %{conn: conn} do
       # Setup: Restaurant owner with orders

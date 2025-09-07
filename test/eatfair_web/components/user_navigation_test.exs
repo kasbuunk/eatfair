@@ -29,7 +29,9 @@ defmodule EatfairWeb.Components.UserNavigationTest do
 
       # Should have link in mobile menu too (appears twice - desktop and mobile)
       courier_links = html |> String.split("Courier Dashboard") |> length()
-      assert courier_links >= 2, "Expected at least one 'Courier Dashboard' link for mobile navigation"
+
+      assert courier_links >= 2,
+             "Expected at least one 'Courier Dashboard' link for mobile navigation"
     end
 
     test "non-courier users do not see Courier Dashboard link" do

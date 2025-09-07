@@ -410,31 +410,35 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
   @impl true
   def handle_event("stage_order", %{"order_id" => order_id}, socket) do
     order = Orders.get_order!(order_id)
-    
+
     case Orders.stage_order(order) do
       {:ok, _staged_order} ->
         # Refresh both staged orders AND active orders (since order moved from ready to staged)
         staged_orders = Orders.list_staged_orders_for_restaurant(socket.assigns.restaurant.id)
-        orders_by_status = if socket.assigns.orders_filter == :active do
-          Orders.list_restaurant_orders(socket.assigns.restaurant.id, :active)
-        else
-          socket.assigns.orders_by_status
-        end
-        
+
+        orders_by_status =
+          if socket.assigns.orders_filter == :active do
+            Orders.list_restaurant_orders(socket.assigns.restaurant.id, :active)
+          else
+            socket.assigns.orders_by_status
+          end
+
         socket =
           socket
           |> assign(:staged_orders, staged_orders)
           |> assign(:orders_by_status, orders_by_status)
           |> put_flash(:info, "Order ##{order_id} moved to staging area")
-        
+
         {:noreply, socket}
-        
+
       {:error, changeset} ->
         # Better error handling - show the actual validation error
-        error_msg = case changeset.errors do
-          [{:status, {message, _}} | _] -> "Cannot stage order: #{message}"
-          _ -> "Could not stage order. Order must be ready first."
-        end
+        error_msg =
+          case changeset.errors do
+            [{:status, {message, _}} | _] -> "Cannot stage order: #{message}"
+            _ -> "Could not stage order. Order must be ready first."
+          end
+
         {:noreply, put_flash(socket, :error, error_msg)}
     end
   end
@@ -443,25 +447,25 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
   def handle_event("toggle_order_selection", %{"order_id" => order_id}, socket) do
     order_id = String.to_integer(order_id)
     selected_orders = socket.assigns.selected_orders
-    
-    updated_selection = 
+
+    updated_selection =
       if MapSet.member?(selected_orders, order_id) do
         MapSet.delete(selected_orders, order_id)
       else
         MapSet.put(selected_orders, order_id)
       end
-    
+
     socket = assign(socket, :selected_orders, updated_selection)
     {:noreply, socket}
   end
 
   @impl true
   def handle_event("select_all_staged", _params, socket) do
-    all_staged_ids = 
+    all_staged_ids =
       socket.assigns.staged_orders
-      |> Enum.map(&(&1.id))
+      |> Enum.map(& &1.id)
       |> MapSet.new()
-    
+
     socket = assign(socket, :selected_orders, all_staged_ids)
     {:noreply, socket}
   end
@@ -487,7 +491,7 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
   @impl true
   def handle_event("submit_batch_creation", %{"batch_name" => batch_name}, socket) do
     selected_order_ids = MapSet.to_list(socket.assigns.selected_orders)
-    
+
     if Enum.empty?(selected_order_ids) do
       {:noreply, put_flash(socket, :error, "Please select at least one order to create a batch")}
     else
@@ -504,8 +508,11 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
               case Orders.suggest_courier(socket.assigns.restaurant.id) do
                 nil ->
                   # No courier available, keep as draft
-                  refresh_staging_data(socket, "Delivery batch '#{batch_name}' created successfully!")
-                  
+                  refresh_staging_data(
+                    socket,
+                    "Delivery batch '#{batch_name}' created successfully!"
+                  )
+
                 courier ->
                   # Auto-assign courier and set to proposed
                   case Orders.update_delivery_batch(updated_batch, %{
@@ -521,18 +528,24 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
                         "courier_batches:#{courier.id}",
                         {:batch_auto_assigned, updated_batch}
                       )
-                      
-                      refresh_staging_data(socket, "Delivery batch '#{batch_name}' created and assigned to #{courier.name || "courier"}!")
-                      
+
+                      refresh_staging_data(
+                        socket,
+                        "Delivery batch '#{batch_name}' created and assigned to #{courier.name || "courier"}!"
+                      )
+
                     {:error, _} ->
-                      refresh_staging_data(socket, "Delivery batch '#{batch_name}' created successfully!")
+                      refresh_staging_data(
+                        socket,
+                        "Delivery batch '#{batch_name}' created successfully!"
+                      )
                   end
               end
-              
+
             {:error, _reason} ->
               {:noreply, put_flash(socket, :error, "Failed to assign orders to batch")}
           end
-          
+
         {:error, _changeset} ->
           {:noreply, put_flash(socket, :error, "Failed to create delivery batch")}
       end
@@ -570,76 +583,76 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
             <% end %>
           </:actions>
         </.header>
-        
-    <%!-- MVP: notification center hidden --%>
-    <%= if false do %>
-        <!-- Notification Center (Always visible for TDD tests) -->
-        <div
-          data-testid="notification-center"
-          class="fixed top-4 right-4 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto"
-        >
-          <div class="p-3 border-b border-gray-200 flex justify-between items-center">
-            <h3 class="font-semibold text-gray-800">Notifications</h3>
-            <button
-              phx-click="mark_all_notifications_read"
-              class="text-xs text-blue-600 hover:text-blue-800"
-            >
-              Mark all as read
-            </button>
-          </div>
 
-          <div id="notifications-list">
-            <%= if Enum.empty?(@notifications) do %>
-              <div class="p-4 text-center text-gray-500">
-                <p>No notifications</p>
-              </div>
-            <% else %>
-              <%= for notification <- @notifications do %>
-                <div
-                  id={"notification-#{notification.id}"}
-                  data-testid="notification-item"
-                  data-priority={if(notification.priority == :critical, do: "high", else: "normal")}
-                  data-auto-hide={if(notification.priority != :critical, do: "true", else: "false")}
-                  class={[
-                    "p-3 border-b border-gray-100 relative hover:bg-gray-50",
-                    if(notification.read, do: "bg-gray-50", else: "bg-white"),
-                    if(notification.priority == :critical,
-                      do: "border-l-4 border-l-red-500",
-                      else: ""
-                    )
-                  ]}
-                >
-                  <button
-                    phx-click="dismiss_notification"
-                    phx-value-id={notification.id}
-                    data-testid="dismiss-notification"
-                    class="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
-                    aria-label="Dismiss"
-                  >
-                    <.icon name="hero-x-mark" class="h-4 w-4" />
-                  </button>
+        <%!-- MVP: notification center hidden --%>
+        <%= if false do %>
+          <!-- Notification Center (Always visible for TDD tests) -->
+          <div
+            data-testid="notification-center"
+            class="fixed top-4 right-4 w-80 bg-white border border-gray-200 rounded-lg shadow-lg z-50 max-h-96 overflow-y-auto"
+          >
+            <div class="p-3 border-b border-gray-200 flex justify-between items-center">
+              <h3 class="font-semibold text-gray-800">Notifications</h3>
+              <button
+                phx-click="mark_all_notifications_read"
+                class="text-xs text-blue-600 hover:text-blue-800"
+              >
+                Mark all as read
+              </button>
+            </div>
 
-                  <div class="pr-5">
-                    <p class={[
-                      "font-medium",
-                      if(notification.priority == :critical,
-                        do: "text-red-700",
-                        else: "text-gray-800"
-                      )
-                    ]}>
-                      {notification.title}
-                    </p>
-                    <p class="text-sm text-gray-600 mt-1">{notification.message}</p>
-                    <p class="text-xs text-gray-400 mt-1">
-                      {format_time_ago(notification.timestamp)}
-                    </p>
-                  </div>
+            <div id="notifications-list">
+              <%= if Enum.empty?(@notifications) do %>
+                <div class="p-4 text-center text-gray-500">
+                  <p>No notifications</p>
                 </div>
+              <% else %>
+                <%= for notification <- @notifications do %>
+                  <div
+                    id={"notification-#{notification.id}"}
+                    data-testid="notification-item"
+                    data-priority={if(notification.priority == :critical, do: "high", else: "normal")}
+                    data-auto-hide={if(notification.priority != :critical, do: "true", else: "false")}
+                    class={[
+                      "p-3 border-b border-gray-100 relative hover:bg-gray-50",
+                      if(notification.read, do: "bg-gray-50", else: "bg-white"),
+                      if(notification.priority == :critical,
+                        do: "border-l-4 border-l-red-500",
+                        else: ""
+                      )
+                    ]}
+                  >
+                    <button
+                      phx-click="dismiss_notification"
+                      phx-value-id={notification.id}
+                      data-testid="dismiss-notification"
+                      class="absolute top-2 right-2 text-gray-400 hover:text-gray-600"
+                      aria-label="Dismiss"
+                    >
+                      <.icon name="hero-x-mark" class="h-4 w-4" />
+                    </button>
+
+                    <div class="pr-5">
+                      <p class={[
+                        "font-medium",
+                        if(notification.priority == :critical,
+                          do: "text-red-700",
+                          else: "text-gray-800"
+                        )
+                      ]}>
+                        {notification.title}
+                      </p>
+                      <p class="text-sm text-gray-600 mt-1">{notification.message}</p>
+                      <p class="text-xs text-gray-400 mt-1">
+                        {format_time_ago(notification.timestamp)}
+                      </p>
+                    </div>
+                  </div>
+                <% end %>
               <% end %>
-            <% end %>
+            </div>
           </div>
-        </div>
-    <% end %>
+        <% end %>
         
     <!-- Active/History/Staging Tabs -->
         <div class="mt-6">
@@ -675,7 +688,8 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
                     "whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm transition-colors",
                     if(@orders_filter == :staging,
                       do: "border-blue-500 text-blue-600",
-                      else: "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      else:
+                        "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
                     )
                   ]}
                 >
@@ -767,7 +781,9 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
                 <div class="flex items-center justify-between">
                   <div>
                     <h3 class="text-lg font-semibold text-blue-900">Staging Area</h3>
-                    <p class="text-sm text-blue-700 mt-1">Select ready orders and create delivery batches for couriers</p>
+                    <p class="text-sm text-blue-700 mt-1">
+                      Select ready orders and create delivery batches for couriers
+                    </p>
                   </div>
                   <div class="flex space-x-3">
                     <%= if MapSet.size(@selected_orders) > 0 do %>
@@ -798,11 +814,13 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
                   </div>
                 </div>
               </div>
-
-              <!-- Staged Orders -->
+              
+    <!-- Staged Orders -->
               <%= if length(@staged_orders) > 0 do %>
                 <div>
-                  <h2 class="text-xl font-bold text-gray-900 mb-4">Staged Orders Ready for Delivery</h2>
+                  <h2 class="text-xl font-bold text-gray-900 mb-4">
+                    Staged Orders Ready for Delivery
+                  </h2>
                   <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
                     <%= for order <- @staged_orders do %>
                       {render_staged_order_card(order, @selected_orders)}
@@ -816,8 +834,8 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
                   <p class="text-gray-500">Orders marked as ready will appear here for batching.</p>
                 </div>
               <% end %>
-
-              <!-- Delivery Batches -->
+              
+    <!-- Delivery Batches -->
               <%= if length(@delivery_batches) > 0 do %>
                 <div>
                   <h2 class="text-xl font-bold text-gray-900 mb-4">Delivery Batches</h2>
@@ -836,8 +854,8 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
               <% end %>
             </div>
           <% end %>
-
-          <!-- Pending Orders -->
+          
+    <!-- Pending Orders -->
           <%= if length(@orders_by_status.pending) > 0 do %>
             <div>
               <h2 class="text-xl font-bold text-gray-900 mb-4">Pending Orders</h2>
@@ -1019,7 +1037,10 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
       
     <!-- Batch Creation Modal -->
       <%= if @show_batch_modal do %>
-        <div class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50" data-testid="batch-modal">
+        <div
+          class="fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50"
+          data-testid="batch-modal"
+        >
           <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white">
             <div class="mt-3">
               <div class="flex items-center justify-between mb-4">
@@ -1032,10 +1053,12 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
                   <.icon name="hero-x-mark" class="h-6 w-6" />
                 </button>
               </div>
-              
+
               <form phx-submit="submit_batch_creation" class="space-y-4">
                 <div>
-                  <label for="batch_name" class="block text-sm font-medium text-gray-700">Batch Name</label>
+                  <label for="batch_name" class="block text-sm font-medium text-gray-700">
+                    Batch Name
+                  </label>
                   <input
                     type="text"
                     name="batch_name"
@@ -1046,12 +1069,17 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
                     data-testid="batch-name-input"
                   />
                 </div>
-                
+
                 <div class="bg-gray-50 p-3 rounded-lg">
-                  <p class="text-sm text-gray-600">Selected Orders: <span class="font-semibold">{MapSet.size(@selected_orders)}</span></p>
-                  <p class="text-xs text-gray-500 mt-1">A courier will be automatically assigned if available.</p>
+                  <p class="text-sm text-gray-600">
+                    Selected Orders:
+                    <span class="font-semibold">{MapSet.size(@selected_orders)}</span>
+                  </p>
+                  <p class="text-xs text-gray-500 mt-1">
+                    A courier will be automatically assigned if available.
+                  </p>
                 </div>
-                
+
                 <div class="flex justify-end space-x-3">
                   <button
                     type="button"
@@ -1074,8 +1102,8 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
           </div>
         </div>
       <% end %>
-
-      <!-- Modal placeholders for TDD tests -->
+      
+    <!-- Modal placeholders for TDD tests -->
       <div data-modal="rejection-modal" style="display: none;">
         <form id="rejection-form" phx-submit="submit_rejection">
           <input name="rejection_reason" type="text" value="" />
@@ -1184,7 +1212,7 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
             <% end %>
           </div>
         </div>
-        
+
         <%!-- MVP: batch delivery hidden --%>
         <%= if false do %>
           <!-- Delivery Context Information -->
@@ -1414,15 +1442,15 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
   defp refresh_staging_data(socket, message) do
     staged_orders = Orders.list_staged_orders_for_restaurant(socket.assigns.restaurant.id)
     delivery_batches = Orders.list_restaurant_delivery_batches(socket.assigns.restaurant.id)
-    
-    socket = 
+
+    socket =
       socket
       |> assign(:staged_orders, staged_orders)
       |> assign(:delivery_batches, delivery_batches)
       |> assign(:selected_orders, MapSet.new())
       |> assign(:show_batch_modal, false)
       |> put_flash(:info, message)
-    
+
     {:noreply, socket}
   end
 
@@ -1476,7 +1504,10 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
     ~H"""
     <div class={[
       "bg-white shadow-lg rounded-lg border p-6 cursor-pointer transition-colors",
-      if(@is_selected, do: "border-blue-500 bg-blue-50", else: "border-gray-200 hover:border-gray-300")
+      if(@is_selected,
+        do: "border-blue-500 bg-blue-50",
+        else: "border-gray-200 hover:border-gray-300"
+      )
     ]}>
       <!-- Selection Checkbox and Order Header -->
       <div class="flex items-start justify-between mb-4">
@@ -1506,7 +1537,7 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
         </div>
       </div>
       
-      <!-- Order Items -->
+    <!-- Order Items -->
       <div class="mb-4">
         <h4 class="font-medium text-gray-900 mb-2">Items</h4>
         <div class="space-y-1">
@@ -1519,7 +1550,7 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
         </div>
       </div>
       
-      <!-- Delivery Information -->
+    <!-- Delivery Information -->
       <div class="p-3 bg-gray-50 rounded-lg">
         <h4 class="font-medium text-gray-900 mb-1">Delivery Address</h4>
         <p class="text-sm text-gray-700">{@order.delivery_address}</p>
@@ -1562,7 +1593,7 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
         </div>
       </div>
       
-      <!-- Batch Details -->
+    <!-- Batch Details -->
       <div class="space-y-3">
         <!-- Orders Count -->
         <div class="flex justify-between items-center">
@@ -1570,23 +1601,25 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
           <span class="text-sm text-gray-900">{length(@batch.orders)}</span>
         </div>
         
-        <!-- Batch Code -->
+    <!-- Batch Code -->
         <div class="flex justify-between items-center">
           <span class="text-sm font-medium text-gray-700">Batch Code:</span>
           <span class="text-sm font-mono text-gray-900">{"BATCH-#{@batch.id}"}</span>
         </div>
         
-        <!-- Courier Assignment -->
+    <!-- Courier Assignment -->
         <div class="flex justify-between items-center">
           <span class="text-sm font-medium text-gray-700">Courier:</span>
           <%= if @batch.courier do %>
-            <span class="text-sm text-gray-900">{@batch.courier.name || "Courier ##{@batch.courier.id}"}</span>
+            <span class="text-sm text-gray-900">
+              {@batch.courier.name || "Courier ##{@batch.courier.id}"}
+            </span>
           <% else %>
             <span class="text-sm text-gray-500">Not assigned</span>
           <% end %>
         </div>
         
-        <!-- Auto-assignment Info -->
+    <!-- Auto-assignment Info -->
         <%= if @batch.auto_assigned do %>
           <div class="text-xs text-blue-600 bg-blue-50 p-2 rounded">
             🤖 Auto-assigned to courier
@@ -1594,7 +1627,7 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
         <% end %>
       </div>
       
-      <!-- Order List -->
+    <!-- Order List -->
       <%= if length(@batch.orders) > 0 do %>
         <div class="mt-4">
           <h4 class="font-medium text-gray-900 mb-2">Orders in Batch</h4>
@@ -1614,14 +1647,14 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
         </div>
       <% end %>
       
-      <!-- Batch Actions -->
+    <!-- Batch Actions -->
       <div class="mt-4 flex justify-between items-center">
         <div class="text-xs text-gray-500">
           Total Value: €{Enum.reduce(@batch.orders, Decimal.new("0"), fn order, acc ->
             Decimal.add(acc, order.total_price)
           end)}
         </div>
-        
+
         <%= case @batch.status do %>
           <% "draft" -> %>
             <span class="text-xs text-gray-500">Waiting for courier assignment</span>
