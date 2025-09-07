@@ -1,343 +1,343 @@
 <Layouts.app flash={@flash} current_scope={@current_scope}>
   <div class="min-h-screen bg-gray-50 py-8" data-test="menu-management-dashboard">
-  <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
-    <!-- Header Section -->
-    <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
-      <div class="flex items-center justify-between">
-        <div>
-          <h1 class="text-3xl font-bold text-gray-900">Menu Management</h1>
-          <p class="text-gray-600 mt-2">Create and organize your restaurant's offerings</p>
-        </div>
-
-        <div class="flex space-x-4">
-          <button
-            phx-click="preview_menu"
-            data-test="preview-menu-button"
-            class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
-          >
-            Preview Menu
-          </button>
-
-          <%= if @menus == [] do %>
-            <button
-              phx-click="show_menu_form"
-              data-test="create-first-menu"
-              class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md font-medium transition-colors"
-            >
-              Create Your First Menu Section
-            </button>
-          <% else %>
-            <button
-              phx-click="show_menu_form"
-              data-test="add-menu-section-button"
-              class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
-            >
-              Add Menu Section
-            </button>
-          <% end %>
-        </div>
-      </div>
-    </div>
-    
-<!-- Menu Section Form -->
-    <%= if @show_menu_form do %>
-      <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
-        <div class="flex items-center justify-between mb-4">
-          <h3 class="text-lg font-semibold text-gray-900">Create Menu Section</h3>
-          <button phx-click="hide_menu_form" class="text-gray-400 hover:text-gray-600">
-            <.icon name="hero-x-mark" class="w-6 h-6" />
-          </button>
-        </div>
-
-        <.form
-          for={@menu_form}
-          phx-submit="create_menu"
-          data-test="menu-section-form"
-          class="space-y-4"
-        >
+    <div class="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8">
+      <!-- Header Section -->
+      <div class="bg-white rounded-lg shadow-sm p-6 mb-8">
+        <div class="flex items-center justify-between">
           <div>
-            <.input
-              field={@menu_form[:name]}
-              type="text"
-              label="Section Name"
-              placeholder="e.g., Appetizers, Main Courses, Desserts"
-              required
-            />
+            <h1 class="text-3xl font-bold text-gray-900">Menu Management</h1>
+            <p class="text-gray-600 mt-2">Create and organize your restaurant's offerings</p>
           </div>
 
-          <div class="flex justify-end space-x-3">
+          <div class="flex space-x-4">
             <button
-              type="button"
-              phx-click="hide_menu_form"
-              class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+              phx-click="preview_menu"
+              data-test="preview-menu-button"
+              class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
             >
-              Cancel
+              Preview Menu
             </button>
-            <button
-              type="submit"
-              class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors"
-            >
-              Create Section
-            </button>
-          </div>
-        </.form>
-      </div>
-    <% end %>
-    
-<!-- Empty State -->
-    <%= if @menus == [] and not @show_menu_form do %>
-      <div class="text-center py-12" data-test="empty-menu-state">
-        <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
-          <.icon name="hero-book-open" class="w-12 h-12 text-gray-400" />
-        </div>
-        <h3 class="text-xl font-medium text-gray-900 mb-2">Ready to Build Your Menu?</h3>
-        <p class="text-gray-600 mb-8 max-w-md mx-auto">
-          Start by creating menu sections to organize your dishes. Think appetizers, main courses, desserts – whatever makes sense for your restaurant.
-        </p>
-        <button
-          phx-click="show_menu_form"
-          data-test="add-first-menu-section"
-          class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-md font-medium transition-colors"
-        >
-          Create Your First Menu Section
-        </button>
-      </div>
-    <% end %>
-    
-<!-- Menu Sections -->
-    <div class="space-y-8">
-      <%= for menu <- @menus do %>
-        <div
-          class="bg-white rounded-lg shadow-sm p-6"
-          data-test={"menu-section-#{data_test_id(menu.name)}"}
-        >
-          <div class="flex items-center justify-between mb-6">
-            <h2 class="text-xl font-semibold text-gray-900" data-test="section-title">
-              {menu.name}
-            </h2>
-            <button
-              phx-click="show_meal_form"
-              phx-value-menu_id={menu.id}
-              data-test={"add-menu-item-#{data_test_id(menu.name)}"}
-              class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium transition-colors text-sm"
-            >
-              Add Item
-            </button>
-          </div>
-          
-<!-- Meal Form for this Menu Section -->
-          <%= if @show_meal_form == menu.id do %>
-            <div class="bg-gray-50 rounded-lg p-4 mb-6">
-              <div class="flex items-center justify-between mb-4">
-                <h4 class="font-medium text-gray-900">Add New Item to {menu.name}</h4>
-                <button phx-click="hide_meal_form" class="text-gray-400 hover:text-gray-600">
-                  <.icon name="hero-x-mark" class="w-5 h-5" />
-                </button>
-              </div>
 
-              <.form
-                for={@meal_form}
-                phx-submit="create_meal"
-                phx-value-menu_id={menu.id}
-                data-test="menu-item-form"
-                class="space-y-4"
+            <%= if @menus == [] do %>
+              <button
+                phx-click="show_menu_form"
+                data-test="create-first-menu"
+                class="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-md font-medium transition-colors"
               >
-                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <.input
-                      field={@meal_form[:name]}
-                      type="text"
-                      label="Item Name"
-                      placeholder="e.g., Pan-Fried Pork Dumplings"
-                      required
-                    />
-                  </div>
-                  <div>
-                    <.input
-                      field={@meal_form[:price]}
-                      type="number"
-                      label="Price (€)"
-                      placeholder="8.50"
-                      step="0.01"
-                      min="0"
-                      required
-                    />
-                  </div>
+                Create Your First Menu Section
+              </button>
+            <% else %>
+              <button
+                phx-click="show_menu_form"
+                data-test="add-menu-section-button"
+                class="bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-md font-medium transition-colors"
+              >
+                Add Menu Section
+              </button>
+            <% end %>
+          </div>
+        </div>
+      </div>
+      
+<!-- Menu Section Form -->
+      <%= if @show_menu_form do %>
+        <div class="bg-white rounded-lg shadow-sm p-6 mb-6">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-lg font-semibold text-gray-900">Create Menu Section</h3>
+            <button phx-click="hide_menu_form" class="text-gray-400 hover:text-gray-600">
+              <.icon name="hero-x-mark" class="w-6 h-6" />
+            </button>
+          </div>
+
+          <.form
+            for={@menu_form}
+            phx-submit="create_menu"
+            data-test="menu-section-form"
+            class="space-y-4"
+          >
+            <div>
+              <.input
+                field={@menu_form[:name]}
+                type="text"
+                label="Section Name"
+                placeholder="e.g., Appetizers, Main Courses, Desserts"
+                required
+              />
+            </div>
+
+            <div class="flex justify-end space-x-3">
+              <button
+                type="button"
+                phx-click="hide_menu_form"
+                class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                type="submit"
+                class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors"
+              >
+                Create Section
+              </button>
+            </div>
+          </.form>
+        </div>
+      <% end %>
+      
+<!-- Empty State -->
+      <%= if @menus == [] and not @show_menu_form do %>
+        <div class="text-center py-12" data-test="empty-menu-state">
+          <div class="mx-auto w-24 h-24 bg-gray-100 rounded-full flex items-center justify-center mb-6">
+            <.icon name="hero-book-open" class="w-12 h-12 text-gray-400" />
+          </div>
+          <h3 class="text-xl font-medium text-gray-900 mb-2">Ready to Build Your Menu?</h3>
+          <p class="text-gray-600 mb-8 max-w-md mx-auto">
+            Start by creating menu sections to organize your dishes. Think appetizers, main courses, desserts – whatever makes sense for your restaurant.
+          </p>
+          <button
+            phx-click="show_menu_form"
+            data-test="add-first-menu-section"
+            class="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-md font-medium transition-colors"
+          >
+            Create Your First Menu Section
+          </button>
+        </div>
+      <% end %>
+      
+<!-- Menu Sections -->
+      <div class="space-y-8">
+        <%= for menu <- @menus do %>
+          <div
+            class="bg-white rounded-lg shadow-sm p-6"
+            data-test={"menu-section-#{data_test_id(menu.name)}"}
+          >
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-xl font-semibold text-gray-900" data-test="section-title">
+                {menu.name}
+              </h2>
+              <button
+                phx-click="show_meal_form"
+                phx-value-menu_id={menu.id}
+                data-test={"add-menu-item-#{data_test_id(menu.name)}"}
+                class="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-md font-medium transition-colors text-sm"
+              >
+                Add Item
+              </button>
+            </div>
+            
+<!-- Meal Form for this Menu Section -->
+            <%= if @show_meal_form == menu.id do %>
+              <div class="bg-gray-50 rounded-lg p-4 mb-6">
+                <div class="flex items-center justify-between mb-4">
+                  <h4 class="font-medium text-gray-900">Add New Item to {menu.name}</h4>
+                  <button phx-click="hide_meal_form" class="text-gray-400 hover:text-gray-600">
+                    <.icon name="hero-x-mark" class="w-5 h-5" />
+                  </button>
                 </div>
 
-                <div>
-                  <.input
-                    field={@meal_form[:description]}
-                    type="textarea"
-                    label="Description (Optional)"
-                    placeholder="Describe your dish - ingredients, preparation style, what makes it special..."
-                    rows="3"
-                  />
-                </div>
-
-                <div class="flex justify-end space-x-3">
-                  <button
-                    type="button"
-                    phx-click="hide_meal_form"
-                    class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    Cancel
-                  </button>
-                  <button
-                    type="submit"
-                    class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors"
-                  >
-                    Add Item
-                  </button>
-                </div>
-              </.form>
-            </div>
-          <% end %>
-          
-<!-- Menu Items -->
-          <%= if menu.meals == [] do %>
-            <div class="text-center py-8 border-2 border-dashed border-gray-200 rounded-lg">
-              <.icon name="hero-plus-circle" class="w-8 h-8 text-gray-400 mx-auto mb-3" />
-              <p class="text-gray-500">No items in this section yet</p>
-              <p class="text-sm text-gray-400">Click "Add Item" to get started</p>
-            </div>
-          <% else %>
-            <div class="space-y-4">
-              <%= for meal <- menu.meals do %>
-                <div
-                  class={"border rounded-lg p-4 transition-all #{if meal.is_available, do: "border-gray-200 bg-white", else: "border-gray-300 bg-gray-50"}"}
-                  data-test={"menu-item-#{data_test_id(meal.name)}"}
-                  data-status={if meal.is_available, do: "available", else: "unavailable"}
+                <.form
+                  for={@meal_form}
+                  phx-submit="create_meal"
+                  phx-value-menu_id={menu.id}
+                  data-test="menu-item-form"
+                  class="space-y-4"
                 >
-                  <%= if @editing_meal && @editing_meal.id == meal.id do %>
-                    <!-- Edit Mode -->
-                    <.form
-                      for={@meal_form}
-                      phx-submit="update_meal"
-                      data-test="menu-item-form-edit"
-                      class="space-y-4"
+                  <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <.input
+                        field={@meal_form[:name]}
+                        type="text"
+                        label="Item Name"
+                        placeholder="e.g., Pan-Fried Pork Dumplings"
+                        required
+                      />
+                    </div>
+                    <div>
+                      <.input
+                        field={@meal_form[:price]}
+                        type="number"
+                        label="Price (€)"
+                        placeholder="8.50"
+                        step="0.01"
+                        min="0"
+                        required
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <.input
+                      field={@meal_form[:description]}
+                      type="textarea"
+                      label="Description (Optional)"
+                      placeholder="Describe your dish - ingredients, preparation style, what makes it special..."
+                      rows="3"
+                    />
+                  </div>
+
+                  <div class="flex justify-end space-x-3">
+                    <button
+                      type="button"
+                      phx-click="hide_meal_form"
+                      class="px-4 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors"
                     >
-                      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      Cancel
+                    </button>
+                    <button
+                      type="submit"
+                      class="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium transition-colors"
+                    >
+                      Add Item
+                    </button>
+                  </div>
+                </.form>
+              </div>
+            <% end %>
+            
+<!-- Menu Items -->
+            <%= if menu.meals == [] do %>
+              <div class="text-center py-8 border-2 border-dashed border-gray-200 rounded-lg">
+                <.icon name="hero-plus-circle" class="w-8 h-8 text-gray-400 mx-auto mb-3" />
+                <p class="text-gray-500">No items in this section yet</p>
+                <p class="text-sm text-gray-400">Click "Add Item" to get started</p>
+              </div>
+            <% else %>
+              <div class="space-y-4">
+                <%= for meal <- menu.meals do %>
+                  <div
+                    class={"border rounded-lg p-4 transition-all #{if meal.is_available, do: "border-gray-200 bg-white", else: "border-gray-300 bg-gray-50"}"}
+                    data-test={"menu-item-#{data_test_id(meal.name)}"}
+                    data-status={if meal.is_available, do: "available", else: "unavailable"}
+                  >
+                    <%= if @editing_meal && @editing_meal.id == meal.id do %>
+                      <!-- Edit Mode -->
+                      <.form
+                        for={@meal_form}
+                        phx-submit="update_meal"
+                        data-test="menu-item-form-edit"
+                        class="space-y-4"
+                      >
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <.input
+                              field={@meal_form[:name]}
+                              type="text"
+                              label="Item Name"
+                              required
+                            />
+                          </div>
+                          <div>
+                            <.input
+                              field={@meal_form[:price]}
+                              type="number"
+                              label="Price (€)"
+                              step="0.01"
+                              min="0"
+                              required
+                            />
+                          </div>
+                        </div>
+
                         <div>
                           <.input
-                            field={@meal_form[:name]}
-                            type="text"
-                            label="Item Name"
-                            required
+                            field={@meal_form[:description]}
+                            type="textarea"
+                            label="Description (Optional)"
+                            rows="3"
                           />
                         </div>
-                        <div>
-                          <.input
-                            field={@meal_form[:price]}
-                            type="number"
-                            label="Price (€)"
-                            step="0.01"
-                            min="0"
-                            required
-                          />
+
+                        <div class="flex justify-end space-x-3">
+                          <button
+                            type="button"
+                            phx-click="cancel_edit_meal"
+                            class="px-3 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors text-sm"
+                          >
+                            Cancel
+                          </button>
+                          <button
+                            type="submit"
+                            class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors text-sm"
+                          >
+                            Save Changes
+                          </button>
                         </div>
-                      </div>
-
-                      <div>
-                        <.input
-                          field={@meal_form[:description]}
-                          type="textarea"
-                          label="Description (Optional)"
-                          rows="3"
-                        />
-                      </div>
-
-                      <div class="flex justify-end space-x-3">
-                        <button
-                          type="button"
-                          phx-click="cancel_edit_meal"
-                          class="px-3 py-2 border border-gray-300 rounded-md text-gray-700 hover:bg-gray-50 transition-colors text-sm"
-                        >
-                          Cancel
-                        </button>
-                        <button
-                          type="submit"
-                          class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors text-sm"
-                        >
-                          Save Changes
-                        </button>
-                      </div>
-                    </.form>
-                  <% else %>
-                    <!-- Display Mode -->
-                    <div class="flex items-start justify-between">
-                      <div class="flex-1">
-                        <div class="flex items-center space-x-3">
-                          <h3
-                            class={"font-semibold #{if meal.is_available, do: "text-gray-900", else: "text-gray-500"}"}
-                            data-test="item-name"
-                          >
-                            {meal.name}
-                          </h3>
-                          <span
-                            class={"font-medium #{if meal.is_available, do: "text-green-600", else: "text-gray-400"}"}
-                            data-test="item-price"
-                          >
-                            {format_price(meal.price)}
-                          </span>
-                          <%= unless meal.is_available do %>
-                            <span class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">
-                              Unavailable
+                      </.form>
+                    <% else %>
+                      <!-- Display Mode -->
+                      <div class="flex items-start justify-between">
+                        <div class="flex-1">
+                          <div class="flex items-center space-x-3">
+                            <h3
+                              class={"font-semibold #{if meal.is_available, do: "text-gray-900", else: "text-gray-500"}"}
+                              data-test="item-name"
+                            >
+                              {meal.name}
+                            </h3>
+                            <span
+                              class={"font-medium #{if meal.is_available, do: "text-green-600", else: "text-gray-400"}"}
+                              data-test="item-price"
+                            >
+                              {format_price(meal.price)}
                             </span>
+                            <%= unless meal.is_available do %>
+                              <span class="text-xs bg-gray-200 text-gray-600 px-2 py-1 rounded-full">
+                                Unavailable
+                              </span>
+                            <% end %>
+                          </div>
+
+                          <%= if meal.description && meal.description != "" do %>
+                            <p
+                              class={"text-sm mt-2 #{if meal.is_available, do: "text-gray-600", else: "text-gray-400"}"}
+                              data-test="item-description"
+                            >
+                              {meal.description}
+                            </p>
                           <% end %>
                         </div>
 
-                        <%= if meal.description && meal.description != "" do %>
-                          <p
-                            class={"text-sm mt-2 #{if meal.is_available, do: "text-gray-600", else: "text-gray-400"}"}
-                            data-test="item-description"
+                        <div class="flex items-center space-x-2 ml-4">
+                          <button
+                            phx-click="toggle_meal_availability"
+                            phx-value-meal_id={meal.id}
+                            data-test="item-available-toggle"
+                            data-available={to_string(meal.is_available)}
+                            class={"px-3 py-1 rounded-md text-xs font-medium transition-colors #{if meal.is_available, do: "bg-green-100 text-green-700 hover:bg-green-200", else: "bg-gray-100 text-gray-600 hover:bg-gray-200"}"}
                           >
-                            {meal.description}
-                          </p>
-                        <% end %>
-                      </div>
+                            {if meal.is_available, do: "Available", else: "Unavailable"}
+                          </button>
 
-                      <div class="flex items-center space-x-2 ml-4">
-                        <button
-                          phx-click="toggle_meal_availability"
-                          phx-value-meal_id={meal.id}
-                          data-test="item-available-toggle"
-                          data-available={to_string(meal.is_available)}
-                          class={"px-3 py-1 rounded-md text-xs font-medium transition-colors #{if meal.is_available, do: "bg-green-100 text-green-700 hover:bg-green-200", else: "bg-gray-100 text-gray-600 hover:bg-gray-200"}"}
-                        >
-                          {if meal.is_available, do: "Available", else: "Unavailable"}
-                        </button>
-
-                        <button
-                          phx-click="edit_meal"
-                          phx-value-meal_id={meal.id}
-                          data-test={"edit-menu-item-#{data_test_id(meal.name)}"}
-                          class="text-blue-600 hover:text-blue-700 transition-colors"
-                        >
-                          <.icon name="hero-pencil" class="w-4 h-4" />
-                        </button>
+                          <button
+                            phx-click="edit_meal"
+                            phx-value-meal_id={meal.id}
+                            data-test={"edit-menu-item-#{data_test_id(meal.name)}"}
+                            class="text-blue-600 hover:text-blue-700 transition-colors"
+                          >
+                            <.icon name="hero-pencil" class="w-4 h-4" />
+                          </button>
+                        </div>
                       </div>
-                    </div>
-                  <% end %>
-                </div>
-              <% end %>
-            </div>
-          <% end %>
+                    <% end %>
+                  </div>
+                <% end %>
+              </div>
+            <% end %>
+          </div>
+        <% end %>
+      </div>
+      
+<!-- Footer -->
+      <%= if @menus != [] do %>
+        <div class="mt-12 text-center">
+          <p class="text-gray-600">
+            Ready to show your menu to customers?
+            <button phx-click="preview_menu" class="text-blue-600 hover:text-blue-700 font-medium">
+              Preview your menu
+            </button>
+          </p>
         </div>
       <% end %>
     </div>
-    
-<!-- Footer -->
-    <%= if @menus != [] do %>
-      <div class="mt-12 text-center">
-        <p class="text-gray-600">
-          Ready to show your menu to customers?
-          <button phx-click="preview_menu" class="text-blue-600 hover:text-blue-700 font-medium">
-            Preview your menu
-          </button>
-        </p>
-      </div>
-    <% end %>
-  </div>
   </div>
 </Layouts.app>

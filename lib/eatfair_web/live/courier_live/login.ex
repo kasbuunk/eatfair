@@ -55,58 +55,60 @@ defmodule EatfairWeb.CourierLive.Login do
   @impl Phoenix.LiveView
   def render(assigns) do
     ~H"""
-    <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
-      <div class="max-w-md w-full space-y-8">
-        <div>
-          <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
-            🚚 Courier Login
-          </h2>
-          <p class="mt-2 text-center text-sm text-gray-600">
-            Sign in to your courier account
-          </p>
-        </div>
-
-        <.form
-          :let={f}
-          for={@form}
-          id="courier_login_form"
-          action={~p"/users/log-in"}
-          phx-submit="submit"
-          phx-trigger-action={@trigger_submit}
-          class="mt-8 space-y-6"
-        >
-          <div class="rounded-md shadow-sm -space-y-px">
-            <div>
-              <.input
-                field={f[:email]}
-                type="email"
-                label="Email"
-                autocomplete="username"
-                required
-              />
-            </div>
-            <div>
-              <.input
-                field={f[:password]}
-                type="password"
-                label="Password"
-                autocomplete="current-password"
-                required
-              />
-            </div>
-          </div>
-
+    <Layouts.app flash={@flash} current_scope={@current_scope}>
+      <div class="min-h-screen flex items-center justify-center bg-gray-50 py-12 px-4 sm:px-6 lg:px-8">
+        <div class="max-w-md w-full space-y-8">
           <div>
-            <.button
-              type="submit"
-              class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
-            >
-              Sign in
-            </.button>
+            <h2 class="mt-6 text-center text-3xl font-extrabold text-gray-900">
+              🚚 Courier Login
+            </h2>
+            <p class="mt-2 text-center text-sm text-gray-600">
+              Sign in to your courier account
+            </p>
           </div>
-        </.form>
+
+          <.form
+            :let={f}
+            for={@form}
+            id="courier_login_form"
+            action={~p"/users/log-in"}
+            phx-submit="submit"
+            phx-trigger-action={@trigger_submit}
+            class="mt-8 space-y-6"
+          >
+            <div class="rounded-md shadow-sm -space-y-px">
+              <div>
+                <.input
+                  field={f[:email]}
+                  type="email"
+                  label="Email"
+                  autocomplete="username"
+                  required
+                />
+              </div>
+              <div>
+                <.input
+                  field={f[:password]}
+                  type="password"
+                  label="Password"
+                  autocomplete="current-password"
+                  required
+                />
+              </div>
+            </div>
+
+            <div>
+              <.button
+                type="submit"
+                class="group relative w-full flex justify-center py-2 px-4 border border-transparent text-sm font-medium rounded-md text-white bg-orange-600 hover:bg-orange-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+              >
+                Sign in
+              </.button>
+            </div>
+          </.form>
+        </div>
       </div>
-    </div>
+    </Layouts.app>
     """
   end
 end

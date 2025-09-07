@@ -125,164 +125,168 @@ defmodule EatfairWeb.OrderTrackingLive do
   @impl true
   def render(%{show_all: true} = assigns) do
     ~H"""
-    <div class="max-w-4xl mx-auto p-6">
-      <.header>
-        Track Your Orders
-        <:subtitle>Real-time updates on all your active orders</:subtitle>
-      </.header>
+    <Layouts.app flash={@flash} current_scope={@current_scope}>
+      <div class="max-w-4xl mx-auto p-6">
+        <.header>
+          Track Your Orders
+          <:subtitle>Real-time updates on all your active orders</:subtitle>
+        </.header>
 
-      <div class="mt-8">
-        <%= if @active_orders == [] do %>
-          <div class="text-center py-12">
-            <.icon name="hero-shopping-bag" class="h-12 w-12 text-gray-400 mx-auto mb-4" />
-            <h3 class="text-lg font-medium text-gray-900 mb-2">No Active Orders</h3>
-            <p class="text-gray-500 mb-6">You don't have any orders in progress right now.</p>
-            <.link
-              navigate={~p"/restaurants"}
-              class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
-            >
-              Discover Restaurants
-            </.link>
-          </div>
-        <% else %>
-          <div class="space-y-6">
-            <%= for order <- @active_orders do %>
-              <div class="bg-white shadow-lg rounded-lg p-6 border border-gray-200">
-                <div class="flex justify-between items-start mb-4">
-                  <div>
-                    <h3 class="text-lg font-semibold text-gray-900">Order #{order.id}</h3>
-                    <p class="text-sm text-gray-500">{order.restaurant.name}</p>
+        <div class="mt-8">
+          <%= if @active_orders == [] do %>
+            <div class="text-center py-12">
+              <.icon name="hero-shopping-bag" class="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <h3 class="text-lg font-medium text-gray-900 mb-2">No Active Orders</h3>
+              <p class="text-gray-500 mb-6">You don't have any orders in progress right now.</p>
+              <.link
+                navigate={~p"/restaurants"}
+                class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700 transition-colors"
+              >
+                Discover Restaurants
+              </.link>
+            </div>
+          <% else %>
+            <div class="space-y-6">
+              <%= for order <- @active_orders do %>
+                <div class="bg-white shadow-lg rounded-lg p-6 border border-gray-200">
+                  <div class="flex justify-between items-start mb-4">
+                    <div>
+                      <h3 class="text-lg font-semibold text-gray-900">Order #{order.id}</h3>
+                      <p class="text-sm text-gray-500">{order.restaurant.name}</p>
+                    </div>
+                    <div class="text-right">
+                      {render_order_status(order)}
+                    </div>
                   </div>
-                  <div class="text-right">
-                    {render_order_status(order)}
-                  </div>
-                </div>
 
-                <div class="grid md:grid-cols-2 gap-6">
-                  <div>
-                    <h4 class="font-medium text-gray-900 mb-2">Items Ordered</h4>
-                    <div class="space-y-2">
-                      <%= for item <- order.order_items do %>
-                        <div class="flex justify-between text-sm">
-                          <span>{item.quantity}× {item.meal.name}</span>
-                          <span class="font-medium">€{item.meal.price}</span>
-                        </div>
+                  <div class="grid md:grid-cols-2 gap-6">
+                    <div>
+                      <h4 class="font-medium text-gray-900 mb-2">Items Ordered</h4>
+                      <div class="space-y-2">
+                        <%= for item <- order.order_items do %>
+                          <div class="flex justify-between text-sm">
+                            <span>{item.quantity}× {item.meal.name}</span>
+                            <span class="font-medium">€{item.meal.price}</span>
+                          </div>
+                        <% end %>
+                      </div>
+                    </div>
+
+                    <div>
+                      <h4 class="font-medium text-gray-900 mb-2">Delivery Information</h4>
+                      <p class="text-sm text-gray-600">{order.delivery_address}</p>
+                      <%= if order.delivery_notes do %>
+                        <p class="text-sm text-gray-500 mt-1">{order.delivery_notes}</p>
+                      <% end %>
+                      <%= if estimated = Orders.calculate_estimated_delivery(order) do %>
+                        <p class="text-sm text-blue-600 mt-2">
+                          <.icon name="hero-clock" class="h-4 w-4 inline" />
+                          Estimated arrival: {format_estimated_time(estimated)}
+                        </p>
                       <% end %>
                     </div>
                   </div>
 
-                  <div>
-                    <h4 class="font-medium text-gray-900 mb-2">Delivery Information</h4>
-                    <p class="text-sm text-gray-600">{order.delivery_address}</p>
-                    <%= if order.delivery_notes do %>
-                      <p class="text-sm text-gray-500 mt-1">{order.delivery_notes}</p>
-                    <% end %>
-                    <%= if estimated = Orders.calculate_estimated_delivery(order) do %>
-                      <p class="text-sm text-blue-600 mt-2">
-                        <.icon name="hero-clock" class="h-4 w-4 inline" />
-                        Estimated arrival: {format_estimated_time(estimated)}
-                      </p>
-                    <% end %>
+                  <div class="mt-6 flex justify-between items-center">
+                    <div class="text-lg font-semibold">
+                      Total: €{order.total_price}
+                    </div>
+                    <.link
+                      navigate={~p"/orders/track/#{order.id}"}
+                      class="text-blue-600 hover:text-blue-800 text-sm font-medium"
+                    >
+                      View Details →
+                    </.link>
                   </div>
                 </div>
-
-                <div class="mt-6 flex justify-between items-center">
-                  <div class="text-lg font-semibold">
-                    Total: €{order.total_price}
-                  </div>
-                  <.link
-                    navigate={~p"/orders/track/#{order.id}"}
-                    class="text-blue-600 hover:text-blue-800 text-sm font-medium"
-                  >
-                    View Details →
-                  </.link>
-                </div>
-              </div>
-            <% end %>
-          </div>
-        <% end %>
+              <% end %>
+            </div>
+          <% end %>
+        </div>
       </div>
-    </div>
+    </Layouts.app>
     """
   end
 
   @impl true
   def render(assigns) do
     ~H"""
-    <div class="max-w-3xl mx-auto p-6">
-      <.header>
-        Order #{@order.id}
-        <:subtitle>{@order.restaurant.name}</:subtitle>
-      </.header>
-      
+    <Layouts.app flash={@flash} current_scope={@current_scope}>
+      <div class="max-w-3xl mx-auto p-6">
+        <.header>
+          Order #{@order.id}
+          <:subtitle>{@order.restaurant.name}</:subtitle>
+        </.header>
+        
     <!-- Order Status Timeline -->
-      <div class="mt-8 bg-white shadow-lg rounded-lg p-6">
-        {render_status_timeline(@order)}
-      </div>
-      
+        <div class="mt-8 bg-white shadow-lg rounded-lg p-6">
+          {render_status_timeline(@order)}
+        </div>
+        
     <!-- Order Details -->
-      <div class="mt-6 grid md:grid-cols-2 gap-6">
-        <!-- Items Ordered -->
-        <div class="bg-white shadow-lg rounded-lg p-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Your Order</h3>
-          <div class="space-y-3">
-            <%= for item <- @order.order_items do %>
-              <div class="flex justify-between items-center">
-                <div>
-                  <span class="font-medium">{item.quantity}× {item.meal.name}</span>
+        <div class="mt-6 grid md:grid-cols-2 gap-6">
+          <!-- Items Ordered -->
+          <div class="bg-white shadow-lg rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Your Order</h3>
+            <div class="space-y-3">
+              <%= for item <- @order.order_items do %>
+                <div class="flex justify-between items-center">
+                  <div>
+                    <span class="font-medium">{item.quantity}× {item.meal.name}</span>
+                  </div>
+                  <span class="font-medium">€{item.meal.price}</span>
                 </div>
-                <span class="font-medium">€{item.meal.price}</span>
+              <% end %>
+            </div>
+            <div class="border-t border-gray-200 pt-3 mt-4">
+              <div class="flex justify-between items-center text-lg font-semibold">
+                <span>Total</span>
+                <span>€{@order.total_price}</span>
               </div>
-            <% end %>
+            </div>
           </div>
-          <div class="border-t border-gray-200 pt-3 mt-4">
-            <div class="flex justify-between items-center text-lg font-semibold">
-              <span>Total</span>
-              <span>€{@order.total_price}</span>
+          
+    <!-- Delivery Information -->
+          <div class="bg-white shadow-lg rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 mb-4">Delivery Information</h3>
+            <div class="space-y-3">
+              <div>
+                <h4 class="font-medium text-gray-700">Address</h4>
+                <p class="text-gray-600">{@order.delivery_address}</p>
+              </div>
+              <%= if @order.delivery_notes do %>
+                <div>
+                  <h4 class="font-medium text-gray-700">Special Instructions</h4>
+                  <p class="text-gray-600">{@order.delivery_notes}</p>
+                </div>
+              <% end %>
+              <%= if @estimated_delivery do %>
+                <div>
+                  <h4 class="font-medium text-gray-700">Estimated Arrival</h4>
+                  <p class="text-blue-600 font-medium">
+                    <.icon name="hero-clock" class="h-4 w-4 inline" />
+                    {format_estimated_time(@estimated_delivery)}
+                  </p>
+                </div>
+              <% end %>
+              <%= if @order.is_delayed and @order.delay_reason do %>
+                <div class="bg-amber-50 border border-amber-200 rounded-lg p-3">
+                  <h4 class="font-medium text-amber-800">Slight Delay</h4>
+                  <p class="text-amber-700 text-sm mt-1">{@order.delay_reason}</p>
+                </div>
+              <% end %>
             </div>
           </div>
         </div>
         
-    <!-- Delivery Information -->
-        <div class="bg-white shadow-lg rounded-lg p-6">
-          <h3 class="text-lg font-semibold text-gray-900 mb-4">Delivery Information</h3>
-          <div class="space-y-3">
-            <div>
-              <h4 class="font-medium text-gray-700">Address</h4>
-              <p class="text-gray-600">{@order.delivery_address}</p>
-            </div>
-            <%= if @order.delivery_notes do %>
-              <div>
-                <h4 class="font-medium text-gray-700">Special Instructions</h4>
-                <p class="text-gray-600">{@order.delivery_notes}</p>
-              </div>
-            <% end %>
-            <%= if @estimated_delivery do %>
-              <div>
-                <h4 class="font-medium text-gray-700">Estimated Arrival</h4>
-                <p class="text-blue-600 font-medium">
-                  <.icon name="hero-clock" class="h-4 w-4 inline" />
-                  {format_estimated_time(@estimated_delivery)}
-                </p>
-              </div>
-            <% end %>
-            <%= if @order.is_delayed and @order.delay_reason do %>
-              <div class="bg-amber-50 border border-amber-200 rounded-lg p-3">
-                <h4 class="font-medium text-amber-800">Slight Delay</h4>
-                <p class="text-amber-700 text-sm mt-1">{@order.delay_reason}</p>
-              </div>
-            <% end %>
-          </div>
+    <!-- Back to All Orders -->
+        <div class="mt-6 text-center">
+          <.link navigate={~p"/orders/track"} class="text-blue-600 hover:text-blue-800 font-medium">
+            ← View All Orders
+          </.link>
         </div>
       </div>
-      
-    <!-- Back to All Orders -->
-      <div class="mt-6 text-center">
-        <.link navigate={~p"/orders/track"} class="text-blue-600 hover:text-blue-800 font-medium">
-          ← View All Orders
-        </.link>
-      </div>
-    </div>
+    </Layouts.app>
     """
   end
 
