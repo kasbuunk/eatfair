@@ -322,14 +322,7 @@ defmodule EatfairWeb.UserLive.Dashboard do
                   </h3>
                   <div class="flex items-center mt-1">
                     <div class="flex text-yellow-400">
-                      <%= for _star <- 1..review.rating do %>
-                        ★
-                      <% end %>
-                      <%= if review.rating < 5 do %>
-                        <%= for _star <- (review.rating + 1)..5 do %>
-                          ☆
-                        <% end %>
-                      <% end %>
+                      <%= for _star <- 1..review.rating do %>★<% end %><%= if review.rating < 5 do %><%= for _star <- (review.rating + 1)..5 do %>☆<% end %><% end %>
                     </div>
                     <span class="ml-2 text-sm text-gray-500">
                       {Calendar.strftime(review.inserted_at, "%B %d, %Y")}
