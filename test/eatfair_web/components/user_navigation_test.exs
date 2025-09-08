@@ -77,4 +77,71 @@ defmodule EatfairWeb.Components.UserNavigationTest do
       assert html =~ "My Restaurant"
     end
   end
+
+  describe "👑 Admin Dashboard Navigation" do
+    test "admin user sees Admin Dashboard link in desktop navigation with testid" do
+      # Create admin user
+      admin = user_fixture(%{role: "admin", name: "Admin User"})
+      current_scope = %{user: admin}
+
+      # Render UserNavigation component
+      html = render_component(&UserNavigation.user_nav/1, %{current_scope: current_scope})
+
+      # Should have link to admin dashboard with testid for maintainability
+      assert html =~ ~r/data-testid="admin-dashboard-link"/
+      assert html =~ ~r/href="\/admin\/dashboard"/
+      assert html =~ "Admin Dashboard"
+    end
+
+    test "admin user sees Admin Dashboard link in mobile navigation with testid" do
+      # Create admin user
+      admin = user_fixture(%{role: "admin", name: "Admin Mobile User"})
+      current_scope = %{user: admin}
+
+      # Render UserNavigation component
+      html = render_component(&UserNavigation.user_nav/1, %{current_scope: current_scope})
+
+      # Should have link with testid in mobile menu (appears in both desktop and mobile)
+      admin_testid_count =
+        (html |> String.split(~r/data-testid="admin-dashboard-link"/) |> length()) - 1
+
+      admin_text_count = (html |> String.split("Admin Dashboard") |> length()) - 1
+
+      # Should appear at least once (desktop), ideally twice (desktop + mobile)
+      assert admin_testid_count >= 1, "Expected at least one Admin Dashboard link with testid"
+      assert admin_text_count >= 1, "Expected at least one 'Admin Dashboard' text occurrence"
+    end
+
+    test "non-admin users do not see Admin Dashboard link" do
+      test_cases = [
+        %{role: "customer", name: "Regular Customer"},
+        %{role: "restaurant_owner", name: "Restaurant Owner"},
+        %{role: "courier", name: "Courier User"}
+      ]
+
+      for user_attrs <- test_cases do
+        user = user_fixture(user_attrs)
+        current_scope = %{user: user}
+
+        html = render_component(&UserNavigation.user_nav/1, %{current_scope: current_scope})
+
+        # Should NOT have admin dashboard link or testid
+        refute html =~ ~r/data-testid="admin-dashboard-link"/
+        refute html =~ ~r/href="\/admin\/dashboard"/
+        refute html =~ "Admin Dashboard"
+      end
+    end
+
+    test "unauthenticated users do not see Admin Dashboard link" do
+      # No current_scope (unauthenticated)
+      current_scope = nil
+
+      html = render_component(&UserNavigation.user_nav/1, %{current_scope: current_scope})
+
+      # Should NOT have admin dashboard link or testid
+      refute html =~ ~r/data-testid="admin-dashboard-link"/
+      refute html =~ ~r/href="\/admin\/dashboard"/
+      refute html =~ "Admin Dashboard"
+    end
+  end
 end

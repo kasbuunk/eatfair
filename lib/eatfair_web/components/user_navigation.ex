@@ -75,6 +75,16 @@ defmodule EatfairWeb.UserNavigation do
                   Courier Dashboard
                 </.link>
               <% end %>
+
+              <%= if @current_scope.user.role == "admin" do %>
+                <.link
+                  navigate={~p"/admin/dashboard"}
+                  class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors"
+                  data-testid="admin-dashboard-link"
+                >
+                  Admin Dashboard
+                </.link>
+              <% end %>
               
     <!-- User Greeting -->
               <span class="text-gray-700 dark:text-gray-300 text-sm">
@@ -211,6 +221,16 @@ defmodule EatfairWeb.UserNavigation do
                   class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
                 >
                   <.icon name="hero-truck" class="w-4 h-4 mr-2 inline" /> Courier Dashboard
+                </.link>
+              <% end %>
+
+              <%= if @current_scope.user.role == "admin" do %>
+                <.link
+                  navigate={~p"/admin/dashboard"}
+                  class="block px-3 py-2 text-base font-medium text-gray-700 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-700 rounded-md transition-colors"
+                  data-testid="admin-dashboard-link"
+                >
+                  <.icon name="hero-cog-8-tooth" class="w-4 h-4 mr-2 inline" /> Admin Dashboard
                 </.link>
               <% end %>
 
