@@ -610,10 +610,15 @@ defmodule EatfairWeb.Admin.DashboardLive do
     assign(socket, :community_metrics, metrics)
   end
 
+  # Format currency values from various database return types
+  # Handles: nil, integer, float, and Decimal types
   defp format_currency(decimal) when is_nil(decimal), do: "0.00"
 
   defp format_currency(decimal) when is_integer(decimal),
     do: Decimal.to_string(Decimal.new(decimal), :normal)
+
+  defp format_currency(decimal) when is_float(decimal),
+    do: decimal |> Decimal.from_float() |> Decimal.to_string(:normal)
 
   defp format_currency(decimal), do: Decimal.to_string(decimal, :normal)
 

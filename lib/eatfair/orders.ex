@@ -1568,7 +1568,7 @@ defmodule Eatfair.Orders do
       |> where([o], not is_nil(o.donation_amount))
       |> maybe_filter_order_date(opts[:date])
       |> maybe_filter_order_since(unless(opts[:all_time], do: opts[:since]))
-      |> maybe_filter_order_status(opts[:status] || "delivered")
+      |> maybe_filter_order_status(opts[:status] || :delivered)
 
     Repo.one(query) || Decimal.new("0.00")
   end
