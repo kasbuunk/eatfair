@@ -9,8 +9,11 @@ defmodule EatfairWeb.UserNavigation do
   Renders unified navigation bar with theme toggle and all navigation features
   """
   attr :current_scope, :map, required: true
+  attr :id_prefix, :string, default: nil
 
   def user_nav(assigns) do
+    # Generate a unique ID prefix for this navigation instance
+    assigns = assign(assigns, :uid, assigns.id_prefix || "nav-#{System.unique_integer([:positive])}")
     ~H"""
     <nav
       aria-label="Navigation bar"
@@ -92,11 +95,11 @@ defmodule EatfairWeb.UserNavigation do
               </span>
               
     <!-- User Dropdown -->
-              <div class="relative" data-dropdown="user-menu">
+              <div class="relative" data-dropdown={"#{@uid}-user-menu"}>
                 <button
                   type="button"
                   class="flex items-center space-x-1 text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 px-3 py-2 rounded-md text-sm font-medium transition-colors"
-                  onclick="toggleDropdown('user-menu')"
+                  onclick={"toggleDropdown('#{@uid}-user-menu')"}
                 >
                   <.icon name="hero-user-circle" class="w-5 h-5" />
                   <.icon name="hero-chevron-down" class="w-4 h-4" />
@@ -104,7 +107,7 @@ defmodule EatfairWeb.UserNavigation do
                 
     <!-- Dropdown Menu -->
                 <div
-                  id="user-menu-dropdown"
+                  id={"#{@uid}-user-menu-dropdown"}
                   class="hidden absolute right-0 mt-2 w-56 bg-white dark:bg-gray-800 rounded-lg shadow-lg border border-gray-200 dark:border-gray-700 z-50"
                 >
                   <div class="py-2">
@@ -174,7 +177,7 @@ defmodule EatfairWeb.UserNavigation do
             <button
               type="button"
               class="text-gray-600 dark:text-gray-300 hover:text-gray-900 dark:hover:text-gray-100 p-2 transition-colors"
-              onclick="toggleMobileMenu()"
+              onclick={"toggleMobileMenu('#{@uid}-mobile-menu')"}
             >
               <.icon name="hero-bars-3" class="w-6 h-6" />
             </button>
@@ -182,7 +185,7 @@ defmodule EatfairWeb.UserNavigation do
         </div>
         
     <!-- Mobile Navigation -->
-        <div id="mobile-menu" class="hidden sm:hidden pb-4">
+        <div id={"#{@uid}-mobile-menu"} class="hidden sm:hidden pb-4">
           <div class="space-y-2">
             <.link
               navigate={~p"/restaurants"}
@@ -299,8 +302,8 @@ defmodule EatfairWeb.UserNavigation do
         }, { once: true });
       }
 
-      function toggleMobileMenu() {
-        const menu = document.getElementById('mobile-menu');
+      function toggleMobileMenu(mobileMenuId) {
+        const menu = document.getElementById(mobileMenuId);
         menu.classList.toggle('hidden');
       }
     </script>

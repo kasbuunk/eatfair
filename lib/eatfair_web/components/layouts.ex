@@ -12,42 +12,6 @@ defmodule EatfairWeb.Layouts do
   embed_templates "layouts/*"
 
   @doc """
-  Renders your app layout.
-
-  This function is typically invoked from every template,
-  and it often contains your application menu, sidebar,
-  or similar.
-
-  ## Examples
-
-      <Layouts.app flash={@flash}>
-        <h1>Content</h1>
-      </Layouts.app>
-
-  """
-  attr :flash, :map, required: true, doc: "the map of flash messages"
-
-  attr :current_scope, :map,
-    default: nil,
-    doc: "the current [scope](https://hexdocs.pm/phoenix/scopes.html)"
-
-  slot :inner_block, required: true
-
-  def app(assigns) do
-    ~H"""
-    <div class="bg-gray-50 dark:bg-gray-900 min-h-screen transition-colors duration-200">
-      <EatfairWeb.UserNavigation.user_nav current_scope={@current_scope} />
-
-      <main>
-        {render_slot(@inner_block)}
-      </main>
-    </div>
-
-    <.flash_group flash={@flash} />
-    """
-  end
-
-  @doc """
   Shows the flash group with standard titles and content.
 
   ## Examples
@@ -58,17 +22,23 @@ defmodule EatfairWeb.Layouts do
   attr :id, :string, default: "flash-group", doc: "the optional id of flash container"
 
   def flash_group(assigns) do
+    # Generate unique IDs for all flash elements
+    assigns = assign(assigns, :info_flash_id, "#{assigns.id}-info")
+    assigns = assign(assigns, :error_flash_id, "#{assigns.id}-error")
+    assigns = assign(assigns, :client_error_id, "#{assigns.id}-client-error")
+    assigns = assign(assigns, :server_error_id, "#{assigns.id}-server-error")
+
     ~H"""
     <div id={@id} aria-live="polite">
-      <.flash kind={:info} flash={@flash} />
-      <.flash kind={:error} flash={@flash} />
+      <.flash id={@info_flash_id} kind={:info} flash={@flash} />
+      <.flash id={@error_flash_id} kind={:error} flash={@flash} />
 
       <.flash
-        id="client-error"
+        id={@client_error_id}
         kind={:error}
         title={gettext("We can't find the internet")}
-        phx-disconnected={show(".phx-client-error #client-error") |> JS.remove_attribute("hidden")}
-        phx-connected={hide("#client-error") |> JS.set_attribute({"hidden", ""})}
+        phx-disconnected={show(".phx-client-error ##{@client_error_id}") |> JS.remove_attribute("hidden")}
+        phx-connected={hide("##{@client_error_id}") |> JS.set_attribute({"hidden", ""})}
         hidden
       >
         {gettext("Attempting to reconnect")}
@@ -76,11 +46,11 @@ defmodule EatfairWeb.Layouts do
       </.flash>
 
       <.flash
-        id="server-error"
+        id={@server_error_id}
         kind={:error}
         title={gettext("Something went wrong!")}
-        phx-disconnected={show(".phx-server-error #server-error") |> JS.remove_attribute("hidden")}
-        phx-connected={hide("#server-error") |> JS.set_attribute({"hidden", ""})}
+        phx-disconnected={show(".phx-server-error ##{@server_error_id}") |> JS.remove_attribute("hidden")}
+        phx-connected={hide("##{@server_error_id}") |> JS.set_attribute({"hidden", ""})}
         hidden
       >
         {gettext("Attempting to reconnect")}

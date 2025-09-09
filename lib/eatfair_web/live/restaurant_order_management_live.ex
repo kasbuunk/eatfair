@@ -2,7 +2,6 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
   use EatfairWeb, :live_view
 
   alias Eatfair.{Orders, Restaurants, Notifications}
-  alias EatfairWeb.Layouts
   alias Phoenix.PubSub
 
   @impl true
@@ -555,8 +554,7 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
   @impl true
   def render(assigns) do
     ~H"""
-    <Layouts.app flash={assigns[:flash] || %{}} current_scope={assigns[:current_scope]}>
-      <div class="max-w-7xl mx-auto p-6">
+    <div class="max-w-7xl mx-auto p-6">
         <.header>
           Order Management - {@restaurant.name}
           <:subtitle>Manage all incoming orders and update their status in real-time</:subtitle>
@@ -1117,7 +1115,6 @@ defmodule EatfairWeb.RestaurantOrderManagementLive do
           <input name="failure_notes" type="text" value="" />
         </form>
       </div>
-    </Layouts.app>
     """
   end
 

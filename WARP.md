@@ -48,6 +48,17 @@ This document defines the global principles and operational rules that govern ou
 - Broken builds must be fixed immediately
 - Changes should be small, frequent, and incremental
 
+### 5. Test-First Development Approach
+**Principle**: Always prioritize unit testing and static analysis over running live servers for validation.
+
+**Rules**:
+- **NEVER** run development servers (`mix phx.server`, `npm start`, etc.) for testing changes
+- Use unit tests, integration tests, and static analysis tools instead
+- For layout/UI changes: write view tests or component tests
+- For route changes: test route configurations programmatically
+- For configuration changes: validate with compilation tests
+- Only suggest server startup if explicitly requested by user for development purposes
+
 ## Operational Rules
 
 ### Information Architecture

@@ -24,24 +24,28 @@ defmodule EatfairWeb.Admin.DashboardLiveTest do
       # This test verifies that our format_currency fix works
       # Previously this would crash with FunctionClauseError in Decimal.to_string/2
       # Now it should work (even if there might be other issues)
-      
+
       try do
         case live(conn, ~p"/admin") do
-          {:ok, _view, html} -> 
+          {:ok, _view, html} ->
             # Success! The format_currency float issue is fixed
-            assert html =~ "Dashboard"  # Basic check that page loaded
-            
+            # Basic check that page loaded
+            assert html =~ "Dashboard"
+
           {:error, %{reason: reason}} ->
             # If there are other errors, make sure it's not the original format_currency issue
             error_msg = inspect(reason)
-            refute error_msg =~ "Decimal.to_string/2", 
-              "Original format_currency float bug still exists: #{error_msg}"
+
+            refute error_msg =~ "Decimal.to_string/2",
+                   "Original format_currency float bug still exists: #{error_msg}"
         end
       rescue
         error ->
           error_msg = Exception.message(error)
-          refute error_msg =~ "Decimal.to_string/2", 
-            "Original format_currency float bug still exists: #{error_msg}"
+
+          refute error_msg =~ "Decimal.to_string/2",
+                 "Original format_currency float bug still exists: #{error_msg}"
+
           # Re-raise if it's a different error - we'll handle those separately
           reraise error, __STACKTRACE__
       end

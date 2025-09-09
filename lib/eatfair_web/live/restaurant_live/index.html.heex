@@ -1,114 +1,112 @@
-<Layouts.app flash={@flash} current_scope={@current_scope}>
-  <div phx-hook="GeolocationHook" id="geolocation-hook" style="display: none;"></div>
-  <!-- Hero Section with Location Input -->
-  <div class="relative bg-gradient-to-br from-orange-500 via-red-500 to-pink-500">
-    <!-- Background overlay -->
-    <div class="absolute inset-0 bg-black/20"></div>
-    
-<!-- Content -->
-    <div class="relative mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8 text-center">
-      <h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
-        Discover Great Food Near You
-      </h1>
-      <p class="mt-6 max-w-2xl mx-auto text-xl text-white/90">
-        Enter your address to find restaurants that deliver to your door
-      </p>
-      
-<!-- Primary Consumer Path: Location Input -->
-      <div class="mt-12 max-w-2xl mx-auto">
-        <.form
-          for={%{}}
-          id="discover-form"
-          phx-submit="discover_restaurants"
-          phx-change="update_location_from_form"
-          class="flex flex-col sm:flex-row gap-3"
-        >
-          <div class="flex-1">
-            <input
-              type="text"
-              name="location"
-              value={@discover_location}
-              placeholder={@inferred_placeholder || "e.g. Amsterdam"}
-              class="block w-full rounded-lg border-0 bg-white px-4 py-4 text-gray-900 shadow-lg ring-1 ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500 text-lg"
-              phx-keydown="handle_keydown"
-              autocomplete="off"
-            />
-          </div>
-          <.button
-            type="submit"
-            class="px-8 py-4 bg-white text-orange-600 font-bold text-lg rounded-lg shadow-lg hover:bg-gray-50 transition-all duration-200 transform hover:scale-105"
-          >
-            Find Restaurants
-          </.button>
-        </.form>
-      </div>
-    </div>
-  </div>
+<div phx-hook="GeolocationHook" id="geolocation-hook" style="display: none;"></div>
+<!-- Hero Section with Location Input -->
+<div class="relative bg-gradient-to-br from-orange-500 via-red-500 to-pink-500">
+  <!-- Background overlay -->
+  <div class="absolute inset-0 bg-black/20"></div>
   
+<!-- Content -->
+  <div class="relative mx-auto max-w-4xl px-4 py-16 sm:px-6 sm:py-24 lg:px-8 text-center">
+    <h1 class="text-4xl font-bold tracking-tight text-white sm:text-5xl lg:text-6xl">
+      Discover Great Food Near You
+    </h1>
+    <p class="mt-6 max-w-2xl mx-auto text-xl text-white/90">
+      Enter your address to find restaurants that deliver to your door
+    </p>
+    
+<!-- Primary Consumer Path: Location Input -->
+    <div class="mt-12 max-w-2xl mx-auto">
+      <.form
+        for={%{}}
+        id="discover-form"
+        phx-submit="discover_restaurants"
+        phx-change="update_location_from_form"
+        class="flex flex-col sm:flex-row gap-3"
+      >
+        <div class="flex-1">
+          <input
+            type="text"
+            name="location"
+            value={@discover_location}
+            placeholder={@inferred_placeholder || "e.g. Amsterdam"}
+            class="block w-full rounded-lg border-0 bg-white px-4 py-4 text-gray-900 shadow-lg ring-1 ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-orange-500 text-lg"
+            phx-keydown="handle_keydown"
+            autocomplete="off"
+          />
+        </div>
+        <.button
+          type="submit"
+          class="px-8 py-4 bg-white text-orange-600 font-bold text-lg rounded-lg shadow-lg hover:bg-gray-50 transition-all duration-200 transform hover:scale-105"
+        >
+          Find Restaurants
+        </.button>
+      </.form>
+    </div>
+  </div>
+</div>
+
 <!-- Three User Paths Section -->
-  <div class="bg-gray-50 py-16">
-    <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-      <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        
+<div class="bg-gray-50 py-16">
+  <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      
 <!-- Secondary: Restaurant Owner Path -->
-        <div class="bg-white rounded-2xl shadow-lg p-8 border-2 border-transparent hover:border-blue-200 transition-all duration-200">
-          <div class="text-center">
-            <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
-              <.icon name="hero-building-storefront" class="w-8 h-8 text-white" />
-            </div>
-            <h3 class="text-2xl font-bold text-gray-900 mb-4">
-              Restaurant Owner
-            </h3>
-            <p class="text-gray-600 mb-6">
-              Join our platform and reach more customers in your area
-            </p>
-            <.link
-              href={
-                if @current_scope && @current_scope.user,
-                  do: ~p"/restaurant/onboard",
-                  else: ~p"/users/register"
-              }
-              class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg shadow-md hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105"
-            >
-              <.icon name="hero-plus-circle" class="w-5 h-5 mr-2" />
-              Set up your restaurant in less than 3 minutes
-            </.link>
+      <div class="bg-white rounded-2xl shadow-lg p-8 border-2 border-transparent hover:border-blue-200 transition-all duration-200">
+        <div class="text-center">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center">
+            <.icon name="hero-building-storefront" class="w-8 h-8 text-white" />
           </div>
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">
+            Restaurant Owner
+          </h3>
+          <p class="text-gray-600 mb-6">
+            Join our platform and reach more customers in your area
+          </p>
+          <.link
+            href={
+              if @current_scope && @current_scope.user,
+                do: ~p"/restaurant/onboard",
+                else: ~p"/users/register"
+            }
+            class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white font-semibold rounded-lg shadow-md hover:from-blue-700 hover:to-purple-700 transition-all duration-200 transform hover:scale-105"
+          >
+            <.icon name="hero-plus-circle" class="w-5 h-5 mr-2" />
+            Set up your restaurant in less than 3 minutes
+          </.link>
         </div>
-        
+      </div>
+      
 <!-- Tertiary: Courier Path -->
-        <div class="bg-white rounded-2xl shadow-lg p-8">
-          <div class="text-center">
-            <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-green-500 to-teal-600 rounded-2xl flex items-center justify-center">
-              <.icon name="hero-truck" class="w-8 h-8 text-white" />
-            </div>
-            <h3 class="text-2xl font-bold text-gray-900 mb-4">
-              Become a Courier
-            </h3>
-            <p class="text-gray-600 mb-6">
-              Earn money on your schedule delivering food to neighbors
-            </p>
-            <button class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-teal-600 text-white font-semibold rounded-lg shadow-md hover:from-green-700 hover:to-teal-700 transition-all duration-200">
-              <.icon name="hero-bicycle" class="w-5 h-5 mr-2" /> Start Delivering
-            </button>
+      <div class="bg-white rounded-2xl shadow-lg p-8">
+        <div class="text-center">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-green-500 to-teal-600 rounded-2xl flex items-center justify-center">
+            <.icon name="hero-truck" class="w-8 h-8 text-white" />
           </div>
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">
+            Become a Courier
+          </h3>
+          <p class="text-gray-600 mb-6">
+            Earn money on your schedule delivering food to neighbors
+          </p>
+          <button class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-teal-600 text-white font-semibold rounded-lg shadow-md hover:from-green-700 hover:to-teal-700 transition-all duration-200">
+            <.icon name="hero-bicycle" class="w-5 h-5 mr-2" /> Start Delivering
+          </button>
         </div>
-        
+      </div>
+      
 <!-- Community Message -->
-        <div class="bg-white rounded-2xl shadow-lg p-8">
-          <div class="text-center">
-            <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl flex items-center justify-center">
-              <.icon name="hero-heart" class="w-8 h-8 text-white" />
-            </div>
-            <h3 class="text-2xl font-bold text-gray-900 mb-4">
-              Community First
-            </h3>
-            <p class="text-gray-600">
-              Supporting local entrepreneurs and fair opportunities for everyone in the food delivery ecosystem.
-            </p>
+      <div class="bg-white rounded-2xl shadow-lg p-8">
+        <div class="text-center">
+          <div class="w-16 h-16 mx-auto mb-6 bg-gradient-to-r from-orange-500 to-red-600 rounded-2xl flex items-center justify-center">
+            <.icon name="hero-heart" class="w-8 h-8 text-white" />
           </div>
+          <h3 class="text-2xl font-bold text-gray-900 mb-4">
+            Community First
+          </h3>
+          <p class="text-gray-600">
+            Supporting local entrepreneurs and fair opportunities for everyone in the food delivery ecosystem.
+          </p>
         </div>
       </div>
     </div>
   </div>
-</Layouts.app>
+</div>

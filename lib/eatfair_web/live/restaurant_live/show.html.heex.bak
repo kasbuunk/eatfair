@@ -1,0 +1,648 @@
+<Layouts.app flash={@flash} current_scope={@current_scope}>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Back Button -->
+    <div class="mb-6">
+      <.link
+        navigate={
+          if @location,
+            do: ~p"/restaurants?location=#{@location}",
+            else: ~p"/restaurants"
+        }
+        class="inline-flex items-center text-indigo-600 hover:text-indigo-500"
+      >
+        <.icon name="hero-arrow-left" class="w-4 h-4 mr-2" /> Back to restaurants
+      </.link>
+    </div>
+    
+<!-- Enhanced Location Display Section -->
+    <%= if @location do %>
+      <div class="mb-6 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-6">
+        <div class="flex items-start justify-between">
+          <div class="flex items-start space-x-4">
+            <div class="w-12 h-12 bg-blue-100 dark:bg-blue-800 rounded-full flex items-center justify-center flex-shrink-0">
+              <.icon name="hero-map-pin" class="w-6 h-6 text-blue-600 dark:text-blue-300" />
+            </div>
+            <div class="flex-1">
+              <h3 class="text-lg font-semibold text-blue-900 dark:text-blue-100 mb-1">
+                📍 Delivery to
+              </h3>
+              <p class="text-blue-800 dark:text-blue-200 font-medium text-lg">
+                {@formatted_location || @location}
+              </p>
+              
+<!-- Delivery Status with Enhanced Messaging -->
+              <div class="mt-3">
+                <%= if @delivery_available do %>
+                  <div class="flex items-center text-green-700 dark:text-green-300">
+                    <.icon name="hero-check-circle" class="w-5 h-5 mr-2" />
+                    <span class="font-semibold">✅ Delivers to your location</span>
+                  </div>
+                  <p class="text-sm text-green-600 dark:text-green-400 mt-1">
+                    Great! {format_delivery_time(@restaurant.avg_preparation_time)} estimated delivery time
+                  </p>
+                <% else %>
+                  <div class="flex items-center text-red-700 dark:text-red-300">
+                    <.icon name="hero-x-circle" class="w-5 h-5 mr-2" />
+                    <span class="font-semibold">❌ Delivery not available</span>
+                  </div>
+                  <p class="text-sm text-red-600 dark:text-red-400 mt-1">
+                    This location is outside the restaurant's delivery range ({@restaurant.delivery_radius_km} km)
+                  </p>
+                <% end %>
+              </div>
+            </div>
+          </div>
+          
+<!-- Location Refinement Button -->
+          <div class="flex flex-col space-y-2">
+            <button
+              phx-click="toggle_location_refinement"
+              class="px-4 py-2 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-medium rounded-lg transition-colors text-sm"
+            >
+              <.icon name="hero-pencil" class="w-4 h-4 mr-2" /> Change Address
+            </button>
+            <%= unless @delivery_available do %>
+              <.link
+                navigate={~p"/restaurants?location=#{@location}"}
+                class="px-4 py-2 bg-gray-100 hover:bg-gray-200 dark:bg-gray-700 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-200 font-medium rounded-lg transition-colors text-sm text-center"
+              >
+                <.icon name="hero-arrow-left" class="w-4 h-4 mr-2" /> Find Other Restaurants
+              </.link>
+            <% end %>
+          </div>
+        </div>
+        
+<!-- Location Refinement Form -->
+        <%= if @show_location_refinement do %>
+          <div class="mt-6 p-4 bg-white dark:bg-gray-800 rounded-lg border border-blue-200 dark:border-blue-700">
+            <h4 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-3">
+              Update delivery address
+            </h4>
+            <.form
+              for={%{}}
+              id="location-refinement-form"
+              phx-submit="update_delivery_address"
+              class="flex gap-3"
+            >
+              <div class="flex-1">
+                <.live_component
+                  module={EatfairWeb.Live.Components.AddressAutocomplete}
+                  id="delivery-address-autocomplete"
+                  value={@location}
+                  placeholder="Enter new delivery address..."
+                  class="w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500"
+                  event="address_selected"
+                />
+              </div>
+              <.button type="submit" class="px-6 py-2">
+                <.icon name="hero-check" class="w-4 h-4 mr-2" /> Update
+              </.button>
+              <button
+                type="button"
+                phx-click="toggle_location_refinement"
+                class="px-4 py-2 bg-gray-200 hover:bg-gray-300 dark:bg-gray-600 dark:hover:bg-gray-700 text-gray-700 dark:text-gray-200 font-medium rounded-lg transition-colors"
+              >
+                Cancel
+              </button>
+            </.form>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
+    
+<!-- Restaurant Header -->
+    <div class="bg-white rounded-lg shadow-lg overflow-hidden mb-8">
+      <!-- Restaurant Image -->
+      <div class="h-64 bg-gray-200">
+        <%= if @restaurant.image_url do %>
+          <img
+            src={@restaurant.image_url}
+            alt={@restaurant.name}
+            class="w-full h-full object-cover"
+          />
+        <% else %>
+          <div class="w-full h-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center">
+            <.icon name="hero-building-storefront" class="w-20 h-20 text-white" />
+          </div>
+        <% end %>
+      </div>
+      
+<!-- Restaurant Info -->
+      <div class="p-8">
+        <div class="flex items-start justify-between mb-4">
+          <div>
+            <h1 class="text-3xl font-bold text-gray-900 mb-2">{@restaurant.name}</h1>
+            <p class="text-lg text-gray-600 mb-4">{@restaurant.address}</p>
+            
+<!-- Cuisines -->
+            <div class="flex flex-wrap gap-2">
+              <%= for cuisine <- @restaurant.cuisines do %>
+                <span class="inline-block px-3 py-1 text-sm font-medium bg-indigo-100 text-indigo-700 rounded-full">
+                  {cuisine.name}
+                </span>
+              <% end %>
+            </div>
+          </div>
+
+          <%= if @average_rating do %>
+            <div class="text-right">
+              <div class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-yellow-100 text-yellow-800">
+                <.icon name="hero-star-solid" class="w-4 h-4 mr-1" />
+                {EatfairWeb.CoreComponents.format_average_rating(@average_rating)}
+              </div>
+            </div>
+          <% end %>
+        </div>
+        
+<!-- Restaurant Details -->
+        <div class="flex items-center justify-between">
+          <div class="flex items-center space-x-6 text-gray-500">
+            <div class="flex items-center">
+              <.icon name="hero-clock" class="w-5 h-5 mr-2" />
+              <span>Delivery: {format_delivery_time(@restaurant.avg_preparation_time)}</span>
+            </div>
+            <%= if @restaurant.min_order_value do %>
+              <div class="flex items-center">
+                <.icon name="hero-currency-dollar" class="w-5 h-5 mr-2" />
+                <span>Min order: {format_price(@restaurant.min_order_value)}</span>
+              </div>
+            <% end %>
+            <!-- Delivery Availability Status -->
+            <%= if @current_scope && @current_scope.user do %>
+              <%= if @delivery_available do %>
+                <div class="flex items-center text-green-600">
+                  <.icon name="hero-check-circle" class="w-5 h-5 mr-2" />
+                  <span data-testid="order-button">Available for delivery</span>
+                </div>
+              <% else %>
+                <div class="flex items-center text-red-600">
+                  <.icon name="hero-x-circle" class="w-5 h-5 mr-2" />
+                  <span>Delivery not available to your location</span>
+                </div>
+              <% end %>
+            <% end %>
+          </div>
+          
+<!-- Reviews Summary -->
+          <div class="flex items-center space-x-4 text-sm text-gray-600">
+            <%= if @average_rating do %>
+              <div class="flex items-center">
+                <.icon name="hero-star-solid" class="w-4 h-4 text-yellow-400 mr-1" />
+                <span class="font-medium">
+                  {EatfairWeb.CoreComponents.format_average_rating(@average_rating)}
+                </span>
+                <span class="ml-1">({@review_count} reviews)</span>
+              </div>
+            <% else %>
+              <span class="text-gray-400">No reviews yet</span>
+            <% end %>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+      <!-- Menu Section -->
+      <div class="lg:col-span-2">
+        <h2 class="text-2xl font-bold text-gray-900 mb-6">Menu</h2>
+
+        <%= for menu <- @restaurant.menus do %>
+          <div class="mb-8">
+            <h3 class="text-xl font-semibold text-gray-800 mb-4">{menu.name}</h3>
+
+            <div class="space-y-4">
+              <%= for meal <- menu.meals do %>
+                <div
+                  class="bg-white rounded-lg shadow p-6 flex items-start justify-between"
+                  data-meal-id={meal.id}
+                >
+                  <div class="flex-1">
+                    <h4 class="text-lg font-medium text-gray-900 mb-2" data-meal-name>
+                      {meal.name}
+                    </h4>
+                    <%= if meal.description do %>
+                      <p class="text-gray-600 text-sm mb-3">{meal.description}</p>
+                    <% end %>
+                    <p class="text-lg font-semibold text-indigo-600" data-meal-price>
+                      {format_price(meal.price)}
+                    </p>
+                  </div>
+                  
+<!-- Add to Cart Section -->
+                  <div class="ml-6 flex items-center">
+                    <%= if @delivery_available do %>
+                      <%= if Map.get(@cart, meal.id, 0) > 0 do %>
+                        <div class="flex items-center space-x-3">
+                          <button
+                            phx-click="remove_from_cart"
+                            phx-value-meal_id={meal.id}
+                            class="w-8 h-8 rounded-full bg-gray-200 hover:bg-gray-300 flex items-center justify-center text-gray-600"
+                          >
+                            <.icon name="hero-minus" class="w-4 h-4" />
+                          </button>
+
+                          <span class="text-lg font-medium text-gray-900 min-w-[2rem] text-center">
+                            {Map.get(@cart, meal.id, 0)}
+                          </span>
+
+                          <button
+                            phx-click="add_to_cart"
+                            phx-value-meal_id={meal.id}
+                            data-add-to-cart
+                            class="w-8 h-8 rounded-full bg-indigo-600 hover:bg-indigo-700 flex items-center justify-center text-white"
+                          >
+                            <.icon name="hero-plus" class="w-4 h-4" />
+                          </button>
+                        </div>
+                      <% else %>
+                        <button
+                          phx-click="add_to_cart"
+                          phx-value-meal_id={meal.id}
+                          data-add-to-cart
+                          class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
+                        >
+                          Add to Cart
+                        </button>
+                      <% end %>
+                    <% else %>
+                      <div class="text-sm text-gray-400 text-right">
+                        <p class="font-medium">Delivery not available</p>
+                        <p class="text-xs mt-1">Outside delivery range</p>
+                      </div>
+                    <% end %>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        <% end %>
+        
+<!-- Reviews Section -->
+        <div class="mt-12">
+          <div class="bg-white rounded-lg shadow-lg p-8">
+            <div class="flex items-center justify-between mb-6">
+              <h2 class="text-2xl font-bold text-gray-900">Customer Reviews</h2>
+
+              <%= cond do %>
+                <% @current_scope && @current_scope.user && @user_can_review -> %>
+                  <button
+                    phx-click="toggle_review_form"
+                    class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
+                  >
+                    Write a Review
+                  </button>
+                <% @current_scope && @current_scope.user && @user_has_orders -> %>
+                  <div class="text-sm text-gray-600 text-right">
+                    <p class="font-medium">Complete your order to leave a review</p>
+                    <p class="text-xs mt-1">Reviews available after delivery</p>
+                  </div>
+                <% @current_scope && @current_scope.user -> %>
+                  <div class="text-sm text-gray-600 text-right">
+                    <p class="font-medium">Order from this restaurant to leave a review</p>
+                    <p class="text-xs mt-1">Share your experience after delivery</p>
+                  </div>
+                <% true -> %>
+                  <!-- Not logged in - no action needed -->
+              <% end %>
+            </div>
+            
+<!-- Review Form -->
+            <%= if @show_review_form do %>
+              <div class="mb-8 p-6 bg-gray-50 rounded-lg">
+                <h3 class="text-lg font-semibold text-gray-900 mb-4">Share your experience</h3>
+                <.form
+                  for={@review_form}
+                  id="review-form"
+                  phx-submit="submit_review"
+                  phx-change="validate_review"
+                  class="space-y-4"
+                >
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">Rating</label>
+                    <select
+                      name="review[rating]"
+                      required
+                      class="w-32 px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                    >
+                      <option value="">Select...</option>
+                      <option value="5">⭐⭐⭐⭐⭐ (5 stars)</option>
+                      <option value="4">⭐⭐⭐⭐ (4 stars)</option>
+                      <option value="3">⭐⭐⭐ (3 stars)</option>
+                      <option value="2">⭐⭐ (2 stars)</option>
+                      <option value="1">⭐ (1 star)</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      Comment (optional)
+                    </label>
+                    <textarea
+                      name="review[comment]"
+                      rows="4"
+                      placeholder="Tell others about your experience..."
+                      class="w-full px-3 py-2 border border-gray-300 rounded-md focus:ring-indigo-500 focus:border-indigo-500"
+                    ></textarea>
+                  </div>
+                  
+<!-- Image Upload Section -->
+                  <div>
+                    <label class="block text-sm font-medium text-gray-700 mb-2">
+                      📸 Upload photos (optional)
+                    </label>
+                    <p class="text-xs text-gray-500 mb-3">
+                      Share photos of your meal! Accept up to 3 images (JPEG, PNG, WebP), max 5MB each.
+                    </p>
+                    
+<!-- Upload Area -->
+                    <div
+                      class="mt-2"
+                      phx-drop-target={@uploads.review_images.ref}
+                    >
+                      <label
+                        for={@uploads.review_images.ref}
+                        class="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100"
+                      >
+                        <div class="flex flex-col items-center justify-center pt-5 pb-6">
+                          <svg
+                            class="w-8 h-8 mb-4 text-gray-500"
+                            aria-hidden="true"
+                            xmlns="http://www.w3.org/2000/svg"
+                            fill="none"
+                            viewBox="0 0 20 16"
+                          >
+                            <path
+                              stroke="currentColor"
+                              stroke-linecap="round"
+                              stroke-linejoin="round"
+                              stroke-width="2"
+                              d="M13 13h3a3 3 0 0 0 0-6h-.025A5.56 5.56 0 0 0 16 6.5 5.5 5.5 0 0 0 5.207 5.021C5.137 5.017 5.071 5 5 5a4 4 0 0 0 0 8h2.167M10 15V6m0 0L8 8m2-2 2 2"
+                            />
+                          </svg>
+                          <p class="mb-2 text-sm text-gray-500">
+                            <span class="font-semibold">Click to upload</span> or drag and drop
+                          </p>
+                          <p class="text-xs text-gray-500">PNG, JPG, WebP up to 5MB</p>
+                        </div>
+                        <.live_file_input upload={@uploads.review_images} class="sr-only" />
+                      </label>
+                    </div>
+                    
+<!-- Upload Progress and Preview -->
+                    <%= for entry <- @uploads.review_images.entries do %>
+                      <div class="mt-3 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+                        <div class="flex items-center justify-between mb-2">
+                          <div class="flex items-center">
+                            <.icon name="hero-photo" class="w-4 h-4 text-blue-600 mr-2" />
+                            <span class="text-sm font-medium text-blue-900">
+                              {entry.client_name}
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            phx-click="cancel-upload"
+                            phx-value-ref={entry.ref}
+                            aria-label="cancel"
+                            class="text-red-600 hover:text-red-800"
+                          >
+                            <.icon name="hero-x-mark" class="w-4 h-4" />
+                          </button>
+                        </div>
+                        
+<!-- Progress Bar -->
+                        <div class="w-full bg-blue-200 rounded-full h-2">
+                          <div
+                            class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                            style={"width: #{entry.progress}%"}
+                          >
+                          </div>
+                        </div>
+                        
+<!-- Validation Errors -->
+                        <%= for err <- upload_errors(@uploads.review_images, entry) do %>
+                          <div class="mt-2 text-sm text-red-600 flex items-center">
+                            <.icon name="hero-exclamation-triangle" class="w-4 h-4 mr-1" />
+                            {error_to_string(err)}
+                          </div>
+                        <% end %>
+                      </div>
+                    <% end %>
+                    
+<!-- General Upload Errors -->
+                    <%= for err <- upload_errors(@uploads.review_images) do %>
+                      <div class="mt-2 text-sm text-red-600 flex items-center">
+                        <.icon name="hero-exclamation-triangle" class="w-4 h-4 mr-1" />
+                        {error_to_string(err)}
+                      </div>
+                    <% end %>
+                  </div>
+
+                  <div class="flex items-center space-x-3">
+                    <button
+                      type="submit"
+                      class="px-6 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded-lg transition-colors"
+                    >
+                      Submit Review
+                    </button>
+                    <button
+                      type="button"
+                      phx-click="toggle_review_form"
+                      class="px-6 py-2 bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium rounded-lg transition-colors"
+                    >
+                      Cancel
+                    </button>
+                  </div>
+                </.form>
+              </div>
+            <% end %>
+            
+<!-- Reviews List -->
+            <div data-testid="reviews-list">
+              <%= if Enum.empty?(@reviews) do %>
+                <div class="text-center py-12">
+                  <.icon name="hero-star" class="w-12 h-12 mx-auto text-gray-300 mb-4" />
+                  <p class="text-gray-500 font-medium">No reviews yet</p>
+                  <p class="text-gray-400 text-sm mt-1">Be the first to share your experience!</p>
+                </div>
+              <% else %>
+                <div class="space-y-6" data-testid="reviews-container">
+                  <%= for review <- @reviews do %>
+                    <div
+                      class="border-b border-gray-200 pb-6 last:border-b-0 last:pb-0"
+                      data-testid="review-item"
+                    >
+                      <div class="flex items-start justify-between mb-3">
+                        <div class="flex items-center space-x-3">
+                          <div class="w-10 h-10 bg-indigo-100 rounded-full flex items-center justify-center">
+                            <span class="text-indigo-600 font-semibold text-sm">
+                              {String.first(review.user.email)}
+                            </span>
+                          </div>
+                          <div>
+                            <p class="font-medium text-gray-900" data-testid="reviewer-name">
+                              {review.user.name || String.split(review.user.email, "@") |> hd()}
+                            </p>
+                            <p class="text-sm text-gray-500">
+                              {Calendar.strftime(review.inserted_at, "%B %d, %Y")}
+                            </p>
+                          </div>
+                        </div>
+
+                        <div class="flex items-center" data-testid="review-rating">
+                          <%= for i <- 1..5 do %>
+                            <.icon
+                              name={
+                                if i <= review.rating, do: "hero-star-solid", else: "hero-star"
+                              }
+                              class={"w-4 h-4 #{if i <= review.rating, do: "text-yellow-400", else: "text-gray-300"}"}
+                            />
+                          <% end %>
+                        </div>
+                      </div>
+
+                      <%= if review.comment && review.comment != "" do %>
+                        <p class="text-gray-700 leading-relaxed" data-testid="review-comment">
+                          {review.comment}
+                        </p>
+                      <% end %>
+                      
+<!-- Review Images -->
+                      <%= if review.review_images && !Enum.empty?(review.review_images) do %>
+                        <div class="mt-4">
+                          <div class="flex flex-wrap gap-2">
+                            <%= for image <- review.review_images do %>
+                              <div class="relative group cursor-pointer">
+                                <img
+                                  src={image.compressed_path || image.image_path}
+                                  alt="Review image"
+                                  class="w-20 h-20 object-cover rounded-lg border border-gray-200 hover:border-indigo-300 transition-colors"
+                                  loading="lazy"
+                                />
+                                <!-- Lightbox overlay on hover -->
+                                <div class="absolute inset-0 bg-black bg-opacity-50 opacity-0 group-hover:opacity-100 transition-opacity rounded-lg flex items-center justify-center">
+                                  <.icon
+                                    name="hero-magnifying-glass-plus"
+                                    class="w-6 h-6 text-white"
+                                  />
+                                </div>
+                              </div>
+                            <% end %>
+                          </div>
+                          <p class="text-xs text-gray-500 mt-2">
+                            📸 {length(review.review_images)} photo(s) shared by customer
+                          </p>
+                        </div>
+                      <% end %>
+                    </div>
+                  <% end %>
+                </div>
+              <% end %>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+<!-- Cart Sidebar -->
+      <div class="lg:col-span-1">
+        <div class="bg-white rounded-xl shadow-xl p-6 sticky top-6 border border-gray-100">
+          <div class="flex items-center justify-between mb-6">
+            <h3 class="text-xl font-bold text-gray-900">Your Order</h3>
+            <%= unless Enum.empty?(@cart) do %>
+              <div
+                class="bg-indigo-100 text-indigo-800 text-sm font-semibold px-3 py-1 rounded-full"
+                data-cart-count
+              >
+                {Enum.sum(Map.values(@cart))} items
+              </div>
+            <% end %>
+          </div>
+
+          <%= if Enum.empty?(@cart) do %>
+            <div class="text-center py-12">
+              <div class="w-16 h-16 mx-auto mb-4 bg-gray-100 rounded-full flex items-center justify-center">
+                <.icon name="hero-shopping-cart" class="w-8 h-8 text-gray-400" />
+              </div>
+              <p class="text-gray-500 font-medium">Your cart is empty</p>
+              <p class="text-gray-400 text-sm mt-1">Add some delicious items!</p>
+            </div>
+          <% else %>
+            <div class="space-y-4 mb-6 max-h-64 overflow-y-auto">
+              <%= for {meal_id, quantity} <- @cart do %>
+                <% meal = find_meal(@restaurant, meal_id) %>
+                <div
+                  class="flex items-start justify-between p-3 bg-gray-50 rounded-lg"
+                  data-order-item
+                  data-meal-name={meal.name}
+                >
+                  <div class="flex-1 min-w-0">
+                    <p class="font-semibold text-gray-900 truncate">{meal.name}</p>
+                    <p class="text-sm text-gray-600 mt-1">
+                      {format_price(meal.price)} each
+                    </p>
+                    <div class="flex items-center mt-2">
+                      <span
+                        class="text-xs font-medium text-indigo-600 bg-indigo-50 px-2 py-1 rounded-full"
+                        data-item-quantity
+                      >
+                        Qty: {quantity}
+                      </span>
+                    </div>
+                  </div>
+                  <div class="text-right ml-3">
+                    <p class="font-bold text-gray-900">
+                      {format_price(Decimal.mult(meal.price, quantity))}
+                    </p>
+                  </div>
+                </div>
+              <% end %>
+            </div>
+
+            <div class="border-t border-gray-200 pt-4 mb-6">
+              <div class="flex items-center justify-between text-lg font-bold text-gray-900">
+                <span>Total</span>
+                <span class="text-xl text-indigo-600" data-order-total>
+                  {format_price(@cart_total)}
+                </span>
+              </div>
+            </div>
+            
+<!-- Minimum Order Check -->
+            <%= cond do %>
+              <% @restaurant.min_order_value && Decimal.compare(@cart_total, @restaurant.min_order_value) == :lt -> %>
+                <div class="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                  <div class="flex items-start">
+                    <.icon
+                      name="hero-exclamation-triangle"
+                      class="w-5 h-5 text-amber-500 mt-0.5 mr-2 flex-shrink-0"
+                    />
+                    <div>
+                      <p class="text-sm font-medium text-amber-800">
+                        Minimum order: {format_price(@restaurant.min_order_value)}
+                      </p>
+                      <p class="text-sm text-amber-700 mt-1">
+                        Add {format_price(Decimal.sub(@restaurant.min_order_value, @cart_total))} more to continue
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                <button
+                  disabled
+                  class="w-full py-4 px-6 bg-gray-200 text-gray-500 font-semibold rounded-xl cursor-not-allowed flex items-center justify-center"
+                >
+                  <.icon name="hero-lock-closed" class="w-5 h-5 mr-2" /> Minimum order not met
+                </button>
+              <% true -> %>
+                <button
+                  phx-click="place_order"
+                  data-checkout-button
+                  class="w-full py-4 px-6 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-bold rounded-xl transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl flex items-center justify-center"
+                >
+                  <.icon name="hero-shopping-bag" class="w-5 h-5 mr-2" /> Place Order
+                </button>
+            <% end %>
+          <% end %>
+        </div>
+      </div>
+    </div>
+  </div>
+</Layouts.app>

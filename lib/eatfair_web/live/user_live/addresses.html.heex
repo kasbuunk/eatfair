@@ -1,186 +1,184 @@
-<Layouts.app flash={@flash} current_scope={@current_scope}>
-  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <.header>
-      📍 Your Addresses
-      <:subtitle>Manage your delivery addresses for easier ordering</:subtitle>
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+  <.header>
+    📍 Your Addresses
+    <:subtitle>Manage your delivery addresses for easier ordering</:subtitle>
 
-      <:actions>
-        <%= unless @show_form do %>
-          <.button id="add-address-button" phx-click="show_form">
-            <.icon name="hero-plus" class="w-4 h-4 mr-1" /> Add Address
-          </.button>
-        <% end %>
-      </:actions>
-    </.header>
+    <:actions>
+      <%= unless @show_form do %>
+        <.button id="add-address-button" phx-click="show_form">
+          <.icon name="hero-plus" class="w-4 h-4 mr-1" /> Add Address
+        </.button>
+      <% end %>
+    </:actions>
+  </.header>
 
-    <div class="space-y-6">
-      <!-- Add Address Form -->
-      <%= if @show_form do %>
-        <div class="bg-white rounded-lg shadow p-6">
-          <h3 class="text-lg font-medium text-gray-900 mb-4">Add New Address</h3>
+  <div class="space-y-6">
+    <!-- Add Address Form -->
+    <%= if @show_form do %>
+      <div class="bg-white rounded-lg shadow p-6">
+        <h3 class="text-lg font-medium text-gray-900 mb-4">Add New Address</h3>
 
-          <.form
-            for={@form}
-            id="address-form"
-            phx-submit="save_address"
-            class="space-y-4"
-          >
-            <!-- Quick Location Detection -->
-            <div class="bg-gray-50 rounded-lg p-4 mb-4">
-              <h4 class="text-sm font-medium text-gray-900 mb-3">Quick Address Detection</h4>
-              <div class="flex flex-col sm:flex-row gap-2">
-                <button
-                  type="button"
-                  onclick="getCurrentLocation()"
-                  class="flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  <.icon name="hero-map-pin" class="w-4 h-4 mr-2" /> Use My Location
-                </button>
-                <input
-                  type="text"
-                  id="postal-code-lookup"
-                  placeholder="Enter postal code for quick lookup"
-                  class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
-                  onkeypress="if(event.key === 'Enter') { lookupPostalCode(this.value); event.preventDefault(); }"
-                />
-                <button
-                  type="button"
-                  onclick="lookupPostalCode(document.getElementById('postal-code-lookup').value)"
-                  class="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
-                >
-                  Lookup
-                </button>
-              </div>
-              <p class="text-xs text-gray-500 mt-2">
-                We'll automatically fill in your address details to save you time
-              </p>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <.input
-                field={@form[:name]}
+        <.form
+          for={@form}
+          id="address-form"
+          phx-submit="save_address"
+          class="space-y-4"
+        >
+          <!-- Quick Location Detection -->
+          <div class="bg-gray-50 rounded-lg p-4 mb-4">
+            <h4 class="text-sm font-medium text-gray-900 mb-3">Quick Address Detection</h4>
+            <div class="flex flex-col sm:flex-row gap-2">
+              <button
+                type="button"
+                onclick="getCurrentLocation()"
+                class="flex items-center justify-center px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                <.icon name="hero-map-pin" class="w-4 h-4 mr-2" /> Use My Location
+              </button>
+              <input
                 type="text"
-                label="Address Name"
-                placeholder="e.g. Home, Work, Mom's place"
+                id="postal-code-lookup"
+                placeholder="Enter postal code for quick lookup"
+                class="flex-1 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 text-sm"
+                onkeypress="if(event.key === 'Enter') { lookupPostalCode(this.value); event.preventDefault(); }"
               />
-
-              <.input
-                field={@form[:postal_code]}
-                type="text"
-                label="Postal Code"
-                placeholder="e.g. 1012 AB"
-              />
+              <button
+                type="button"
+                onclick="lookupPostalCode(document.getElementById('postal-code-lookup').value)"
+                class="px-3 py-2 border border-gray-300 rounded-md text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+              >
+                Lookup
+              </button>
             </div>
+            <p class="text-xs text-gray-500 mt-2">
+              We'll automatically fill in your address details to save you time
+            </p>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <.input
+              field={@form[:name]}
+              type="text"
+              label="Address Name"
+              placeholder="e.g. Home, Work, Mom's place"
+            />
 
             <.input
-              field={@form[:street_address]}
+              field={@form[:postal_code]}
               type="text"
-              label="Street Address"
-              placeholder="e.g. Prinsengracht 263"
+              label="Postal Code"
+              placeholder="e.g. 1012 AB"
+            />
+          </div>
+
+          <.input
+            field={@form[:street_address]}
+            type="text"
+            label="Street Address"
+            placeholder="e.g. Prinsengracht 263"
+            required
+          />
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <.input
+              field={@form[:city]}
+              type="text"
+              label="City"
+              placeholder="e.g. Amsterdam"
               required
             />
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <.input
-                field={@form[:city]}
-                type="text"
-                label="City"
-                placeholder="e.g. Amsterdam"
-                required
-              />
+            <.input
+              field={@form[:country]}
+              type="text"
+              label="Country"
+              value="Netherlands"
+              readonly
+            />
+          </div>
 
-              <.input
-                field={@form[:country]}
-                type="text"
-                label="Country"
-                value="Netherlands"
-                readonly
-              />
-            </div>
+          <div class="flex items-center">
+            <.input
+              field={@form[:is_default]}
+              type="checkbox"
+              label="Set as default address"
+            />
+          </div>
 
-            <div class="flex items-center">
-              <.input
-                field={@form[:is_default]}
-                type="checkbox"
-                label="Set as default address"
-              />
+          <div class="flex gap-2">
+            <.button type="submit">Save Address</.button>
+            <.button type="button" phx-click="hide_form" class="bg-gray-500 hover:bg-gray-600">
+              Cancel
+            </.button>
+          </div>
+        </.form>
+      </div>
+    <% end %>
+    
+<!-- Address List -->
+    <%= if Enum.empty?(@addresses) do %>
+      <div class="text-center py-12">
+        <.icon name="hero-map-pin" class="w-12 h-12 mx-auto mb-4 text-gray-400" />
+        <h3 class="text-lg font-medium text-gray-900 mb-2">No addresses yet</h3>
+        <p class="text-gray-500 mb-4">Add your first address to make ordering easier</p>
+        <%= unless @show_form do %>
+          <.button phx-click="show_form">Add Your First Address</.button>
+        <% end %>
+      </div>
+    <% else %>
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <%= for address <- @addresses do %>
+          <div
+            id={"address-#{String.downcase(address.name || "unnamed")}"}
+            data-testid={"address-#{String.downcase(address.name || "unnamed")}"}
+            class="bg-white rounded-lg shadow p-4 relative"
+          >
+            <%= if address.is_default do %>
+              <div
+                data-testid="default-address-badge"
+                class="absolute top-2 right-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full"
+              >
+                Default
+              </div>
+            <% end %>
+
+            <div class="mb-3">
+              <%= if address.name do %>
+                <h4 class="font-medium text-gray-900">{address.name}</h4>
+              <% end %>
+              <p class="text-sm text-gray-600">
+                {address.street_address}
+              </p>
+              <p class="text-sm text-gray-600">
+                {address.postal_code} {address.city}
+              </p>
             </div>
 
             <div class="flex gap-2">
-              <.button type="submit">Save Address</.button>
-              <.button type="button" phx-click="hide_form" class="bg-gray-500 hover:bg-gray-600">
-                Cancel
-              </.button>
-            </div>
-          </.form>
-        </div>
-      <% end %>
-      
-<!-- Address List -->
-      <%= if Enum.empty?(@addresses) do %>
-        <div class="text-center py-12">
-          <.icon name="hero-map-pin" class="w-12 h-12 mx-auto mb-4 text-gray-400" />
-          <h3 class="text-lg font-medium text-gray-900 mb-2">No addresses yet</h3>
-          <p class="text-gray-500 mb-4">Add your first address to make ordering easier</p>
-          <%= unless @show_form do %>
-            <.button phx-click="show_form">Add Your First Address</.button>
-          <% end %>
-        </div>
-      <% else %>
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          <%= for address <- @addresses do %>
-            <div
-              id={"address-#{String.downcase(address.name || "unnamed")}"}
-              data-testid={"address-#{String.downcase(address.name || "unnamed")}"}
-              class="bg-white rounded-lg shadow p-4 relative"
-            >
-              <%= if address.is_default do %>
-                <div
-                  data-testid="default-address-badge"
-                  class="absolute top-2 right-2 bg-green-100 text-green-800 text-xs px-2 py-1 rounded-full"
+              <%= unless address.is_default do %>
+                <button
+                  class="set-default-button text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200"
+                  phx-click="set_default"
+                  phx-value-id={address.id}
                 >
-                  Default
-                </div>
+                  Set Default
+                </button>
               <% end %>
 
-              <div class="mb-3">
-                <%= if address.name do %>
-                  <h4 class="font-medium text-gray-900">{address.name}</h4>
-                <% end %>
-                <p class="text-sm text-gray-600">
-                  {address.street_address}
-                </p>
-                <p class="text-sm text-gray-600">
-                  {address.postal_code} {address.city}
-                </p>
-              </div>
-
-              <div class="flex gap-2">
-                <%= unless address.is_default do %>
-                  <button
-                    class="set-default-button text-xs bg-blue-100 text-blue-800 px-2 py-1 rounded hover:bg-blue-200"
-                    phx-click="set_default"
-                    phx-value-id={address.id}
-                  >
-                    Set Default
-                  </button>
-                <% end %>
-
-                <button
-                  class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded hover:bg-red-200"
-                  phx-click="delete_address"
-                  phx-value-id={address.id}
-                  data-confirm="Are you sure you want to delete this address?"
-                >
-                  Delete
-                </button>
-              </div>
+              <button
+                class="text-xs bg-red-100 text-red-800 px-2 py-1 rounded hover:bg-red-200"
+                phx-click="delete_address"
+                phx-value-id={address.id}
+                data-confirm="Are you sure you want to delete this address?"
+              >
+                Delete
+              </button>
             </div>
-          <% end %>
-        </div>
-      <% end %>
-    </div>
+          </div>
+        <% end %>
+      </div>
+    <% end %>
   </div>
-</Layouts.app>
+</div>
 
 <script>
   // Location detection functions
