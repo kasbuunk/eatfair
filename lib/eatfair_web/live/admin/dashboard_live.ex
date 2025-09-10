@@ -43,13 +43,11 @@ defmodule EatfairWeb.Admin.DashboardLive do
     <Layouts.app flash={@flash} current_scope={@current_scope}>
       <div class="min-h-screen bg-base-200">
         <div class="container mx-auto p-6">
-          <!-- Header -->
-          <.header>
-            EatFair Admin Dashboard
-            <:subtitle>
-              Platform oversight and community support tools
-            </:subtitle>
-          </.header>
+          <!-- Page Title Section -->
+          <div class="mb-8">
+            <h1 class="text-3xl font-bold text-base-content mb-2">EatFair Admin Dashboard</h1>
+            <p class="text-base-content/70">Platform oversight and community support tools</p>
+          </div>
           
     <!-- Platform Health Overview -->
           <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">

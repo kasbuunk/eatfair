@@ -99,17 +99,8 @@ defmodule EatfairWeb.Router do
       live "/orders/track", OrderTrackingLive, :index
       live "/orders/track/:id", OrderTrackingLive, :show
 
-      # Restaurant onboarding - available to all authenticated users
+    # Restaurant onboarding - available to all authenticated users
       live "/restaurant/onboard", RestaurantLive.Onboarding, :new
-    end
-
-    # Admin routes - requires admin role
-    live_session :require_admin,
-      on_mount: [{EatfairWeb.UserAuth, :require_admin}] do
-      live "/admin", Admin.DashboardLive, :index
-      live "/admin/dashboard", Admin.DashboardLive, :index
-      live "/admin/users", Admin.UsersLive, :index
-      live "/admin/feedback", Admin.FeedbackDashboardLive, :index
     end
 
     # Restaurant management - requires restaurant ownership
@@ -128,6 +119,19 @@ defmodule EatfairWeb.Router do
     end
 
     post "/users/update-password", UserSessionController, :update_password
+  end
+
+  # Admin routes - requires admin role (moved outside to prevent double mounting)
+  scope "/", EatfairWeb do
+    pipe_through :browser
+    
+    live_session :require_admin,
+      on_mount: [{EatfairWeb.UserAuth, :require_admin}] do
+      live "/admin", Admin.DashboardLive, :index
+      live "/admin/dashboard", Admin.DashboardLive, :index
+      live "/admin/users", Admin.UsersLive, :index
+      live "/admin/feedback", Admin.FeedbackDashboardLive, :index
+    end
   end
 
   # Courier routes - require courier role

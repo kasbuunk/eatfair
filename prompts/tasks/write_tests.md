@@ -44,6 +44,13 @@ Write comprehensive tests that prove functionality works correctly:
 - Check tests run quickly (target <1 second each) and reliably
 - Review test readability and maintainability
 
+**6. Layout Component Duplication Testing**
+- For shared UI components (navbars, headers, footers), always test for single existence
+- Add `data-test` attributes to shared layout primitives for reliable querying
+- Assert exact count of critical UI elements: `assert length(find_all("[data-test='navbar']")) == 1`
+- Test duplication scenarios across different routes and user roles
+- Validate unique IDs are not conflicting in the DOM
+
 Testing framework specifics: See prompts/config/tech_stack.md  
 Test organization patterns: See prompts/config/quality_standards.md
 
@@ -80,3 +87,9 @@ Test organization patterns: See prompts/config/quality_standards.md
 - Error cases: Invalid email addresses, service outages, template errors
 - Retry logic: Failed jobs are retried appropriately with backoff
 - Monitoring: Job completion and failure tracking works correctly
+
+**Layout Component Duplication**: "Test single navbar across user roles"
+- Single existence: Only one navbar element appears on any given page
+- Role-based testing: Test navbar appears correctly for admin, user, and guest roles  
+- Route coverage: Verify navbar consistency across different page types
+- DOM validation: Ensure no duplicate IDs or conflicting elements in navbar

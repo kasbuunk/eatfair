@@ -36,12 +36,11 @@ defmodule EatfairWeb.Admin.FeedbackDashboardLive do
     <Layouts.app flash={@flash} current_scope={@current_scope}>
       <div class="min-h-screen bg-base-200">
         <div class="container mx-auto p-6">
-          <.header>
-            Admin Feedback Dashboard
-            <:subtitle>
-              Manage user feedback and correlate with application logs for development troubleshooting
-            </:subtitle>
-          </.header>
+          <!-- Page Title Section -->
+          <div class="mb-8">
+            <h1 class="text-3xl font-bold text-base-content mb-2">Admin Feedback Dashboard</h1>
+            <p class="text-base-content/70">Manage user feedback and correlate with application logs for development troubleshooting</p>
+          </div>
           
     <!-- Stats Overview -->
           <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">

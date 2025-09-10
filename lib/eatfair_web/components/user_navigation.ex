@@ -12,11 +12,29 @@ defmodule EatfairWeb.UserNavigation do
   attr :id_prefix, :string, default: nil
 
   def user_nav(assigns) do
-    # Generate a unique ID prefix for this navigation instance
-    assigns = assign(assigns, :uid, assigns.id_prefix || "nav-#{System.unique_integer([:positive])}")
+    # Prevent duplicate navbar rendering - only render once per LiveView process
+    navbar_key = "navbar_rendered_#{inspect(self())}"
+    
+    if Process.get(navbar_key) do
+      # Already rendered a navbar in this process, return empty template
+      ~H"""  
+      """
+    else
+      # Mark as rendered and proceed with normal rendering
+      Process.put(navbar_key, true)
+      
+      # Generate a unique ID prefix for this navigation instance
+      assigns = assign(assigns, :uid, assigns.id_prefix || "main-navbar")
+      
+      render_navbar(assigns)
+    end
+  end
+  
+  defp render_navbar(assigns) do
     ~H"""
     <nav
       aria-label="Navigation bar"
+      data-test="navbar"
       class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700 transition-colors duration-200"
     >
       <span class="sr-only">Navigation bar</span>

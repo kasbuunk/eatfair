@@ -11,6 +11,33 @@ defmodule EatfairWeb.Admin.DashboardLiveTest do
   import Eatfair.AccountsFixtures
 
   describe "Basic Admin Page Loading" do
+    test "should have exactly one navbar on admin dashboard", %{conn: conn} do
+      admin_user = user_fixture(role: :admin)
+      conn = conn |> log_in_user(admin_user)
+
+      {:ok, _view, html} = live(conn, ~p"/admin/dashboard")
+      
+      # Count navbar elements with our test ID
+      parsed_html = Floki.parse_document!(html)
+      navbar_elements = Floki.find(parsed_html, "[data-test='navbar']")
+      navbar_count = length(navbar_elements)
+      
+      assert navbar_count == 1, "Expected exactly 1 navbar, found #{navbar_count}"
+    end
+
+    test "should have exactly one navbar on regular user dashboard", %{conn: conn} do
+      user = user_fixture(role: :customer)
+      conn = conn |> log_in_user(user)
+
+      {:ok, _view, html} = live(conn, ~p"/users/dashboard")
+      
+      # Count navbar elements with our test ID
+      parsed_html = Floki.parse_document!(html)
+      navbar_elements = Floki.find(parsed_html, "[data-test='navbar']")
+      navbar_count = length(navbar_elements)
+      
+      assert navbar_count == 1, "Expected exactly 1 navbar on regular user dashboard, found #{navbar_count}"
+    end
     test "redirects unauthenticated users to login", %{conn: conn} do
       {:error, redirect} = live(conn, ~p"/admin")
       assert {:redirect, %{to: "/users/log-in"}} = redirect
